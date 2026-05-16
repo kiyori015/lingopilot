@@ -1758,26 +1758,26 @@
               <h2>韓国語版の学習を始める前にログイン</h2>
               <p>学籍番号ごとに学習状況を分けて保存し、オフィシャルユーザーだけが他の学習記録を確認できるようにします。</p>
               <div class="auth-chip-row">
-                <span class="chip">学籍番号</span>
-                <span class="chip">公開デモ</span>
+                <span class="chip">ユーザー名</span>
+                <span class="chip">Supabase Auth</span>
                 <span class="chip">管理者確認</span>
               </div>
-              <p class="auth-note">学籍番号は「数字2桁 + 英字2桁 + 数字4桁」の形式です。英字は小文字でも自動で大文字化します。</p>
+              <p class="auth-note">配布されたユーザー名とパスワードでログインしてください。</p>
             </section>
             <section class="auth-form">
               <div>
                 <p class="chapter-label">Korean Starter</p>
                 <h3>ログイン</h3>
-                <p class="auth-hint">公開デモでは自動で学習画面を開きます。</p>
+                <p class="auth-hint">Supabase Authで認証して学習画面を開きます。</p>
               </div>
               <form id="login-form">
                 <div class="auth-field">
-                  <label for="student-id-input">学籍番号</label>
-                  <input id="student-id-input" name="studentId" type="text" inputmode="text" autocomplete="username" placeholder="00LP0001" maxlength="8" required />
+                  <label for="student-id-input">ユーザー名</label>
+                  <input id="student-id-input" name="studentId" type="text" inputmode="text" autocomplete="username" placeholder="student1" maxlength="32" required />
                 </div>
                 <div class="auth-field">
                   <label for="password-input">パスワード</label>
-                  <input id="password-input" name="password" type="password" autocomplete="current-password" placeholder="公開デモでは不要" />
+                  <input id="password-input" name="password" type="password" autocomplete="current-password" placeholder="パスワード" required />
                 </div>
                 <p id="login-error" class="auth-error" aria-live="polite"></p>
                 <button class="primary-btn" type="submit">ログイン</button>
@@ -1786,15 +1786,15 @@
                 <div>
                   <p class="chapter-label">ADMIN ONLY</p>
                   <h3>管理者専用ページ</h3>
-                  <p class="auth-hint">管理者機能はSupabase Authへ移行するまで公開デモ扱いです。</p>
+                  <p class="auth-hint">管理者ユーザーでログインすると、学習者登録・記録確認ページを開きます。</p>
                 </div>
                 <div class="auth-field">
-                  <label for="admin-login-id">管理者ID</label>
-                  <input id="admin-login-id" type="text" inputmode="text" autocomplete="username" placeholder="00lp0001" maxlength="8" required />
+                  <label for="admin-login-id">管理者ユーザー名</label>
+                  <input id="admin-login-id" type="text" inputmode="text" autocomplete="username" placeholder="admin" maxlength="32" required />
                 </div>
                 <div class="auth-field">
                   <label for="admin-login-password">管理者パスワード</label>
-                  <input id="admin-login-password" type="password" autocomplete="current-password" placeholder="公開デモでは不要" />
+                  <input id="admin-login-password" type="password" autocomplete="current-password" placeholder="パスワード" required />
                 </div>
                 <p id="admin-login-error" class="auth-error" aria-live="polite"></p>
                 <button class="secondary-btn" type="submit">管理画面へ</button>
@@ -2272,17 +2272,17 @@
           <section class="panel">
             <div class="panel-title">
               <h3>ユーザー登録</h3>
-              <p>公開デモではローカル保存の学習記録を確認できます。</p>
+              <p>ログイン後のローカル保存データをユーザー名ごとに確認できます。</p>
             </div>
             <form id="admin-user-form" class="admin-form">
               <div class="admin-inline">
-                <input id="admin-student-id" type="text" inputmode="text" maxlength="8" placeholder="00LP0001" required />
+                <input id="admin-student-id" type="text" inputmode="text" maxlength="32" placeholder="student2" required />
                 <input id="admin-student-email" type="email" inputmode="email" placeholder="student@example.com" />
                 <button class="primary-btn" type="submit">登録する</button>
               </div>
               <p id="admin-form-message" class="auth-error" aria-live="polite"></p>
             </form>
-            <p class="admin-note">公開デモユーザーは常に有効です。</p>
+            <p class="admin-note">Supabase Authのユーザー作成はダッシュボードまたは管理APIで行います。</p>
           </section>
 
           <section class="panel">
@@ -2306,6 +2306,7 @@
       <div id="status" class="status" role="status" aria-live="polite"></div>
     </main>
 
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script>
       const QUIZ_COUNT_PER_DIRECTION = 14;
       const LISTENING_COUNT = 12;
@@ -2320,9 +2321,16 @@
       const OUTPUT_STORAGE_KEY = "korean-lab-output";
       const REMINDER_STORAGE_KEY = "starter-reminders";
       const QUICK_QUESTION_STORAGE_KEY = "starter-quick-question";
-      const OFFICIAL_USER_ID = "00LP0001";
+      const SUPABASE_URL = "https://ieakvpwzhihqttcxegti.supabase.co";
+      const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_w0n4fPh2Fus5U62MBIU7zA__zDNkwjc";
+      const AUTH_EMAIL_DOMAIN = "lingopilot.local";
+      const ADMIN_USERNAME = "admin";
+      const OFFICIAL_USER_ID = ADMIN_USERNAME;
       const DAILY_GOAL_MS = 15 * 60 * 1000;
-      const STUDENT_ID_PATTERN = /^\d{2}[A-Z]{2}\d{4}$/;
+      const STUDENT_ID_PATTERN = /^[a-z0-9][a-z0-9_-]{2,31}$/;
+      const supabaseAuthClient = window.supabase
+        ? window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY)
+        : null;
 
       const baseChapters = [
         {
@@ -3332,9 +3340,34 @@
         const date = parseDateKey(dateKey);
         return `${date.getMonth() + 1}/${date.getDate()}`;
       };
-      const normalizeStudentId = (value = "") => String(value).trim().toUpperCase();
+      const normalizeStudentId = (value = "") => String(value).trim().toLowerCase();
       const isOfficialUser = (studentId = signedInStudentId) => normalizeStudentId(studentId) === OFFICIAL_USER_ID;
       const createDefaultUserRegistry = () => [{ studentId: OFFICIAL_USER_ID, role: "official", createdAt: "system" }];
+      const createAuthEmail = (username) => `${normalizeStudentId(username)}@${AUTH_EMAIL_DOMAIN}`;
+      const getAuthUsername = (user) => normalizeStudentId(user && (user.app_metadata?.username || String(user.email || "").split("@")[0]));
+      const getAuthRole = (user) => user?.app_metadata?.role || (getAuthUsername(user) === ADMIN_USERNAME ? "admin" : "student");
+      const signInWithUsername = async (username, password) => {
+        if (!supabaseAuthClient) {
+          throw new Error("Supabase Authを読み込めませんでした。");
+        }
+        const { data, error } = await supabaseAuthClient.auth.signInWithPassword({
+          email: createAuthEmail(username),
+          password
+        });
+        if (error) throw error;
+        return data.user;
+      };
+      const applySupabaseUser = (user) => {
+        const username = getAuthUsername(user);
+        if (!username) {
+          throw new Error("ユーザー情報を取得できませんでした。");
+        }
+        if (getAuthRole(user) === "admin" || username === ADMIN_USERNAME) {
+          applyAdminState(username);
+        } else {
+          applyAuthenticatedState(username);
+        }
+      };
       const sortUserRegistry = (entries) =>
         [...entries].sort((a, b) => {
           if (a.studentId === OFFICIAL_USER_ID) return -1;
@@ -3794,10 +3827,10 @@
         initializeCurrentUserData();
         showView("home");
       };
-      const applyAdminState = () => {
+      const applyAdminState = (studentId = OFFICIAL_USER_ID) => {
         isAuthenticated = true;
         isAdminSession = true;
-        signedInStudentId = OFFICIAL_USER_ID;
+        signedInStudentId = normalizeStudentId(studentId);
         currentUserId.textContent = `${signedInStudentId} / 管理者`;
         refreshRegisteredUsers();
         setAppVisibility(true);
@@ -3806,9 +3839,12 @@
         renderAdminPage();
         showView("admin");
       };
-      const logout = () => {
+      const logout = async () => {
         recordSessionTime();
         clearStudyIdleTimer();
+        if (supabaseAuthClient) {
+          await supabaseAuthClient.auth.signOut();
+        }
         isAuthenticated = false;
         isAdminSession = false;
         signedInStudentId = "";
@@ -3819,7 +3855,13 @@
         setAppVisibility(false);
         studentIdInput.focus();
       };
-      const tryRestoreAuthSession = () => false;
+      const tryRestoreAuthSession = async () => {
+        if (!supabaseAuthClient) return false;
+        const { data, error } = await supabaseAuthClient.auth.getSession();
+        if (error || !data.session?.user) return false;
+        applySupabaseUser(data.session.user);
+        return true;
+      };
       const updateNavState = (mode) => {
         navHomeButton.classList.toggle("active", mode === "home");
         navTextButton.classList.toggle("active", mode === "main" || mode === "support");
@@ -6475,31 +6517,57 @@
 
       loginForm.addEventListener("submit", (event) => {
         event.preventDefault();
-        const studentId = normalizeStudentId(studentIdInput.value);
-        if (!STUDENT_ID_PATTERN.test(studentId)) {
-          loginError.textContent = "学籍番号は「数字2桁 + 英字2桁 + 数字4桁」で入力してください。";
+        const username = normalizeStudentId(studentIdInput.value);
+        const password = passwordInput.value;
+        if (!STUDENT_ID_PATTERN.test(username)) {
+          loginError.textContent = "ユーザー名は3〜32文字の英数字・ハイフン・アンダーバーで入力してください。";
           studentIdInput.focus();
           return;
         }
-        if (!isRegisteredUser(studentId)) {
-          loginError.textContent = "登録されていない学籍番号です。";
-          studentIdInput.focus();
+        if (!password) {
+          loginError.textContent = "パスワードを入力してください。";
+          passwordInput.focus();
           return;
         }
-        applyAuthenticatedState(studentId);
-        setStatus("ログインしました。", "success");
+        loginError.textContent = "";
+        signInWithUsername(username, password)
+          .then((user) => {
+            applySupabaseUser(user);
+            setStatus("ログインしました。", "success");
+          })
+          .catch(() => {
+            loginError.textContent = "ユーザー名またはパスワードが違います。";
+            passwordInput.focus();
+          });
       });
 
       adminLoginForm.addEventListener("submit", (event) => {
         event.preventDefault();
-        const adminId = normalizeStudentId(adminLoginIdInput.value);
-        if (adminId !== OFFICIAL_USER_ID) {
-          adminLoginError.textContent = "管理者IDが違います。";
+        const username = normalizeStudentId(adminLoginIdInput.value);
+        const password = adminLoginPasswordInput.value;
+        if (!STUDENT_ID_PATTERN.test(username)) {
+          adminLoginError.textContent = "管理者ユーザー名を正しく入力してください。";
+          adminLoginIdInput.focus();
+          return;
+        }
+        if (!password) {
+          adminLoginError.textContent = "管理者パスワードを入力してください。";
+          adminLoginPasswordInput.focus();
           return;
         }
         adminLoginError.textContent = "";
-        applyAdminState();
-        setStatus("管理者としてログインしました。", "success");
+        signInWithUsername(username, password)
+          .then((user) => {
+            if (getAuthRole(user) !== "admin" && getAuthUsername(user) !== ADMIN_USERNAME) {
+              throw new Error("not-admin");
+            }
+            applySupabaseUser(user);
+            setStatus("管理者としてログインしました。", "success");
+          })
+          .catch(() => {
+            adminLoginError.textContent = "管理者ユーザー名またはパスワードが違います。";
+            adminLoginPasswordInput.focus();
+          });
       });
 
       reminderSaveButton.addEventListener("click", saveReminderSettings);
@@ -6519,12 +6587,12 @@
         event.preventDefault();
         const studentId = normalizeStudentId(adminStudentIdInput.value);
         if (!STUDENT_ID_PATTERN.test(studentId)) {
-          adminFormMessage.textContent = "学籍番号は「数字2桁 + 英字2桁 + 数字4桁」で入力してください。";
+          adminFormMessage.textContent = "ユーザー名は3〜32文字の英数字・ハイフン・アンダーバーで入力してください。";
           adminStudentIdInput.focus();
           return;
         }
         if (isRegisteredUser(studentId)) {
-          adminFormMessage.textContent = "その学籍番号はすでに登録されています。";
+          adminFormMessage.textContent = "そのユーザー名はすでに登録されています。";
           adminStudentIdInput.focus();
           return;
         }
@@ -6573,7 +6641,10 @@
 
       refreshRegisteredUsers();
       clearAuthSession();
-      applyAuthenticatedState(OFFICIAL_USER_ID);
+      setAppVisibility(false);
+      tryRestoreAuthSession().then((restored) => {
+        if (!restored) studentIdInput.focus();
+      });
     </script>
   </body>
 </html>
