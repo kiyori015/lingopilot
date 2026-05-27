@@ -2543,6 +2543,45 @@
           text-align: center;
         }
       }
+      @media (max-width: 480px) {
+        body {
+          padding: 14px 12px 32px;
+        }
+        .auth-card {
+          grid-template-columns: 1fr;
+          padding: 18px;
+          gap: 12px;
+          border-radius: 18px;
+        }
+        .auth-hero,
+        .auth-form {
+          padding: 14px;
+        }
+        .auth-field input,
+        .admin-inline input,
+        .auth-field textarea {
+          width: 100%;
+          font-size: 1rem;
+        }
+        .primary-btn,
+        .secondary-btn {
+          display: block;
+          width: 100%;
+          padding: 12px 14px;
+        }
+        .header-card {
+          min-width: auto;
+          padding: 12px;
+        }
+        .header-main h1 {
+          font-size: 1.6rem;
+        }
+        .status {
+          left: 12px;
+          right: 12px;
+          bottom: 12px;
+        }
+      }
     </style>
   </head>
   <body>
@@ -2569,32 +2608,25 @@
               </div>
               <form id="login-form">
                 <div class="auth-field">
-                  <label for="student-id-input">ユーザー名</label>
-                  <input id="student-id-input" name="studentId" type="text" inputmode="text" autocomplete="username" placeholder="student1" maxlength="32" required />
+                  <label for="student-id-input">メールアドレス</label>
+                  <input id="student-id-input" name="studentId" type="email" inputmode="email" autocomplete="email" placeholder="user@example.com" maxlength="254" required />
                 </div>
-                <div class="auth-field">
-                  <label for="password-input">パスワード</label>
-                  <input id="password-input" name="password" type="password" autocomplete="current-password" placeholder="パスワード" required />
-                </div>
+                <p class="auth-hint">パスワード不要：ログイン用のメールを送信します。受信したリンクからログインしてください。</p>
                 <p id="login-error" class="auth-error" aria-live="polite"></p>
-                <button class="primary-btn" type="submit">ログイン</button>
+                <button class="primary-btn" type="submit">ログイン（メール送信）</button>
               </form>
               <form id="admin-login-form">
                 <div>
                   <p class="chapter-label">ADMIN ONLY</p>
                   <h3>管理者専用ページ</h3>
-                  <p class="auth-hint">管理者ユーザーでログインすると、学習者登録・記録確認ページを開きます。</p>
+                  <p class="auth-hint">管理者は登録済みメールでログイン（パスワード不要）。管理者向けの認可はサーバー側で確認されます。</p>
                 </div>
                 <div class="auth-field">
-                  <label for="admin-login-id">管理者ユーザー名</label>
-                  <input id="admin-login-id" type="text" inputmode="text" autocomplete="username" placeholder="admin" maxlength="32" required />
-                </div>
-                <div class="auth-field">
-                  <label for="admin-login-password">管理者パスワード</label>
-                  <input id="admin-login-password" type="password" autocomplete="current-password" placeholder="パスワード" required />
+                  <label for="admin-login-id">管理者メールアドレス</label>
+                  <input id="admin-login-id" type="email" inputmode="email" autocomplete="email" placeholder="admin@example.com" maxlength="254" required />
                 </div>
                 <p id="admin-login-error" class="auth-error" aria-live="polite"></p>
-                <button class="secondary-btn" type="submit">管理画面へ</button>
+                <button class="secondary-btn" type="submit">管理画面ログイン（メール送信）</button>
               </form>
             </section>
           </div>
@@ -3148,9 +3180,22 @@
       const DAILY_GOAL_MS = 15 * 60 * 1000;
       const STUDENT_ID_PATTERN = /^[a-z0-9][a-z0-9_-]{2,31}$/;
       const EXERCISE_VERSION = 2;
-      const supabaseAuthClient = window.supabase
-        ? window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY)
-        : null;
+      let supabaseAuthClient = null;
+      (async () => {
+        try {
+          if (window.supabase && typeof window.supabase.createClient === "function") {
+            supabaseAuthClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
+          } else {
+            const mod = await import("https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm");
+            const { createClient } = mod;
+            supabaseAuthClient = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
+            window.supabase = { createClient };
+          }
+        } catch (e) {
+          console.error("Supabase client load failed:", e);
+          supabaseAuthClient = null;
+        }
+      })();
 
       const history = new Map();
       let sessionStartTime = Date.now();
@@ -3449,21 +3494,28 @@
       };
 
       const normalizeStudentId = (value = "") => String(value).trim().toLowerCase();
+      const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       const isOfficialUser = (studentId = signedInStudentId) => normalizeStudentId(studentId) === OFFICIAL_USER_ID;
       const createDefaultUserRegistry = () => [{ studentId: OFFICIAL_USER_ID, role: "official", createdAt: "system" }];
       const createAuthEmail = (username) => `${normalizeStudentId(username)}@${AUTH_EMAIL_DOMAIN}`;
       const getAuthUsername = (user) => normalizeStudentId(user && (user.app_metadata?.username || String(user.email || "").split("@")[0]));
       const getAuthRole = (user) => user?.app_metadata?.role || (getAuthUsername(user) === ADMIN_USERNAME ? "admin" : "student");
-      const signInWithUsername = async (username, password) => {
-        if (!supabaseAuthClient) {
-          throw new Error("Supabase Authを読み込めませんでした。");
+      const waitForSupabaseClient = async (timeoutMs = 5000) => {
+        const start = Date.now();
+        while (!supabaseAuthClient && Date.now() - start < timeoutMs) {
+          // eslint-disable-next-line no-await-in-loop
+          await new Promise((r) => setTimeout(r, 100));
         }
-        const { data, error } = await supabaseAuthClient.auth.signInWithPassword({
-          email: createAuthEmail(username),
-          password
-        });
+        if (!supabaseAuthClient) throw new Error("Supabase Authを読み込めませんでした。");
+        return supabaseAuthClient;
+      };
+
+      const signInWithOtp = async (email) => {
+        const client = await waitForSupabaseClient();
+        const redirectTo = `${location.origin}${location.pathname}`;
+        const { data, error } = await client.auth.signInWithOtp({ email, options: { emailRedirectTo: redirectTo } });
         if (error) throw error;
-        return data.user;
+        return data;
       };
       const applySupabaseUser = (user) => {
         const username = getAuthUsername(user);
@@ -8721,60 +8773,43 @@
         setStatus(`${studentId} を登録しました。`, "success");
       });
       studentIdInput.addEventListener("input", () => {
-        studentIdInput.value = normalizeStudentId(studentIdInput.value);
+        studentIdInput.value = String(studentIdInput.value || "").trim().toLowerCase();
       });
-      loginForm.addEventListener("submit", (event) => {
+      loginForm.addEventListener("submit", async (event) => {
         event.preventDefault();
-        const username = normalizeStudentId(studentIdInput.value);
-        const password = passwordInput.value;
-        if (!STUDENT_ID_PATTERN.test(username)) {
-          loginError.textContent = "ユーザー名は3〜32文字の英数字・ハイフン・アンダーバーで入力してください。";
+        const email = String(studentIdInput.value || "").trim().toLowerCase();
+        if (!EMAIL_PATTERN.test(email)) {
+          loginError.textContent = "有効なメールアドレスを入力してください。";
           studentIdInput.focus();
           return;
         }
-        if (!password) {
-          loginError.textContent = "パスワードを入力してください。";
-          passwordInput.focus();
-          return;
-        }
         loginError.textContent = "";
-        signInWithUsername(username, password)
-          .then((user) => {
-            applySupabaseUser(user);
-            setStatus("ログインしました。", "success");
-          })
-          .catch(() => {
-            loginError.textContent = "ユーザー名またはパスワードが違います。";
-            passwordInput.focus();
-          });
+        try {
+          await signInWithOtp(email);
+          setStatus("ログイン用メールを送信しました。受信したリンクからログインしてください。", "success");
+          loginError.textContent = "ログイン用のメールを送信しました。メール内のリンクから開いてください。";
+        } catch (e) {
+          console.error(e);
+          loginError.textContent = "ログインメールの送信に失敗しました。後でもう一度お試しください。";
+        }
       });
-      adminLoginForm.addEventListener("submit", (event) => {
+      adminLoginForm.addEventListener("submit", async (event) => {
         event.preventDefault();
-        const username = normalizeStudentId(adminLoginIdInput.value);
-        const password = adminLoginPasswordInput.value;
-        if (!STUDENT_ID_PATTERN.test(username)) {
-          adminLoginError.textContent = "管理者ユーザー名を正しく入力してください。";
+        const email = String(adminLoginIdInput.value || "").trim().toLowerCase();
+        if (!EMAIL_PATTERN.test(email)) {
+          adminLoginError.textContent = "有効な管理者メールアドレスを入力してください。";
           adminLoginIdInput.focus();
           return;
         }
-        if (!password) {
-          adminLoginError.textContent = "管理者パスワードを入力してください。";
-          adminLoginPasswordInput.focus();
-          return;
-        }
         adminLoginError.textContent = "";
-        signInWithUsername(username, password)
-          .then((user) => {
-            if (getAuthRole(user) !== "admin" && getAuthUsername(user) !== ADMIN_USERNAME) {
-              throw new Error("not-admin");
-            }
-            applySupabaseUser(user);
-            setStatus("管理者としてログインしました。", "success");
-          })
-          .catch(() => {
-            adminLoginError.textContent = "管理者ユーザー名またはパスワードが違います。";
-            adminLoginPasswordInput.focus();
-          });
+        try {
+          await signInWithOtp(email);
+          setStatus("管理者用ログインメールを送信しました。メール内のリンクから開いてください。", "success");
+          adminLoginError.textContent = "管理者ログイン用のメールを送信しました。";
+        } catch (e) {
+          console.error(e);
+          adminLoginError.textContent = "管理者ログインメールの送信に失敗しました。";
+        }
       });
       reminderSaveButton.addEventListener("click", saveReminderSettings);
       quickQuestionSaveButton.addEventListener("click", saveQuickQuestion);
