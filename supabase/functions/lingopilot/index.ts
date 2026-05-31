@@ -1,8 +1,10 @@
 import "@supabase/functions-js/edge-runtime.d.ts";
 
-const htmlHeaders = {
-  "content-type": "text/html; charset=utf-8",
-  "cache-control": "public, max-age=300",
+const createHtmlHeaders = () => {
+  const headers = new Headers();
+  headers.set("Content-Type", "text/html; charset=utf-8");
+  headers.set("Cache-Control", "public, max-age=300");
+  return headers;
 };
 
 const notFoundHtml = `<!doctype html>
@@ -29,9 +31,9 @@ Deno.serve(async (req) => {
     : "";
 
   if (!fileName) {
-    return new Response(notFoundHtml, { status: 404, headers: htmlHeaders });
+    return new Response(notFoundHtml, { status: 404, headers: createHtmlHeaders() });
   }
 
   const html = await Deno.readTextFile(new URL(fileName, import.meta.url));
-  return new Response(html, { headers: htmlHeaders });
+  return new Response(html, { headers: createHtmlHeaders() });
 });
