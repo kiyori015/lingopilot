@@ -48,6 +48,14 @@ The standard Supabase Edge Function URL returns the updated HTML body, but Supab
 
 No WSL-specific source paths were found in the tracked project files.
 
+Windows-side tool check from WSL found:
+
+- `git` was not available in PowerShell PATH.
+- `node` / `npm` were not available in PowerShell PATH.
+- `python` resolved to the Windows app execution alias, not a confirmed full Python install.
+
+For Windows native Codex, install or enable these on Windows if it needs to run Git, `npx supabase`, or a local HTTP server. Git for Windows installation was attempted with `winget`, but the installer requested UAC/admin confirmation.
+
 Recommended checks after opening this folder in Windows native Codex:
 
 ```powershell
