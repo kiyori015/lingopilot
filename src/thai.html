@@ -2608,25 +2608,32 @@
               </div>
               <form id="login-form">
                 <div class="auth-field">
-                  <label for="student-id-input">メールアドレス</label>
-                  <input id="student-id-input" name="studentId" type="email" inputmode="email" autocomplete="email" placeholder="user@example.com" maxlength="254" required />
+                  <label for="student-id-input">ユーザー名</label>
+                  <input id="student-id-input" name="studentId" type="text" inputmode="text" autocomplete="username" placeholder="student1" maxlength="32" required />
                 </div>
-                <p class="auth-hint">パスワード不要：ログイン用のメールを送信します。受信したリンクからログインしてください。</p>
+                <div class="auth-field">
+                  <label for="password-input">パスワード</label>
+                  <input id="password-input" name="password" type="password" autocomplete="current-password" placeholder="パスワード" required />
+                </div>
                 <p id="login-error" class="auth-error" aria-live="polite"></p>
-                <button class="primary-btn" type="submit">ログイン（メール送信）</button>
+                <button class="primary-btn" type="submit">ログイン</button>
               </form>
               <form id="admin-login-form">
                 <div>
                   <p class="chapter-label">ADMIN ONLY</p>
                   <h3>管理者専用ページ</h3>
-                  <p class="auth-hint">管理者は登録済みメールでログイン（パスワード不要）。管理者向けの認可はサーバー側で確認されます。</p>
+                  <p class="auth-hint">管理者ユーザーでログインすると、学習者登録・記録確認ページを開きます。</p>
                 </div>
                 <div class="auth-field">
-                  <label for="admin-login-id">管理者メールアドレス</label>
-                  <input id="admin-login-id" type="email" inputmode="email" autocomplete="email" placeholder="admin@example.com" maxlength="254" required />
+                  <label for="admin-login-id">管理者ユーザー名</label>
+                  <input id="admin-login-id" type="text" inputmode="text" autocomplete="username" placeholder="admin" maxlength="32" required />
+                </div>
+                <div class="auth-field">
+                  <label for="admin-login-password">管理者パスワード</label>
+                  <input id="admin-login-password" type="password" autocomplete="current-password" placeholder="パスワード" required />
                 </div>
                 <p id="admin-login-error" class="auth-error" aria-live="polite"></p>
-                <button class="secondary-btn" type="submit">管理画面ログイン（メール送信）</button>
+                <button class="secondary-btn" type="submit">管理画面へ</button>
               </form>
             </section>
           </div>
@@ -3494,7 +3501,6 @@
       };
 
       const normalizeStudentId = (value = "") => String(value).trim().toLowerCase();
-      const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       const isOfficialUser = (studentId = signedInStudentId) => normalizeStudentId(studentId) === OFFICIAL_USER_ID;
       const createDefaultUserRegistry = () => [{ studentId: OFFICIAL_USER_ID, role: "official", createdAt: "system" }];
       const createAuthEmail = (username) => `${normalizeStudentId(username)}@${AUTH_EMAIL_DOMAIN}`;
@@ -3510,12 +3516,11 @@
         return supabaseAuthClient;
       };
 
-      const signInWithOtp = async (email) => {
+      const signInWithUsername = async (username, password) => {
         const client = await waitForSupabaseClient();
-        const redirectTo = `${location.origin}${location.pathname}`;
-        const { data, error } = await client.auth.signInWithOtp({ email, options: { emailRedirectTo: redirectTo } });
+        const { data, error } = await client.auth.signInWithPassword({ email: createAuthEmail(username), password });
         if (error) throw error;
-        return data;
+        return data.user;
       };
       const applySupabaseUser = (user) => {
         const username = getAuthUsername(user);
@@ -3791,11 +3796,15 @@
       };
 
       const tryRestoreAuthSession = async () => {
-        if (!supabaseAuthClient) return false;
-        const { data, error } = await supabaseAuthClient.auth.getSession();
-        if (error || !data.session?.user) return false;
-        applySupabaseUser(data.session.user);
-        return true;
+        try {
+          const client = await waitForSupabaseClient();
+          const { data, error } = await client.auth.getSession();
+          if (error || !data.session?.user) return false;
+          applySupabaseUser(data.session.user);
+          return true;
+        } catch (e) {
+          return false;
+        }
       };
 
       const updateNavState = (mode) => {
@@ -8775,41 +8784,58 @@
       studentIdInput.addEventListener("input", () => {
         studentIdInput.value = String(studentIdInput.value || "").trim().toLowerCase();
       });
-      loginForm.addEventListener("submit", async (event) => {
+      loginForm.addEventListener("submit", (event) => {
         event.preventDefault();
-        const email = String(studentIdInput.value || "").trim().toLowerCase();
-        if (!EMAIL_PATTERN.test(email)) {
-          loginError.textContent = "有効なメールアドレスを入力してください。";
+        const username = normalizeStudentId(studentIdInput.value);
+        const password = passwordInput.value;
+        if (!STUDENT_ID_PATTERN.test(username)) {
+          loginError.textContent = "ユーザー名は3〜32文字の英数字・ハイフン・アンダーバーで入力してください。";
           studentIdInput.focus();
           return;
         }
-        loginError.textContent = "";
-        try {
-          await signInWithOtp(email);
-          setStatus("ログイン用メールを送信しました。受信したリンクからログインしてください。", "success");
-          loginError.textContent = "ログイン用のメールを送信しました。メール内のリンクから開いてください。";
-        } catch (e) {
-          console.error(e);
-          loginError.textContent = "ログインメールの送信に失敗しました。後でもう一度お試しください。";
+        if (!password) {
+          loginError.textContent = "パスワードを入力してください。";
+          passwordInput.focus();
+          return;
         }
+        loginError.textContent = "";
+        signInWithUsername(username, password)
+          .then((user) => {
+            applySupabaseUser(user);
+            setStatus("ログインしました。", "success");
+          })
+          .catch(() => {
+            loginError.textContent = "ユーザー名またはパスワードが違います。";
+            passwordInput.focus();
+          });
       });
-      adminLoginForm.addEventListener("submit", async (event) => {
+      adminLoginForm.addEventListener("submit", (event) => {
         event.preventDefault();
-        const email = String(adminLoginIdInput.value || "").trim().toLowerCase();
-        if (!EMAIL_PATTERN.test(email)) {
-          adminLoginError.textContent = "有効な管理者メールアドレスを入力してください。";
+        const username = normalizeStudentId(adminLoginIdInput.value);
+        const password = adminLoginPasswordInput.value;
+        if (!STUDENT_ID_PATTERN.test(username)) {
+          adminLoginError.textContent = "管理者ユーザー名を正しく入力してください。";
           adminLoginIdInput.focus();
           return;
         }
-        adminLoginError.textContent = "";
-        try {
-          await signInWithOtp(email);
-          setStatus("管理者用ログインメールを送信しました。メール内のリンクから開いてください。", "success");
-          adminLoginError.textContent = "管理者ログイン用のメールを送信しました。";
-        } catch (e) {
-          console.error(e);
-          adminLoginError.textContent = "管理者ログインメールの送信に失敗しました。";
+        if (!password) {
+          adminLoginError.textContent = "管理者パスワードを入力してください。";
+          adminLoginPasswordInput.focus();
+          return;
         }
+        adminLoginError.textContent = "";
+        signInWithUsername(username, password)
+          .then((user) => {
+            if (getAuthRole(user) !== "admin" && getAuthUsername(user) !== ADMIN_USERNAME) {
+              throw new Error("not-admin");
+            }
+            applySupabaseUser(user);
+            setStatus("管理者としてログインしました。", "success");
+          })
+          .catch(() => {
+            adminLoginError.textContent = "管理者ユーザー名またはパスワードが違います。";
+            adminLoginPasswordInput.focus();
+          });
       });
       reminderSaveButton.addEventListener("click", saveReminderSettings);
       quickQuestionSaveButton.addEventListener("click", saveQuickQuestion);

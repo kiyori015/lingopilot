@@ -1746,6 +1746,45 @@
           text-align: center;
         }
       }
+      @media (max-width: 480px) {
+        body {
+          padding: 14px 12px 32px;
+        }
+        .auth-card {
+          grid-template-columns: 1fr;
+          padding: 18px;
+          gap: 12px;
+          border-radius: 18px;
+        }
+        .auth-hero,
+        .auth-form {
+          padding: 14px;
+        }
+        .auth-field input,
+        .admin-inline input,
+        .auth-field textarea {
+          width: 100%;
+          font-size: 1rem;
+        }
+        .primary-btn,
+        .secondary-btn {
+          display: block;
+          width: 100%;
+          padding: 12px 14px;
+        }
+        .header-card {
+          min-width: auto;
+          padding: 12px;
+        }
+        .header-main h1 {
+          font-size: 1.6rem;
+        }
+        .status {
+          left: 12px;
+          right: 12px;
+          bottom: 12px;
+        }
+      }
     </style>
   </head>
   <body>
@@ -2328,9 +2367,23 @@
       const OFFICIAL_USER_ID = ADMIN_USERNAME;
       const DAILY_GOAL_MS = 15 * 60 * 1000;
       const STUDENT_ID_PATTERN = /^[a-z0-9][a-z0-9_-]{2,31}$/;
-      const supabaseAuthClient = window.supabase
-        ? window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY)
-        : null;
+      let supabaseAuthClient = null;
+      (async () => {
+        try {
+          if (window.supabase && typeof window.supabase.createClient === "function") {
+            supabaseAuthClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
+          } else {
+            const mod = await import("https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm");
+            const { createClient } = mod;
+            supabaseAuthClient = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
+            // attach minimal createClient for other code paths
+            window.supabase = { createClient };
+          }
+        } catch (e) {
+          console.error("Supabase client load failed:", e);
+          supabaseAuthClient = null;
+        }
+      })();
 
       const baseChapters = [
         {
@@ -3346,14 +3399,20 @@
       const createAuthEmail = (username) => `${normalizeStudentId(username)}@${AUTH_EMAIL_DOMAIN}`;
       const getAuthUsername = (user) => normalizeStudentId(user && (user.app_metadata?.username || String(user.email || "").split("@")[0]));
       const getAuthRole = (user) => user?.app_metadata?.role || (getAuthUsername(user) === ADMIN_USERNAME ? "admin" : "student");
-      const signInWithUsername = async (username, password) => {
-        if (!supabaseAuthClient) {
-          throw new Error("Supabase Authを読み込めませんでした。");
+      const waitForSupabaseClient = async (timeoutMs = 5000) => {
+        const start = Date.now();
+        while (!supabaseAuthClient && Date.now() - start < timeoutMs) {
+          // wait for client to initialize
+          // eslint-disable-next-line no-await-in-loop
+          await new Promise((r) => setTimeout(r, 100));
         }
-        const { data, error } = await supabaseAuthClient.auth.signInWithPassword({
-          email: createAuthEmail(username),
-          password
-        });
+        if (!supabaseAuthClient) throw new Error("Supabase Authを読み込めませんでした。");
+        return supabaseAuthClient;
+      };
+
+      const signInWithUsername = async (username, password) => {
+        const client = await waitForSupabaseClient();
+        const { data, error } = await client.auth.signInWithPassword({ email: createAuthEmail(username), password });
         if (error) throw error;
         return data.user;
       };
@@ -3856,11 +3915,15 @@
         studentIdInput.focus();
       };
       const tryRestoreAuthSession = async () => {
-        if (!supabaseAuthClient) return false;
-        const { data, error } = await supabaseAuthClient.auth.getSession();
-        if (error || !data.session?.user) return false;
-        applySupabaseUser(data.session.user);
-        return true;
+        try {
+          const client = await waitForSupabaseClient();
+          const { data, error } = await client.auth.getSession();
+          if (error || !data.session?.user) return false;
+          applySupabaseUser(data.session.user);
+          return true;
+        } catch (e) {
+          return false;
+        }
       };
       const updateNavState = (mode) => {
         navHomeButton.classList.toggle("active", mode === "home");
