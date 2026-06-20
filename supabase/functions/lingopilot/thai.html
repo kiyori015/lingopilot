@@ -2591,29 +2591,29 @@
           <div class="auth-card">
             <section class="auth-hero">
               <p class="eyebrow">LOGIN</p>
-              <h2>学習を始める前にログイン</h2>
-              <p>配布URLからアクセスした利用者ごとに学習を分けていくための基礎として、最初に学籍番号とパスワードを確認する画面を追加します。</p>
+              <h2>タイ語版の学習を始める前にログイン</h2>
+              <p>登録済みメールアドレスごとに学習状況を保存し、管理者だけが全員の学習記録を確認できるようにします。</p>
               <div class="auth-chip-row">
-                <span class="chip">ユーザー名</span>
+                <span class="chip">登録番号</span>
                 <span class="chip">Supabase Auth</span>
-                <span class="chip">マイページ前</span>
+                <span class="chip">学習記録同期</span>
               </div>
-              <p class="auth-note">配布されたユーザー名とパスワードでログインしてください。</p>
+              <p class="auth-note">管理者から届いたQRコードで開き、登録番号とメールアドレスでログインしてください。2回目以降はこの端末のログイン状態を使えます。</p>
             </section>
             <section class="auth-form">
               <div>
                 <p class="chapter-label">Thai Starter</p>
                 <h3>ログイン</h3>
-                <p class="auth-hint">Supabase Authで認証してマイページを開きます。</p>
+                <p class="auth-hint">登録番号とメールアドレスを確認して、マイページを開きます。</p>
               </div>
               <form id="login-form">
                 <div class="auth-field">
-                  <label for="student-id-input">ユーザー名</label>
-                  <input id="student-id-input" name="studentId" type="text" inputmode="text" autocomplete="username" placeholder="student1" maxlength="32" required />
+                  <label for="registration-number-input">登録番号</label>
+                  <input id="registration-number-input" name="registrationNumber" type="text" inputmode="numeric" autocomplete="one-time-code" placeholder="01" maxlength="4" required />
                 </div>
                 <div class="auth-field">
-                  <label for="password-input">パスワード</label>
-                  <input id="password-input" name="password" type="password" autocomplete="current-password" placeholder="パスワード" required />
+                  <label for="student-id-input">メールアドレス</label>
+                  <input id="student-id-input" name="email" type="email" inputmode="email" autocomplete="email" placeholder="student@example.com" required />
                 </div>
                 <p id="login-error" class="auth-error" aria-live="polite"></p>
                 <button class="primary-btn" type="submit">ログイン</button>
@@ -2924,17 +2924,17 @@
             <section class="panel">
               <div class="panel-title">
                 <h3>ユーザー登録</h3>
-                <p>ログイン後のローカル保存データをユーザー名ごとに確認できます。</p>
+                <p>管理画面からメールアドレスを登録すると、登録番号を発行できます。</p>
               </div>
               <form id="admin-user-form" class="admin-form">
                 <div class="admin-inline">
-                  <input id="admin-student-id" type="text" inputmode="text" maxlength="32" placeholder="student2" required />
-                  <input id="admin-student-email" type="email" inputmode="email" placeholder="student@example.com" />
+                  <input id="admin-student-id" type="text" inputmode="numeric" maxlength="4" placeholder="01" readonly />
+                  <input id="admin-student-email" type="email" inputmode="email" placeholder="student@example.com" required />
                   <button class="primary-btn" type="submit">登録する</button>
                 </div>
                 <p id="admin-form-message" class="auth-error" aria-live="polite"></p>
               </form>
-              <p class="admin-note">Supabase Authのユーザー作成はダッシュボードまたは管理APIで行います。</p>
+              <p class="admin-note">登録番号の発行とログイン用ユーザー作成は `lingopilot-auth` で行います。</p>
             </section>
 
             <section class="panel">
@@ -3181,11 +3181,15 @@
       const QUICK_QUESTION_STORAGE_KEY = "starter-quick-question";
       const SUPABASE_URL = "https://ieakvpwzhihqttcxegti.supabase.co";
       const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_w0n4fPh2Fus5U62MBIU7zA__zDNkwjc";
+      const PUBLIC_APP_URL = "https://kiyori015.github.io/lingopilot/thai.html";
+      const AUTH_FUNCTION_NAME = "lingopilot-auth";
       const AUTH_EMAIL_DOMAIN = "lingopilot.local";
       const ADMIN_USERNAME = "admin";
       const OFFICIAL_USER_ID = ADMIN_USERNAME;
       const DAILY_GOAL_MS = 15 * 60 * 1000;
       const STUDENT_ID_PATTERN = /^[a-z0-9][a-z0-9_-]{2,31}$/;
+      const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      const REGISTRATION_NUMBER_PATTERN = /^[0-9]{2,4}$/;
       const EXERCISE_VERSION = 2;
       let supabaseAuthClient = null;
       (async () => {
@@ -3332,8 +3336,8 @@
       const appRoot = document.querySelector(".app");
       const loginForm = document.getElementById("login-form");
       const adminLoginForm = document.getElementById("admin-login-form");
+      const registrationNumberInput = document.getElementById("registration-number-input");
       const studentIdInput = document.getElementById("student-id-input");
-      const passwordInput = document.getElementById("password-input");
       const loginError = document.getElementById("login-error");
       const adminLoginIdInput = document.getElementById("admin-login-id");
       const adminLoginPasswordInput = document.getElementById("admin-login-password");
@@ -3456,6 +3460,7 @@
       let isAuthenticated = false;
       let isAdminSession = false;
       let signedInStudentId = "";
+      let signedInEmail = "";
       let registeredUsers = [];
       let vocabStudyMode = "cards";
       let vocabVisualMode = "text";
@@ -3501,10 +3506,32 @@
       };
 
       const normalizeStudentId = (value = "") => String(value).trim().toLowerCase();
+      const normalizeEmail = (value = "") => String(value).trim().toLowerCase();
+      const normalizeRegistrationNumber = (value = "") => {
+        const digits = String(value).replace(/\D/g, "");
+        if (!digits) return "";
+        return digits.padStart(2, "0");
+      };
       const isOfficialUser = (studentId = signedInStudentId) => normalizeStudentId(studentId) === OFFICIAL_USER_ID;
-      const createDefaultUserRegistry = () => [{ studentId: OFFICIAL_USER_ID, role: "official", createdAt: "system" }];
+      const BOOTSTRAP_REGISTERED_USERS = [
+        { studentId: "01", registrationNumber: "01", email: "kiyori.satoh@gmail.com", role: "student", createdAt: "2026-06-20" },
+        { studentId: "02", registrationNumber: "02", email: "nyonaha@chiba-u.jp", role: "student", createdAt: "2026-06-20" },
+        { studentId: "03", registrationNumber: "03", email: "satoh@hakuba.jp", role: "student", createdAt: "2026-06-20" }
+      ];
+      const createDefaultUserRegistry = () => [
+        { studentId: OFFICIAL_USER_ID, role: "official", createdAt: "system" },
+        ...BOOTSTRAP_REGISTERED_USERS
+      ];
       const createAuthEmail = (username) => `${normalizeStudentId(username)}@${AUTH_EMAIL_DOMAIN}`;
-      const getAuthUsername = (user) => normalizeStudentId(user && (user.app_metadata?.username || String(user.email || "").split("@")[0]));
+      const getAuthUsername = (user) => normalizeStudentId(
+        user && (
+          user.app_metadata?.username
+          || user.app_metadata?.student_id
+          || user.user_metadata?.registration_number
+          || user.user_metadata?.student_id
+          || String(user.email || "").split("@")[0]
+        )
+      );
       const getAuthRole = (user) => user?.app_metadata?.role || (getAuthUsername(user) === ADMIN_USERNAME ? "admin" : "student");
       const waitForSupabaseClient = async (timeoutMs = 5000) => {
         const start = Date.now();
@@ -3522,11 +3549,45 @@
         if (error) throw error;
         return data.user;
       };
+      const invokeAuthFunction = async (body) => {
+        const client = await waitForSupabaseClient();
+        const { data, error } = await client.functions.invoke(AUTH_FUNCTION_NAME, { body });
+        if (error) throw error;
+        if (!data || data.error) throw new Error(data?.error || "auth-function-error");
+        return data;
+      };
+      const signInWithRegistration = async (email, registrationNumber) => {
+        const client = await waitForSupabaseClient();
+        const data = await invokeAuthFunction({
+          action: "login",
+          email,
+          registrationNumber,
+          appUrl: PUBLIC_APP_URL
+        });
+        if (!data.session?.access_token || !data.session?.refresh_token) {
+          throw new Error("missing-session");
+        }
+        const { data: sessionData, error } = await client.auth.setSession({
+          access_token: data.session.access_token,
+          refresh_token: data.session.refresh_token
+        });
+        if (error) throw error;
+        return sessionData.session?.user || data.session.user;
+      };
+      const registerStudentByEmail = async (email) => {
+        const data = await invokeAuthFunction({
+          action: "register",
+          email,
+          appUrl: PUBLIC_APP_URL
+        });
+        return data;
+      };
       const applySupabaseUser = (user) => {
         const username = getAuthUsername(user);
         if (!username) {
           throw new Error("ユーザー情報を取得できませんでした。");
         }
+        signedInEmail = normalizeEmail(user.email || "");
         if (getAuthRole(user) === "admin" || username === ADMIN_USERNAME) {
           applyAdminState(username);
         } else {
@@ -3546,10 +3607,14 @@
         });
         if (Array.isArray(entries)) {
           entries.forEach((entry) => {
-            const studentId = normalizeStudentId(entry && entry.studentId);
-            if (!STUDENT_ID_PATTERN.test(studentId)) return;
+            const rawStudentId = entry && entry.studentId;
+            const studentId = REGISTRATION_NUMBER_PATTERN.test(normalizeRegistrationNumber(rawStudentId))
+              ? normalizeRegistrationNumber(rawStudentId)
+              : normalizeStudentId(rawStudentId);
+            if (!STUDENT_ID_PATTERN.test(studentId) && !REGISTRATION_NUMBER_PATTERN.test(studentId)) return;
             map.set(studentId, {
               studentId,
+              registrationNumber: entry && entry.registrationNumber ? normalizeRegistrationNumber(entry.registrationNumber) : "",
               role: studentId === OFFICIAL_USER_ID ? "official" : "student",
               createdAt: entry && entry.createdAt ? String(entry.createdAt) : getTodayKey(),
               email: entry && entry.email ? String(entry.email) : ""
@@ -3634,7 +3699,12 @@
         registeredUsers = loadUserRegistry();
         return registeredUsers;
       };
-      const isRegisteredUser = (studentId) => refreshRegisteredUsers().some((entry) => entry.studentId === normalizeStudentId(studentId));
+      const isRegisteredUser = (studentId) => {
+        const normalized = REGISTRATION_NUMBER_PATTERN.test(normalizeRegistrationNumber(studentId))
+          ? normalizeRegistrationNumber(studentId)
+          : normalizeStudentId(studentId);
+        return refreshRegisteredUsers().some((entry) => entry.studentId === normalized);
+      };
       const getScopedStorageKey = (baseKey, studentId = signedInStudentId) =>
         studentId ? `${baseKey}:${normalizeStudentId(studentId)}` : baseKey;
       const readScopedJson = (baseKey, studentId) => {
@@ -3717,7 +3787,7 @@
 
       const clearLoginForm = () => {
         loginError.textContent = "";
-        passwordInput.value = "";
+        registrationNumberInput.value = "";
       };
 
       const saveAuthSession = () => {
@@ -3757,7 +3827,7 @@
       const applyAuthenticatedState = (studentId) => {
         isAuthenticated = true;
         signedInStudentId = normalizeStudentId(studentId);
-        currentUserId.textContent = signedInStudentId;
+        currentUserId.textContent = signedInEmail || signedInStudentId;
         loginError.textContent = "";
         refreshRegisteredUsers();
         setAppVisibility(true);
@@ -3769,7 +3839,7 @@
         isAuthenticated = true;
         isAdminSession = true;
         signedInStudentId = normalizeStudentId(studentId);
-        currentUserId.textContent = `${signedInStudentId} / 管理者`;
+        currentUserId.textContent = `${signedInEmail || signedInStudentId} / 管理者`;
         refreshRegisteredUsers();
         setAppVisibility(true);
         updateAdminAccess();
@@ -3787,6 +3857,7 @@
           await supabaseAuthClient.auth.signOut();
         }
         signedInStudentId = "";
+        signedInEmail = "";
         clearAuthSession();
         currentUserId.textContent = "--";
         clearLoginForm();
@@ -8757,56 +8828,63 @@
         renderAdminPage();
         setStatus("管理画面を更新しました。", "success");
       });
-      adminStudentIdInput.addEventListener("input", () => {
-        adminStudentIdInput.value = normalizeStudentId(adminStudentIdInput.value);
-      });
       adminUserForm.addEventListener("submit", (event) => {
         event.preventDefault();
-        const studentId = normalizeStudentId(adminStudentIdInput.value);
-        if (!STUDENT_ID_PATTERN.test(studentId)) {
-          adminFormMessage.textContent = "ユーザー名は3〜32文字の英数字・ハイフン・アンダーバーで入力してください。";
-          adminStudentIdInput.focus();
+        const email = normalizeEmail(adminStudentEmailInput.value);
+        if (!EMAIL_PATTERN.test(email)) {
+          adminFormMessage.textContent = "登録するメールアドレスを入力してください。";
+          adminStudentEmailInput.focus();
           return;
         }
-        if (isRegisteredUser(studentId)) {
-          adminFormMessage.textContent = "そのユーザー名はすでに登録されています。";
-          adminStudentIdInput.focus();
-          return;
-        }
-        registeredUsers = normalizeUserRegistry([...registeredUsers, { studentId, role: "student", createdAt: getTodayKey(), email: adminStudentEmailInput.value.trim() }]);
-        saveUserRegistry();
-        adminStudentIdInput.value = "";
-        adminStudentEmailInput.value = "";
-        adminFormMessage.textContent = "";
-        renderAdminPage();
-        setStatus(`${studentId} を登録しました。`, "success");
-      });
-      studentIdInput.addEventListener("input", () => {
-        studentIdInput.value = String(studentIdInput.value || "").trim().toLowerCase();
+        adminFormMessage.textContent = "登録中です...";
+        registerStudentByEmail(email)
+          .then((data) => {
+            const registrationNumber = normalizeRegistrationNumber(data.registrationNumber);
+            adminStudentIdInput.value = registrationNumber;
+            registeredUsers = normalizeUserRegistry([
+              ...registeredUsers,
+              {
+                studentId: registrationNumber,
+                registrationNumber,
+                role: "student",
+                createdAt: getTodayKey(),
+                email
+              }
+            ]);
+            saveUserRegistry();
+            adminStudentEmailInput.value = "";
+            adminFormMessage.textContent = `${registrationNumber} を ${email} に発行しました。`;
+            renderAdminPage();
+            setStatus(`${registrationNumber} を登録しました。`, "success");
+          })
+          .catch(() => {
+            adminFormMessage.textContent = "登録できませんでした。Supabase関数・管理者権限・service role keyを確認してください。";
+            adminStudentEmailInput.focus();
+          });
       });
       loginForm.addEventListener("submit", (event) => {
         event.preventDefault();
-        const username = normalizeStudentId(studentIdInput.value);
-        const password = passwordInput.value;
-        if (!STUDENT_ID_PATTERN.test(username)) {
-          loginError.textContent = "ユーザー名は3〜32文字の英数字・ハイフン・アンダーバーで入力してください。";
+        const email = normalizeEmail(studentIdInput.value);
+        const registrationNumber = normalizeRegistrationNumber(registrationNumberInput.value);
+        if (!REGISTRATION_NUMBER_PATTERN.test(registrationNumber)) {
+          loginError.textContent = "登録番号を正しく入力してください。";
+          registrationNumberInput.focus();
+          return;
+        }
+        if (!EMAIL_PATTERN.test(email)) {
+          loginError.textContent = "メールアドレスを正しく入力してください。";
           studentIdInput.focus();
           return;
         }
-        if (!password) {
-          loginError.textContent = "パスワードを入力してください。";
-          passwordInput.focus();
-          return;
-        }
         loginError.textContent = "";
-        signInWithUsername(username, password)
+        signInWithRegistration(email, registrationNumber)
           .then((user) => {
             applySupabaseUser(user);
             setStatus("ログインしました。", "success");
           })
           .catch(() => {
-            loginError.textContent = "ユーザー名またはパスワードが違います。";
-            passwordInput.focus();
+            loginError.textContent = "登録番号またはメールアドレスが違います。管理者から届いた内容を確認してください。";
+            registrationNumberInput.focus();
           });
       });
       adminLoginForm.addEventListener("submit", (event) => {
@@ -8883,7 +8961,7 @@
       clearAuthSession();
       setAppVisibility(false);
       tryRestoreAuthSession().then((restored) => {
-        if (!restored) studentIdInput.focus();
+        if (!restored) registrationNumberInput.focus();
       });
     </script>
   </body>
