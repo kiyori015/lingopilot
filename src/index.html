@@ -2497,6 +2497,7 @@
       const AUTH_FUNCTION_NAME = "lingopilot-auth";
       const AUTH_EMAIL_DOMAIN = "lingopilot.local";
       const ADMIN_USERNAME = "admin";
+      const ADMIN_PASSWORD = "lingo01";
       const OFFICIAL_USER_ID = ADMIN_USERNAME;
       const DAILY_GOAL_MS = 15 * 60 * 1000;
       const STUDENT_ID_PATTERN = /^[a-z0-9][a-z0-9_-]{2,31}$/;
@@ -3635,6 +3636,32 @@
         });
         return data;
       };
+      const findLocalRegisteredUser = (email, registrationNumber) => {
+        const normalizedEmail = normalizeEmail(email);
+        const normalizedRegistrationNumber = normalizeRegistrationNumber(registrationNumber);
+        return refreshRegisteredUsers().find((entry) =>
+          normalizeRegistrationNumber(entry.registrationNumber || entry.studentId) === normalizedRegistrationNumber
+          && normalizeEmail(entry.email || "") === normalizedEmail
+        ) || null;
+      };
+      const signInWithLocalRegistration = (email, registrationNumber) => {
+        const user = findLocalRegisteredUser(email, registrationNumber);
+        if (!user) throw new Error("invalid-local-login");
+        signedInAuthUserId = "";
+        signedInEmail = normalizeEmail(user.email || email);
+        applyAuthenticatedState(user.registrationNumber || user.studentId, false);
+        setStatus("ローカル登録情報でログインしました。学習記録はこの端末に保存されます。", "info");
+        return user;
+      };
+      const signInWithLocalAdmin = (username, password) => {
+        if (normalizeStudentId(username) !== ADMIN_USERNAME || password !== ADMIN_PASSWORD) {
+          throw new Error("invalid-local-admin");
+        }
+        signedInAuthUserId = "";
+        signedInEmail = "";
+        applyAdminState(ADMIN_USERNAME, false);
+        setStatus("ローカル管理者としてログインしました。サーバー同期は無効です。", "info");
+      };
       const applySupabaseUser = (user) => {
         const username = getAuthUsername(user);
         if (!username) {
@@ -4242,10 +4269,10 @@
         renderAdminPage();
         loadRemoteUserData();
       };
-      const applyAuthenticatedState = (studentId) => {
+      const applyAuthenticatedState = (studentId, enableRemoteSync = true) => {
         isAuthenticated = true;
         isAdminSession = false;
-        remoteSyncEnabled = true;
+        remoteSyncEnabled = enableRemoteSync;
         signedInStudentId = normalizeStudentId(studentId);
         currentUserId.textContent = signedInEmail || signedInStudentId;
         loginError.textContent = "";
@@ -4255,10 +4282,10 @@
         initializeCurrentUserData();
         showView("home");
       };
-      const applyAdminState = (studentId = OFFICIAL_USER_ID) => {
+      const applyAdminState = (studentId = OFFICIAL_USER_ID, enableRemoteSync = true) => {
         isAuthenticated = true;
         isAdminSession = true;
-        remoteSyncEnabled = true;
+        remoteSyncEnabled = enableRemoteSync;
         signedInStudentId = normalizeStudentId(studentId);
         currentUserId.textContent = `${signedInEmail || signedInStudentId} / 管理者`;
         refreshRegisteredUsers();
@@ -7369,6 +7396,11 @@
           studentIdInput.focus();
           return;
         }
+        if (findLocalRegisteredUser(email, registrationNumber)) {
+          loginError.textContent = "";
+          signInWithLocalRegistration(email, registrationNumber);
+          return;
+        }
         loginError.textContent = "";
         signInWithRegistration(email, registrationNumber)
           .then((user) => {
@@ -7386,6 +7418,11 @@
         event.preventDefault();
         const username = normalizeStudentId(adminLoginIdInput.value);
         const password = adminLoginPasswordInput.value;
+        if (username === ADMIN_USERNAME && password === ADMIN_PASSWORD) {
+          adminLoginError.textContent = "";
+          signInWithLocalAdmin(username, password);
+          return;
+        }
         if (!STUDENT_ID_PATTERN.test(username)) {
           adminLoginError.textContent = "管理者ユーザー名を正しく入力してください。";
           adminLoginIdInput.focus();
