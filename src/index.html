@@ -474,6 +474,42 @@
         font-weight: 700;
       }
 
+      .audio-focus-grid,
+      .review-recommend-list {
+        display: grid;
+        gap: 12px;
+      }
+
+      .audio-focus-card,
+      .review-recommend-card {
+        border: 1px solid rgba(0, 127, 127, 0.16);
+        border-radius: 18px;
+        padding: 14px;
+        background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(230, 242, 240, 0.38));
+      }
+
+      .audio-focus-card .ko-text {
+        display: none;
+      }
+
+      .audio-focus-card.show-text .ko-text {
+        display: block;
+      }
+
+      .audio-focus-card .meaning-line {
+        font-size: 1.05rem;
+        font-weight: 700;
+        margin: 0 0 10px;
+      }
+
+      .audio-focus-actions,
+      .review-recommend-actions {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        align-items: center;
+      }
+
       .sentence-list {
         display: grid;
         gap: 12px;
@@ -1954,6 +1990,11 @@
             <h3>学習記録</h3>
             <p>学習時間、連続日数、正答率、得意・苦手をここで確認します。</p>
           </div>
+          <div class="stats-card" style="margin-bottom: 14px">
+            <h4>今日のおすすめ復習</h4>
+            <p class="support-note">一度学んだ章を、翌日・3日後・7日後にもう一度聞いて定着させます。</p>
+            <div id="review-recommend-list" class="review-recommend-list"></div>
+          </div>
           <div class="learning-summary">
             <article class="log-card">
               <h4>今日の学習時間</h4>
@@ -2183,6 +2224,20 @@
               <div id="scene-illustration"></div>
             </section>
 
+            <section id="audio-focus-panel" class="panel">
+              <div class="panel-title">
+                <div>
+                  <h3>音でわかる練習</h3>
+                  <p>文字を見る前に、音を聞いて意味を思い浮かべます。</p>
+                </div>
+                <div class="audio-focus-actions">
+                  <button id="audio-focus-play-all" class="primary-btn" type="button">5フレーズを聞く</button>
+                  <button id="audio-focus-repeat" class="secondary-btn" type="button">3回リピート</button>
+                </div>
+              </div>
+              <div id="audio-focus-list" class="audio-focus-grid"></div>
+            </section>
+
             <section id="basic-panel" class="panel">
               <div class="panel-title">
                 <h3>基本例文</h3>
@@ -2297,6 +2352,7 @@
               </div>
               <div class="result-actions">
                 <button id="grade-all" class="secondary-btn" type="button">章の採点</button>
+                <button id="review-complete" class="secondary-btn" type="button">今日の復習完了</button>
                 <button id="support-open" class="secondary-btn" type="button" hidden>補講へ</button>
                 <button id="next-chapter" class="primary-btn" type="button">次章へ</button>
               </div>
@@ -2424,6 +2480,7 @@
       const STUDY_IDLE_MS = 2 * 60 * 1000;
       const CORE_PHRASE_LIMIT = 5;
       const CORE_GRAMMAR_LIMIT = 3;
+      const REVIEW_INTERVAL_DAYS = [1, 3, 7];
       const isListeningChapter = (chapter) => chapter.type === "listening";
       const isColumnChapter = (chapter) => chapter.type === "column";
       const hasListeningPanel = (chapter) => isListeningChapter(chapter) || (!isColumnChapter(chapter) && chapter.id > 0 && chapter.id % 3 === 0);
@@ -3371,6 +3428,10 @@
       const dialogueList = document.getElementById("dialogue-list");
       const scenePanel = document.getElementById("scene-panel");
       const sceneIllustration = document.getElementById("scene-illustration");
+      const audioFocusPanel = document.getElementById("audio-focus-panel");
+      const audioFocusList = document.getElementById("audio-focus-list");
+      const audioFocusPlayAllButton = document.getElementById("audio-focus-play-all");
+      const audioFocusRepeatButton = document.getElementById("audio-focus-repeat");
       const vocabPanel = document.getElementById("vocab-panel");
       const vocabList = document.getElementById("vocab-list");
       const flashcardPanel = document.getElementById("flashcard-panel");
@@ -3391,6 +3452,7 @@
       const chapterRating = document.getElementById("chapter-rating");
       const chapterRatingNote = document.getElementById("chapter-rating-note");
       const gradeAllButton = document.getElementById("grade-all");
+      const reviewCompleteButton = document.getElementById("review-complete");
       const supportOpenButton = document.getElementById("support-open");
       const nextChapterButton = document.getElementById("next-chapter");
       const overallScore = document.getElementById("overall-score");
@@ -3412,6 +3474,7 @@
       const reminderTimeInput = document.getElementById("reminder-time");
       const reminderSaveButton = document.getElementById("reminder-save");
       const reminderStatus = document.getElementById("reminder-status");
+      const reviewRecommendList = document.getElementById("review-recommend-list");
       const quickQuestionInput = document.getElementById("quick-question-input");
       const quickQuestionSaveButton = document.getElementById("quick-question-save");
       const quickQuestionAnswer = document.getElementById("quick-question-answer");
@@ -3483,6 +3546,11 @@
           .split("-")
           .map(Number);
         return new Date(year, (month || 1) - 1, day || 1);
+      };
+      const addDaysToDateKey = (dateKey, days) => {
+        const date = parseDateKey(dateKey);
+        date.setDate(date.getDate() + days);
+        return getDateKey(date);
       };
       const getTodayKey = () => getDateKey(new Date());
       const formatMinutes = (ms) => {
@@ -4461,7 +4529,8 @@
             quiz: { krjp: {}, jpkr: {} },
             listening: {},
             cards: {},
-            vocabBook: {}
+            vocabBook: {},
+            review: { count: 0, lastReviewed: "", nextReviewDate: "" }
           });
         }
         const state = progress.get(chapter.id);
@@ -4471,6 +4540,7 @@
         if (!state.listening) state.listening = {};
         if (!state.cards) state.cards = {};
         if (!state.vocabBook) state.vocabBook = {};
+        if (!state.review) state.review = { count: 0, lastReviewed: "", nextReviewDate: "" };
         chapter.quizSets.krjp.forEach((question) => {
           if (!state.quiz.krjp[question.id]) {
             state.quiz.krjp[question.id] = { selected: null, correct: null };
@@ -4788,6 +4858,67 @@
           event.currentTarget.textContent = transcript.hidden ? "会話文と日本語訳を見る" : "会話文を閉じる";
           markStudyActivity();
         });
+      };
+
+      const playAudioFocusItems = (items, repeat = 1) => {
+        if (!items.length || !("speechSynthesis" in window)) return;
+        window.speechSynthesis.cancel();
+        const queue = [];
+        for (let round = 0; round < repeat; round += 1) {
+          items.forEach((item) => queue.push(item));
+        }
+        queue.forEach((item) => {
+          const utterance = new SpeechSynthesisUtterance(item.ko);
+          utterance.lang = "ko-KR";
+          utterance.rate = 0.72;
+          utterance.pitch = 1;
+          if (preferredVoice) utterance.voice = preferredVoice;
+          window.speechSynthesis.speak(utterance);
+        });
+        markStudyActivity();
+      };
+
+      const renderAudioFocusPanel = (chapter) => {
+        const focusItems = getCoreBasics(chapter);
+        audioFocusPanel.hidden = isListeningChapter(chapter) || isColumnChapter(chapter) || !focusItems.length;
+        audioFocusList.innerHTML = "";
+        if (audioFocusPanel.hidden) return;
+
+        focusItems.forEach((item, index) => {
+          const card = document.createElement("article");
+          card.className = "audio-focus-card";
+          card.innerHTML = `
+            <span class="entry-badge">音 ${index + 1}</span>
+            <p class="meaning-line">${escapeHtml(item.ja)}</p>
+            <div class="ko-text">${renderKoreanWithPronunciation(item.ko, "ko")}</div>
+            <div class="audio-focus-actions">
+              <button class="listen-btn" type="button" data-audio-focus-play>聞く</button>
+              <button class="secondary-btn" type="button" data-audio-focus-text>文字を見る</button>
+              <button class="record-btn" type="button" data-audio-focus-record>録音</button>
+              <button class="record-btn" type="button" data-audio-focus-playback disabled>再生</button>
+            </div>
+          `;
+          const playButton = card.querySelector("[data-audio-focus-play]");
+          const textButton = card.querySelector("[data-audio-focus-text]");
+          const recordButton = card.querySelector("[data-audio-focus-record]");
+          const playbackButton = card.querySelector("[data-audio-focus-playback]");
+          playButton.addEventListener("click", () => speakSlow(item.ko, card, "ko"));
+          textButton.addEventListener("click", () => {
+            card.classList.toggle("show-text");
+            textButton.textContent = card.classList.contains("show-text") ? "文字を隠す" : "文字を見る";
+            markStudyActivity();
+          });
+          if (recordingSupported) {
+            recordButton.addEventListener("click", () => toggleRecording(card, recordButton, playbackButton));
+          } else {
+            recordButton.disabled = true;
+            recordButton.textContent = "録音不可";
+          }
+          audioFocusList.appendChild(card);
+        });
+
+        audioFocusPlayAllButton.onclick = () => playAudioFocusItems(focusItems, 1);
+        audioFocusRepeatButton.onclick = () => playAudioFocusItems(focusItems, 3);
       };
 
       const getAudioStream = async () => {
@@ -5787,6 +5918,107 @@
         };
       };
 
+      const getReviewIntervalDays = (reviewCount = 0) => REVIEW_INTERVAL_DAYS[Math.min(Math.max(reviewCount, 0), REVIEW_INTERVAL_DAYS.length - 1)];
+
+      const getChapterReviewInfo = (chapter) => {
+        const state = progress.get(chapter.id);
+        const review = state && state.review ? state.review : { count: 0, lastReviewed: "", nextReviewDate: "" };
+        return {
+          count: Number(review.count) || 0,
+          lastReviewed: review.lastReviewed || "",
+          nextReviewDate: review.nextReviewDate || ""
+        };
+      };
+
+      const getReviewRecommendations = () => {
+        const todayKey = getTodayKey();
+        return baseChapters
+          .map((chapter) => {
+            const state = progress.get(chapter.id);
+            if (!state || isListeningChapter(chapter) || isColumnChapter(chapter)) return null;
+            const stats = computeStoredChapterStats(chapter, state);
+            if (!stats.completed) return null;
+            const review = getChapterReviewInfo(chapter);
+            const nextDate = review.nextReviewDate || todayKey;
+            if (nextDate > todayKey) return null;
+            return {
+              chapter,
+              review,
+              nextDate,
+              nextCount: review.count + 1
+            };
+          })
+          .filter(Boolean)
+          .sort((a, b) => a.nextDate.localeCompare(b.nextDate) || a.review.count - b.review.count)
+          .slice(0, 3);
+      };
+
+      const startReviewChapter = (chapterId) => {
+        const index = chapters.findIndex((chapter) => chapter.id === chapterId);
+        if (index < 0) return;
+        currentChapterIndex = index;
+        saveProgress();
+        flashcardMode = "audio";
+        if (flashcardDisplayMode) flashcardDisplayMode.value = "audio";
+        renderChapter("main");
+        const audioIndex = activeLessonSteps.findIndex((step) => step.id === "audio");
+        setLessonStep(audioIndex >= 0 ? audioIndex : 0);
+        showView("main");
+        setStatus("今日は文字を見る前に、まず音だけで復習しましょう。", "success");
+      };
+
+      const renderReviewRecommendations = () => {
+        if (!reviewRecommendList) return;
+        const recommendations = getReviewRecommendations();
+        reviewRecommendList.innerHTML = "";
+        if (!recommendations.length) {
+          const empty = document.createElement("div");
+          empty.className = "review-recommend-card";
+          empty.innerHTML = `
+            <strong>今日の復習はありません</strong>
+            <p>新しい章を進めるか、前に学んだ章を「聞く」からもう一度練習できます。</p>
+          `;
+          reviewRecommendList.appendChild(empty);
+          return;
+        }
+        recommendations.forEach(({ chapter, review, nextDate, nextCount }) => {
+          const card = document.createElement("div");
+          card.className = "review-recommend-card";
+          card.innerHTML = `
+            <div>
+              <strong>${escapeHtml(chapter.title)}</strong>
+              <p>復習${nextCount}回目 / 予定日: ${formatDateLabel(nextDate)}</p>
+            </div>
+            <div class="review-recommend-actions">
+              <button type="button" data-review-chapter="${escapeHtml(chapter.id)}">音で復習</button>
+              <span>${review.lastReviewed ? `前回: ${formatDateLabel(review.lastReviewed)}` : "初回復習"}</span>
+            </div>
+          `;
+          card.querySelector("button").addEventListener("click", () => startReviewChapter(chapter.id));
+          reviewRecommendList.appendChild(card);
+        });
+      };
+
+      const markChapterReviewComplete = (chapter) => {
+        if (!chapter || isListeningChapter(chapter) || isColumnChapter(chapter)) return;
+        const state = ensureProgress(chapter);
+        const todayKey = getTodayKey();
+        if (state.review.lastReviewed === todayKey) {
+          setStatus("この章の今日の復習はすでに記録済みです。", "info");
+          return;
+        }
+        const currentCount = Number(state.review.count) || 0;
+        const nextCount = currentCount + 1;
+        state.review.count = nextCount;
+        state.review.lastReviewed = todayKey;
+        state.review.nextReviewDate = addDaysToDateKey(todayKey, getReviewIntervalDays(nextCount - 1));
+        markStudyActivity();
+        saveProgress();
+        renderReviewRecommendations();
+        updateChapterStats(chapter);
+        setStatus(`復習${nextCount}回目を記録しました。次は${formatDateLabel(state.review.nextReviewDate)}です。`, "success");
+      };
+
       const getStoredAreaTrends = (progressData) => {
         const progressEntries = progressData && progressData.progress && typeof progressData.progress === "object" ? progressData.progress : {};
         const chapterStats = baseChapters
@@ -5877,6 +6109,7 @@
           return acc;
         }, { answered: 0, correct: 0, completed: 0 });
         const totalStudyTime = Array.from(history.values()).reduce((sum, record) => sum + (record.timeMs || 0), 0);
+        renderReviewRecommendations();
         document.getElementById("today-study-time").textContent = formatMinutes(today.timeMs || 0);
         document.getElementById("current-streak").textContent = `${streak}日`;
         document.getElementById("total-study-time").textContent = formatMinutes(totalStudyTime);
@@ -6212,6 +6445,13 @@
       const updateChapterStats = (chapter) => {
         const stats = computeChapterStats(chapter);
         const percent = Math.round(stats.accuracy * 100);
+        const review = getChapterReviewInfo(chapter);
+        if (reviewCompleteButton) {
+          reviewCompleteButton.textContent = review.lastReviewed === getTodayKey()
+            ? `復習${review.count}回目 記録済み`
+            : `復習${review.count + 1}回目を記録`;
+          reviewCompleteButton.disabled = review.lastReviewed === getTodayKey();
+        }
         chapterScore.textContent = `正答率: ${percent}%`;
         chapterProgressDetail.textContent = `回答済み: ${stats.answered} / ${stats.total}`;
 
@@ -6770,6 +7010,7 @@
 
       const getLessonPanelDefinitions = () => [
         { id: "scene", label: "場面", panel: scenePanel },
+        { id: "audio", label: "聞く", panel: audioFocusPanel },
         { id: "basic", label: "基本", panel: basicPanel },
         { id: "grammar", label: "文法", panel: grammarPanel },
         { id: "vocab", label: "単語", panel: vocabPanel },
@@ -6835,7 +7076,9 @@
         chapterLabel.textContent = isColumnChapter(chapter) ? `Vocabulary Column ${chapter.columnNumber}` : listeningOnly ? "Listening Chapter" : "Chapter";
 
         renderSceneIllustration(chapter);
+        renderAudioFocusPanel(chapter);
         scenePanel.hidden = listeningOnly || columnOnly;
+        audioFocusPanel.hidden = listeningOnly || columnOnly || audioFocusPanel.hidden;
         basicPanel.hidden = listeningOnly;
         grammarPanel.hidden = listeningOnly;
         dialoguePanel.hidden = true;
@@ -7070,6 +7313,10 @@
         });
         renderChapter("main");
         setStatus("誤答のみリセットしました。", "success");
+      });
+
+      reviewCompleteButton.addEventListener("click", () => {
+        markChapterReviewComplete(chapters[currentChapterIndex]);
       });
 
       studentIdInput.addEventListener("input", () => {
