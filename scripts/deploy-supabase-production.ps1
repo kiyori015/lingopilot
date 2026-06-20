@@ -5,6 +5,44 @@ param(
 
 $ErrorActionPreference = "Stop"
 
+function Import-DotEnvFile {
+  param([string]$Path)
+
+  if (-not (Test-Path -LiteralPath $Path)) {
+    return
+  }
+
+  Get-Content -LiteralPath $Path | ForEach-Object {
+    $line = $_.Trim()
+    if (-not $line -or $line.StartsWith("#")) {
+      return
+    }
+
+    $separatorIndex = $line.IndexOf("=")
+    if ($separatorIndex -lt 1) {
+      return
+    }
+
+    $name = $line.Substring(0, $separatorIndex).Trim()
+    $value = $line.Substring($separatorIndex + 1).Trim()
+
+    if (
+      ($value.StartsWith('"') -and $value.EndsWith('"')) -or
+      ($value.StartsWith("'") -and $value.EndsWith("'"))
+    ) {
+      $value = $value.Substring(1, $value.Length - 2)
+    }
+
+    if (-not (Get-Item -LiteralPath "Env:$name" -ErrorAction SilentlyContinue)) {
+      Set-Item -LiteralPath "Env:$name" -Value $value
+    }
+  }
+}
+
+$repoRoot = Split-Path -Parent $PSScriptRoot
+Import-DotEnvFile -Path (Join-Path $repoRoot ".env")
+Import-DotEnvFile -Path (Join-Path $repoRoot ".env.local")
+
 if (-not $env:SUPABASE_ACCESS_TOKEN) {
   throw "SUPABASE_ACCESS_TOKEN is required. Create one in Supabase Dashboard > Account > Access Tokens."
 }
@@ -35,10 +73,6 @@ $secretArgs = @(
   "LINGOPILOT_LOGIN_PEPPER=$env:LINGOPILOT_LOGIN_PEPPER",
   "LINGOPILOT_APP_URL=$AppUrl"
 )
-
-if ($env:SUPABASE_SERVICE_ROLE_KEY) {
-  $secretArgs += "SUPABASE_SERVICE_ROLE_KEY=$env:SUPABASE_SERVICE_ROLE_KEY"
-}
 
 npx supabase secrets set --project-ref $ProjectRef @secretArgs
 
