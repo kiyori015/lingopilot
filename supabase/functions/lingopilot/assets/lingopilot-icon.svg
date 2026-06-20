@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title desc">
+  <title id="title">韓国語ラボ アイコン</title>
+  <desc id="desc">韓国語学習アプリのホーム画面アイコン</desc>
+  <rect width="512" height="512" rx="108" fill="#2f6f73"/>
+  <path d="M128 142c0-26 21-47 47-47h162c26 0 47 21 47 47v228c0 26-21 47-47 47H175c-26 0-47-21-47-47V142z" fill="#fff8ef"/>
+  <path d="M174 156h164M174 206h164M174 256h102" stroke="#234447" stroke-width="22" stroke-linecap="round"/>
+  <circle cx="326" cy="309" r="54" fill="#f3bc4f"/>
+  <path d="M300 310c0-20 11-35 26-35s26 15 26 35-11 35-26 35-26-15-26-35z" fill="#2f6f73"/>
+  <path d="M177 350h72" stroke="#d95f42" stroke-width="22" stroke-linecap="round"/>
+</svg>

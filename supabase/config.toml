@@ -416,4 +416,15 @@ import_map = "./functions/lingopilot/deno.json"
 entrypoint = "./functions/lingopilot/index.ts"
 # Specifies static files to be bundled with the function. Supports glob patterns.
 # For example, if you want to serve static HTML pages in your function:
-static_files = [ "./functions/lingopilot/*.html" ]
+static_files = [
+  "./functions/lingopilot/*.html",
+  "./functions/lingopilot/*.webmanifest",
+  "./functions/lingopilot/*.js",
+  "./functions/lingopilot/assets/*"
+]
+
+[functions.lingopilot-auth]
+enabled = true
+verify_jwt = false
+import_map = "./functions/lingopilot-auth/deno.json"
+entrypoint = "./functions/lingopilot-auth/index.ts"

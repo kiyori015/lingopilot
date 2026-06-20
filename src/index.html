@@ -3,7 +3,9 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#2f6f73" />
     <title>はじめての韓国語ラボ</title>
+    <link rel="manifest" href="./manifest.webmanifest" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -1795,28 +1797,28 @@
             <section class="auth-hero">
               <p class="eyebrow">LOGIN</p>
               <h2>韓国語版の学習を始める前にログイン</h2>
-              <p>学籍番号ごとに学習状況を分けて保存し、オフィシャルユーザーだけが他の学習記録を確認できるようにします。</p>
+              <p>登録済みメールアドレスごとに学習状況を保存し、管理者だけが全員の学習記録を確認できるようにします。</p>
               <div class="auth-chip-row">
-                <span class="chip">ユーザー名</span>
+                <span class="chip">登録番号</span>
                 <span class="chip">Supabase Auth</span>
-                <span class="chip">管理者確認</span>
+                <span class="chip">学習記録同期</span>
               </div>
-              <p class="auth-note">配布されたユーザー名とパスワードでログインしてください。</p>
+              <p class="auth-note">管理者から届いたQRコードで開き、登録番号とメールアドレスでログインしてください。2回目以降はこの端末のログイン状態を使えます。</p>
             </section>
             <section class="auth-form">
               <div>
                 <p class="chapter-label">Korean Starter</p>
                 <h3>ログイン</h3>
-                <p class="auth-hint">Supabase Authで認証して学習画面を開きます。</p>
+                <p class="auth-hint">登録番号とメールアドレスを確認して、マイページを開きます。</p>
               </div>
               <form id="login-form">
                 <div class="auth-field">
-                  <label for="student-id-input">ユーザー名</label>
-                  <input id="student-id-input" name="studentId" type="text" inputmode="text" autocomplete="username" placeholder="student1" maxlength="32" required />
+                  <label for="registration-number-input">登録番号</label>
+                  <input id="registration-number-input" name="registrationNumber" type="text" inputmode="numeric" autocomplete="one-time-code" placeholder="01" maxlength="4" required />
                 </div>
                 <div class="auth-field">
-                  <label for="password-input">パスワード</label>
-                  <input id="password-input" name="password" type="password" autocomplete="current-password" placeholder="パスワード" required />
+                  <label for="student-id-input">メールアドレス</label>
+                  <input id="student-id-input" name="email" type="email" inputmode="email" autocomplete="email" placeholder="student@example.com" required />
                 </div>
                 <p id="login-error" class="auth-error" aria-live="polite"></p>
                 <button class="primary-btn" type="submit">ログイン</button>
@@ -2311,17 +2313,18 @@
           <section class="panel">
             <div class="panel-title">
               <h3>ユーザー登録</h3>
-              <p>ログイン後のローカル保存データをユーザー名ごとに確認できます。</p>
+              <p>メールアドレスを登録すると、登録順に01、02、03...の番号を発行します。</p>
             </div>
             <form id="admin-user-form" class="admin-form">
               <div class="admin-inline">
-                <input id="admin-student-id" type="text" inputmode="text" maxlength="32" placeholder="student2" required />
-                <input id="admin-student-email" type="email" inputmode="email" placeholder="student@example.com" />
-                <button class="primary-btn" type="submit">登録する</button>
+                <input id="admin-student-id" type="text" inputmode="numeric" maxlength="4" placeholder="自動採番" readonly />
+                <input id="admin-student-email" type="email" inputmode="email" placeholder="student@example.com" required />
+                <button class="primary-btn" type="submit">登録して案内文を作成</button>
               </div>
               <p id="admin-form-message" class="auth-error" aria-live="polite"></p>
             </form>
-            <p class="admin-note">Supabase Authのユーザー作成はダッシュボードまたは管理APIで行います。</p>
+            <div id="admin-invite-output" class="admin-note"></div>
+            <p class="admin-note">実際の登録・ログイン許可はSupabase Edge FunctionとSupabase Authで管理します。</p>
           </section>
 
           <section class="panel">
@@ -2362,12 +2365,25 @@
       const QUICK_QUESTION_STORAGE_KEY = "starter-quick-question";
       const SUPABASE_URL = "https://ieakvpwzhihqttcxegti.supabase.co";
       const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_w0n4fPh2Fus5U62MBIU7zA__zDNkwjc";
+      const PUBLIC_APP_URL = "https://kiyori015.github.io/lingopilot/";
+      const AUTH_FUNCTION_NAME = "lingopilot-auth";
       const AUTH_EMAIL_DOMAIN = "lingopilot.local";
       const ADMIN_USERNAME = "admin";
       const OFFICIAL_USER_ID = ADMIN_USERNAME;
       const DAILY_GOAL_MS = 15 * 60 * 1000;
       const STUDENT_ID_PATTERN = /^[a-z0-9][a-z0-9_-]{2,31}$/;
       let supabaseAuthClient = null;
+      const getAppAssetBasePath = () =>
+        window.location.pathname.includes("/functions/v1/lingopilot") ? "/functions/v1/lingopilot/" : "./";
+      const manifestLink = document.querySelector('link[rel="manifest"]');
+      if (manifestLink) {
+        manifestLink.setAttribute("href", `${getAppAssetBasePath()}manifest.webmanifest`);
+      }
+      if ("serviceWorker" in navigator && window.location.protocol !== "file:") {
+        window.addEventListener("load", () => {
+          navigator.serviceWorker.register(`${getAppAssetBasePath()}sw.js`).catch(() => undefined);
+        });
+      }
       (async () => {
         try {
           if (window.supabase && typeof window.supabase.createClient === "function") {
@@ -3205,8 +3221,8 @@
       const appHeader = document.querySelector(".app-header");
       const loginForm = document.getElementById("login-form");
       const adminLoginForm = document.getElementById("admin-login-form");
+      const registrationNumberInput = document.getElementById("registration-number-input");
       const studentIdInput = document.getElementById("student-id-input");
-      const passwordInput = document.getElementById("password-input");
       const loginError = document.getElementById("login-error");
       const adminLoginIdInput = document.getElementById("admin-login-id");
       const adminLoginPasswordInput = document.getElementById("admin-login-password");
@@ -3259,6 +3275,7 @@
       const adminStudentIdInput = document.getElementById("admin-student-id");
       const adminStudentEmailInput = document.getElementById("admin-student-email");
       const adminFormMessage = document.getElementById("admin-form-message");
+      const adminInviteOutput = document.getElementById("admin-invite-output");
       const adminUserList = document.getElementById("admin-user-list");
       const adminRecordList = document.getElementById("admin-record-list");
       const chapterList = document.getElementById("chapter-list");
@@ -3333,7 +3350,14 @@
       let isAuthenticated = false;
       let isAdminSession = false;
       let signedInStudentId = "";
+      let signedInAuthUserId = "";
+      let signedInEmail = "";
       let registeredUsers = [];
+      let remoteSyncTimer = null;
+      let remoteSyncEnabled = true;
+      let remoteSyncInProgress = false;
+      let isLoadingRemoteData = false;
+      let adminRemoteRequestId = 0;
       let sessionStartTime = Date.now();
       let statusTimer = null;
       let preferredVoice = null;
@@ -3394,10 +3418,26 @@
         return `${date.getMonth() + 1}/${date.getDate()}`;
       };
       const normalizeStudentId = (value = "") => String(value).trim().toLowerCase();
+      const normalizeEmail = (value = "") => String(value).trim().toLowerCase();
+      const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      const normalizeRegistrationNumber = (value = "") => {
+        const digits = String(value).replace(/\D/g, "");
+        if (!digits) return "";
+        return digits.padStart(2, "0");
+      };
+      const REGISTRATION_NUMBER_PATTERN = /^[0-9]{2,4}$/;
       const isOfficialUser = (studentId = signedInStudentId) => normalizeStudentId(studentId) === OFFICIAL_USER_ID;
-      const createDefaultUserRegistry = () => [{ studentId: OFFICIAL_USER_ID, role: "official", createdAt: "system" }];
+      const BOOTSTRAP_REGISTERED_USERS = [
+        { studentId: "01", registrationNumber: "01", email: "kiyori.satoh@gmail.com", role: "student", createdAt: "2026-06-20" },
+        { studentId: "02", registrationNumber: "02", email: "nyonaha@chiba-u.jp", role: "student", createdAt: "2026-06-20" },
+        { studentId: "03", registrationNumber: "03", email: "satoh@hakuba.jp", role: "student", createdAt: "2026-06-20" }
+      ];
+      const createDefaultUserRegistry = () => [
+        { studentId: OFFICIAL_USER_ID, role: "official", createdAt: "system" },
+        ...BOOTSTRAP_REGISTERED_USERS
+      ];
       const createAuthEmail = (username) => `${normalizeStudentId(username)}@${AUTH_EMAIL_DOMAIN}`;
-      const getAuthUsername = (user) => normalizeStudentId(user && (user.app_metadata?.username || String(user.email || "").split("@")[0]));
+      const getAuthUsername = (user) => normalizeStudentId(user && (user.app_metadata?.username || user.app_metadata?.student_id || user.user_metadata?.student_id || String(user.email || "").split("@")[0]));
       const getAuthRole = (user) => user?.app_metadata?.role || (getAuthUsername(user) === ADMIN_USERNAME ? "admin" : "student");
       const waitForSupabaseClient = async (timeoutMs = 5000) => {
         const start = Date.now();
@@ -3416,11 +3456,46 @@
         if (error) throw error;
         return data.user;
       };
+      const invokeAuthFunction = async (body) => {
+        const client = await waitForSupabaseClient();
+        const { data, error } = await client.functions.invoke(AUTH_FUNCTION_NAME, { body });
+        if (error) throw error;
+        if (!data || data.error) throw new Error(data?.error || "auth-function-error");
+        return data;
+      };
+      const signInWithRegistration = async (email, registrationNumber) => {
+        const client = await waitForSupabaseClient();
+        const data = await invokeAuthFunction({
+          action: "login",
+          email,
+          registrationNumber,
+          appUrl: PUBLIC_APP_URL
+        });
+        if (!data.session?.access_token || !data.session?.refresh_token) {
+          throw new Error("missing-session");
+        }
+        const { data: sessionData, error } = await client.auth.setSession({
+          access_token: data.session.access_token,
+          refresh_token: data.session.refresh_token
+        });
+        if (error) throw error;
+        return sessionData.session?.user || data.session.user;
+      };
+      const registerStudentByEmail = async (email) => {
+        const data = await invokeAuthFunction({
+          action: "register",
+          email,
+          appUrl: PUBLIC_APP_URL
+        });
+        return data;
+      };
       const applySupabaseUser = (user) => {
         const username = getAuthUsername(user);
         if (!username) {
           throw new Error("ユーザー情報を取得できませんでした。");
         }
+        signedInAuthUserId = user.id || "";
+        signedInEmail = normalizeEmail(user.email || "");
         if (getAuthRole(user) === "admin" || username === ADMIN_USERNAME) {
           applyAdminState(username);
         } else {
@@ -3440,10 +3515,14 @@
         });
         if (Array.isArray(entries)) {
           entries.forEach((entry) => {
-            const studentId = normalizeStudentId(entry && entry.studentId);
-            if (!STUDENT_ID_PATTERN.test(studentId)) return;
+            const rawStudentId = entry && entry.studentId;
+            const studentId = REGISTRATION_NUMBER_PATTERN.test(normalizeRegistrationNumber(rawStudentId))
+              ? normalizeRegistrationNumber(rawStudentId)
+              : normalizeStudentId(rawStudentId);
+            if (!STUDENT_ID_PATTERN.test(studentId) && !REGISTRATION_NUMBER_PATTERN.test(studentId)) return;
             map.set(studentId, {
               studentId,
+              registrationNumber: entry && entry.registrationNumber ? normalizeRegistrationNumber(entry.registrationNumber) : "",
               role: studentId === OFFICIAL_USER_ID ? "official" : "student",
               createdAt: entry && entry.createdAt ? String(entry.createdAt) : getTodayKey(),
               email: entry && entry.email ? String(entry.email) : ""
@@ -3484,6 +3563,7 @@
           time: reminderTimeInput.value
         };
         localStorage.setItem(getScopedStorageKey(REMINDER_STORAGE_KEY), JSON.stringify(data));
+        scheduleRemoteSync();
         reminderStatus.textContent = data.email && data.time
           ? `${data.email} に毎日 ${data.time} のリマインドを送る設定を保存しました（実送信はサーバー連携が必要）。`
           : "メールアドレスと時刻を入力すると保存できます。";
@@ -3515,6 +3595,7 @@
         }
         const data = { text, at: new Date().toISOString() };
         localStorage.setItem(getScopedStorageKey(QUICK_QUESTION_STORAGE_KEY), JSON.stringify(data));
+        scheduleRemoteSync();
         quickQuestionAnswer.textContent = "質問を保存しました。先生に共有する場合は、この内容を管理者へ送ってください。";
         setStatus("質問メモを保存しました。", "success");
       };
@@ -3550,6 +3631,139 @@
             localStorage.setItem(scopedKey, legacyValue);
           }
         });
+      };
+      const serializeProgress = () => ({
+        version: 3,
+        currentChapterIndex,
+        currentChapterId: chapters[currentChapterIndex] ? chapters[currentChapterIndex].id : null,
+        progress: Object.fromEntries(progress)
+      });
+      const serializeHistoryRows = () =>
+        Array.from(history.entries()).map(([date, record]) => ({
+          user_id: signedInAuthUserId,
+          record_date: date,
+          time_ms: Number(record.timeMs) || 0,
+          answered: Number(record.answered) || 0,
+          correct: Number(record.correct) || 0,
+          chapters_completed: Number(record.chaptersCompleted) || 0
+        }));
+      const scheduleRemoteSync = () => {
+        if (!remoteSyncEnabled || isLoadingRemoteData || !signedInAuthUserId || !supabaseAuthClient) return;
+        window.clearTimeout(remoteSyncTimer);
+        remoteSyncTimer = window.setTimeout(() => {
+          syncCurrentUserToSupabase();
+        }, 900);
+      };
+      const applyRemoteState = (stateRow, dailyRows = []) => {
+        isLoadingRemoteData = true;
+        try {
+          if (stateRow) {
+            progress.clear();
+            Object.entries(stateRow.progress || {}).forEach(([key, value]) => {
+              const id = Number(key);
+              if (!Number.isNaN(id) && value && typeof value === "object") {
+                progress.set(id, value);
+              }
+            });
+            outputProgress.clear();
+            Object.entries(stateRow.output_progress || {}).forEach(([key, value]) => {
+              outputProgress.set(key, {
+                completedTurns: Number(value && value.completedTurns) || 0,
+                score: Number(value && value.score) || 0,
+                attempts: Number(value && value.attempts) || 0
+              });
+            });
+            if (Number.isInteger(stateRow.current_chapter_id)) {
+              const chapterIndex = chapters.findIndex((chapter) => chapter.id === stateRow.current_chapter_id);
+              if (chapterIndex !== -1) currentChapterIndex = chapterIndex;
+            } else if (Number.isInteger(stateRow.current_chapter_index)) {
+              currentChapterIndex = Math.max(0, Math.min(stateRow.current_chapter_index, chapters.length - 1));
+            }
+            if ("localStorage" in window) {
+              localStorage.setItem(getScopedStorageKey(STORAGE_KEY), JSON.stringify(serializeProgress()));
+              localStorage.setItem(getScopedStorageKey(OUTPUT_STORAGE_KEY), JSON.stringify(Object.fromEntries(outputProgress)));
+              localStorage.setItem(getScopedStorageKey(REMINDER_STORAGE_KEY), JSON.stringify(stateRow.reminder || {}));
+              localStorage.setItem(getScopedStorageKey(QUICK_QUESTION_STORAGE_KEY), JSON.stringify(stateRow.quick_question || {}));
+            }
+          }
+          if (Array.isArray(dailyRows) && dailyRows.length) {
+            history.clear();
+            dailyRows.forEach((row) => {
+              history.set(row.record_date, {
+                timeMs: Number(row.time_ms) || 0,
+                answered: Number(row.answered) || 0,
+                correct: Number(row.correct) || 0,
+                chaptersCompleted: Number(row.chapters_completed) || 0
+              });
+            });
+            saveHistory();
+          }
+        } finally {
+          isLoadingRemoteData = false;
+        }
+      };
+      const loadRemoteUserData = async () => {
+        if (!remoteSyncEnabled || !signedInAuthUserId || !supabaseAuthClient) return false;
+        try {
+          const [stateResult, dailyResult] = await Promise.all([
+            supabaseAuthClient
+              .from("user_app_state")
+              .select("current_chapter_id,current_chapter_index,progress,output_progress,reminder,quick_question")
+              .eq("user_id", signedInAuthUserId)
+              .maybeSingle(),
+            supabaseAuthClient
+              .from("daily_learning_records")
+              .select("record_date,time_ms,answered,correct,chapters_completed")
+              .eq("user_id", signedInAuthUserId)
+              .order("record_date", { ascending: true })
+          ]);
+          if (stateResult.error) throw stateResult.error;
+          if (dailyResult.error) throw dailyResult.error;
+          applyRemoteState(stateResult.data, dailyResult.data || []);
+          renderChapter("main");
+          renderHomePanels();
+          renderReminderSettings();
+          renderQuickQuestion();
+          renderVocabBook();
+          renderOutputMissions();
+          return true;
+        } catch (error) {
+          console.warn("Supabase learning sync is not available yet.", error);
+          remoteSyncEnabled = false;
+          return false;
+        }
+      };
+      const syncCurrentUserToSupabase = async () => {
+        if (!remoteSyncEnabled || remoteSyncInProgress || isLoadingRemoteData || !signedInAuthUserId || !supabaseAuthClient) return;
+        remoteSyncInProgress = true;
+        try {
+          const statePayload = {
+            user_id: signedInAuthUserId,
+            current_chapter_id: chapters[currentChapterIndex] ? chapters[currentChapterIndex].id : null,
+            current_chapter_index: currentChapterIndex,
+            progress: Object.fromEntries(progress),
+            output_progress: Object.fromEntries(outputProgress),
+            reminder: loadReminderSettings(),
+            quick_question: loadQuickQuestion()
+          };
+          const { error: stateError } = await supabaseAuthClient
+            .from("user_app_state")
+            .upsert(statePayload, { onConflict: "user_id" });
+          if (stateError) throw stateError;
+
+          const rows = serializeHistoryRows();
+          if (rows.length) {
+            const { error: dailyError } = await supabaseAuthClient
+              .from("daily_learning_records")
+              .upsert(rows, { onConflict: "user_id,record_date" });
+            if (dailyError) throw dailyError;
+          }
+        } catch (error) {
+          console.warn("Supabase learning sync failed.", error);
+          setStatus("学習記録は端末に一時保存中です。Supabase設定後に同期されます。", "info");
+        } finally {
+          remoteSyncInProgress = false;
+        }
       };
       const resetCurrentUserState = () => {
         clearStudyIdleTimer();
@@ -3765,6 +3979,7 @@
         if (!("localStorage" in window) || !signedInStudentId) return;
         try {
           localStorage.setItem(getScopedStorageKey(HISTORY_KEY), JSON.stringify(Object.fromEntries(history)));
+          scheduleRemoteSync();
         } catch (error) {
           /* ignore storage errors */
         }
@@ -3789,6 +4004,7 @@
       const saveOutputProgress = () => {
         if (!("localStorage" in window) || !signedInStudentId) return;
         localStorage.setItem(getScopedStorageKey(OUTPUT_STORAGE_KEY), JSON.stringify(Object.fromEntries(outputProgress)));
+        scheduleRemoteSync();
       };
       const ensureTodayRecord = () => {
         const key = getTodayKey();
@@ -3846,7 +4062,7 @@
       };
       const clearLoginForm = () => {
         loginError.textContent = "";
-        passwordInput.value = "";
+        registrationNumberInput.value = "";
       };
       const saveAuthSession = () => {};
       const clearAuthSession = () => {
@@ -3854,7 +4070,7 @@
         localStorage.removeItem(AUTH_STORAGE_KEY);
       };
       const updateAdminAccess = () => {
-        const canViewAdmin = isAdminSession && isOfficialUser();
+        const canViewAdmin = isAdminSession;
         navAdminButton.hidden = !canViewAdmin;
         if (!canViewAdmin && viewMode === "admin") {
           showView("home");
@@ -3874,11 +4090,14 @@
         renderVocabBook();
         renderOutputMissions();
         renderAdminPage();
+        loadRemoteUserData();
       };
       const applyAuthenticatedState = (studentId) => {
         isAuthenticated = true;
+        isAdminSession = false;
+        remoteSyncEnabled = true;
         signedInStudentId = normalizeStudentId(studentId);
-        currentUserId.textContent = signedInStudentId;
+        currentUserId.textContent = signedInEmail || signedInStudentId;
         loginError.textContent = "";
         refreshRegisteredUsers();
         setAppVisibility(true);
@@ -3889,8 +4108,9 @@
       const applyAdminState = (studentId = OFFICIAL_USER_ID) => {
         isAuthenticated = true;
         isAdminSession = true;
+        remoteSyncEnabled = true;
         signedInStudentId = normalizeStudentId(studentId);
-        currentUserId.textContent = `${signedInStudentId} / 管理者`;
+        currentUserId.textContent = `${signedInEmail || signedInStudentId} / 管理者`;
         refreshRegisteredUsers();
         setAppVisibility(true);
         updateAdminAccess();
@@ -3907,6 +4127,8 @@
         isAuthenticated = false;
         isAdminSession = false;
         signedInStudentId = "";
+        signedInAuthUserId = "";
+        signedInEmail = "";
         currentUserId.textContent = "--";
         clearAuthSession();
         clearLoginForm();
@@ -3946,7 +4168,7 @@
         studyLayout.classList.toggle("hidden", !(mode === "main" || mode === "support"));
         chapterView.classList.toggle("active", mode === "main");
         supportView.classList.toggle("active", mode === "support");
-        adminView.classList.toggle("active", mode === "admin" && isAdminSession && isOfficialUser());
+        adminView.classList.toggle("active", mode === "admin" && isAdminSession);
         if (isStudyViewMode(mode)) {
           startStudyTimer();
           resetStudyIdleTimer();
@@ -3993,13 +4215,8 @@
       const saveProgress = () => {
         if (!("localStorage" in window) || !signedInStudentId) return;
         try {
-          const data = {
-            version: 2,
-            currentChapterIndex,
-            currentChapterId: chapters[currentChapterIndex] ? chapters[currentChapterIndex].id : null,
-            progress: Object.fromEntries(progress)
-          };
-          localStorage.setItem(getScopedStorageKey(STORAGE_KEY), JSON.stringify(data));
+          localStorage.setItem(getScopedStorageKey(STORAGE_KEY), JSON.stringify(serializeProgress()));
+          scheduleRemoteSync();
         } catch (error) {
           /* ignore storage errors */
         }
@@ -5672,9 +5889,167 @@
           weak: trends.weak
         };
       };
+      const buildRemoteAdminSnapshots = (profiles = [], states = [], records = []) => {
+        const stateMap = new Map(states.map((state) => [state.user_id, state]));
+        const recordsByUser = new Map();
+        records.forEach((row) => {
+          if (!recordsByUser.has(row.user_id)) recordsByUser.set(row.user_id, []);
+          recordsByUser.get(row.user_id).push(row);
+        });
+        return profiles.map((profile) => {
+          const state = stateMap.get(profile.id) || {};
+          const userRecords = recordsByUser.get(profile.id) || [];
+          const historyData = {};
+          userRecords.forEach((row) => {
+            historyData[row.record_date] = {
+              timeMs: Number(row.time_ms) || 0,
+              answered: Number(row.answered) || 0,
+              correct: Number(row.correct) || 0,
+              chaptersCompleted: Number(row.chapters_completed) || 0
+            };
+          });
+          const progressData = {
+            currentChapterId: state.current_chapter_id,
+            progress: state.progress || {}
+          };
+          const progressEntries = progressData.progress;
+          const totals = chapters.reduce(
+            (acc, chapter) => {
+              const stats = computeStoredChapterStats(chapter, progressEntries[chapter.id]);
+              acc.answered += stats.answered;
+              acc.correct += stats.correct;
+              if (stats.completed) acc.completed += 1;
+              return acc;
+            },
+            { answered: 0, correct: 0, completed: 0 }
+          );
+          const totalTimeMs = Object.values(historyData).reduce((sum, record) => sum + (Number(record.timeMs) || 0), 0);
+          const todayRecord = historyData[getTodayKey()] || { timeMs: 0 };
+          const activeDays = Object.values(historyData).filter((record) => (Number(record.timeMs) || 0) > 0).length;
+          const lastStudyDate = Object.entries(historyData)
+            .filter(([, record]) => (Number(record.timeMs) || 0) > 0)
+            .map(([date]) => date)
+            .sort()
+            .pop();
+          const trends = getStoredAreaTrends(progressData);
+          const reminder = state.reminder || {};
+          return {
+            studentId: profile.registration_number || profile.student_id || String(profile.email || "").split("@")[0] || profile.id,
+            email: profile.email || "",
+            reminder: reminder.email && reminder.time ? `${reminder.time} / ${reminder.email}` : "未設定",
+            role: profile.role === "admin" ? "admin" : "student",
+            todayTime: formatMinutes(Number(todayRecord.timeMs) || 0),
+            totalTime: formatMinutes(totalTimeMs),
+            totalAnswered: totals.answered,
+            accuracy: totals.answered ? `${Math.round((totals.correct / totals.answered) * 100)}%` : "--%",
+            completed: totals.completed,
+            streak: computeCurrentStreak(historyData),
+            activeDays,
+            lastStudyDate: formatDateLabel(lastStudyDate),
+            currentChapter: resolveStoredChapterTitle(state.current_chapter_id),
+            strong: trends.strong,
+            weak: trends.weak
+          };
+        });
+      };
+      const loadRemoteAdminSnapshots = async () => {
+        if (!isAdminSession || !signedInAuthUserId || !supabaseAuthClient) return null;
+        try {
+          const [profilesResult, statesResult, recordsResult] = await Promise.all([
+            supabaseAuthClient.from("profiles").select("id,email,student_id,registration_number,registered_order,role,status,created_at").order("registered_order", { ascending: true, nullsFirst: false }),
+            supabaseAuthClient.from("user_app_state").select("user_id,current_chapter_id,progress,reminder"),
+            supabaseAuthClient.from("daily_learning_records").select("user_id,record_date,time_ms,answered,correct,chapters_completed")
+          ]);
+          if (profilesResult.error) throw profilesResult.error;
+          if (statesResult.error) throw statesResult.error;
+          if (recordsResult.error) throw recordsResult.error;
+          return buildRemoteAdminSnapshots(
+            (profilesResult.data || []).filter((profile) => profile.status !== "inactive"),
+            statesResult.data || [],
+            recordsResult.data || []
+          );
+        } catch (error) {
+          console.warn("Supabase admin snapshots are not available yet.", error);
+          return null;
+        }
+      };
+      const buildInviteMail = ({ email, registrationNumber, appUrl = PUBLIC_APP_URL }) => {
+        const subject = "韓国語ラボのログイン案内";
+        const body = [
+          "韓国語ラボの利用登録が完了しました。",
+          "",
+          `登録番号: ${registrationNumber}`,
+          `メールアドレス: ${email}`,
+          `アプリURL: ${appUrl}`,
+          "",
+          "スマホの場合はQRコードを読み込んで開いてください。",
+          "パソコンの場合は上のURLをブラウザで開いてください。",
+          "",
+          "ログイン画面で登録番号とメールアドレスを入力すると、マイページが開きます。"
+        ].join("\n");
+        const mailtoUrl = `mailto:${encodeURIComponent(email)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+        return { subject, body, mailtoUrl };
+      };
+      const renderInviteOutput = ({ email, registrationNumber, appUrl = PUBLIC_APP_URL }) => {
+        if (!adminInviteOutput) return;
+        const mail = buildInviteMail({ email, registrationNumber, appUrl });
+        adminInviteOutput.innerHTML = `
+          <strong>登録番号 ${escapeHtml(registrationNumber)} を発行しました。</strong><br />
+          <span>${escapeHtml(email)}</span><br />
+          <span>配布URL: ${escapeHtml(appUrl)}</span><br />
+          <a href="${escapeHtml(mail.mailtoUrl)}">この内容でメールを作成</a>
+          <pre style="white-space: pre-wrap; margin: 10px 0 0;">${escapeHtml(mail.body)}</pre>
+        `;
+      };
+      const renderRemoteAdminSnapshots = (snapshots) => {
+        if (!Array.isArray(snapshots) || !snapshots.length) return;
+        adminUserList.innerHTML = "";
+        adminRecordList.innerHTML = "";
+        snapshots.forEach((snapshot) => {
+          const userCard = document.createElement("article");
+          userCard.className = "admin-user-item";
+          userCard.innerHTML = `
+            <div>
+              <h4>${escapeHtml(snapshot.studentId)}</h4>
+              <p>${snapshot.role === "admin" ? "管理者" : "一般ユーザー"}${snapshot.email ? ` / ${escapeHtml(snapshot.email)}` : ""}</p>
+            </div>
+            <div class="admin-inline"><span class="chip">Supabase</span></div>
+          `;
+          adminUserList.appendChild(userCard);
+
+          const recordCard = document.createElement("article");
+          recordCard.className = "admin-record-card";
+          recordCard.innerHTML = `
+            <div class="admin-record-head">
+              <div>
+                <h4>${escapeHtml(snapshot.studentId)}</h4>
+                <p>${escapeHtml(snapshot.email || "メール未登録")}</p>
+                <p>${snapshot.role === "admin" ? "管理者" : "一般ユーザー"}</p>
+              </div>
+              <p>続き: ${escapeHtml(snapshot.currentChapter)}</p>
+            </div>
+            <div class="admin-record-grid">
+              <div class="admin-stat"><strong>今日の学習時間</strong><span>${escapeHtml(snapshot.todayTime)}</span></div>
+              <div class="admin-stat"><strong>累計学習時間</strong><span>${escapeHtml(snapshot.totalTime)}</span></div>
+              <div class="admin-stat"><strong>累計解答数</strong><span>${snapshot.totalAnswered}問</span></div>
+              <div class="admin-stat"><strong>累計正答率</strong><span>${escapeHtml(snapshot.accuracy)}</span></div>
+              <div class="admin-stat"><strong>完了章</strong><span>${snapshot.completed}章</span></div>
+              <div class="admin-stat"><strong>連続学習</strong><span>${snapshot.streak}日</span></div>
+              <div class="admin-stat"><strong>学習日数</strong><span>${snapshot.activeDays}日</span></div>
+              <div class="admin-stat"><strong>最終学習日</strong><span>${escapeHtml(snapshot.lastStudyDate)}</span></div>
+              <div class="admin-stat"><strong>リマインド</strong><span>${escapeHtml(snapshot.reminder)}</span></div>
+            </div>
+            <div class="admin-record-footer">
+              <p>得意分野: ${escapeHtml(snapshot.strong)}</p>
+              <p>苦手分野: ${escapeHtml(snapshot.weak)}</p>
+            </div>
+          `;
+          adminRecordList.appendChild(recordCard);
+        });
+      };
 
       const renderAdminPage = () => {
-        if (!isAdminSession || !isOfficialUser()) {
+        if (!isAdminSession) {
           adminView.classList.remove("active");
           return;
         }
@@ -5743,6 +6118,12 @@
             </div>
           `;
           adminRecordList.appendChild(recordCard);
+        });
+        const requestId = ++adminRemoteRequestId;
+        loadRemoteAdminSnapshots().then((snapshots) => {
+          if (requestId === adminRemoteRequestId && snapshots) {
+            renderRemoteAdminSnapshots(snapshots);
+          }
         });
       };
 
@@ -6547,11 +6928,15 @@
       });
 
       studentIdInput.addEventListener("input", () => {
-        studentIdInput.value = normalizeStudentId(studentIdInput.value);
+        studentIdInput.value = normalizeEmail(studentIdInput.value);
+      });
+
+      registrationNumberInput.addEventListener("input", () => {
+        registrationNumberInput.value = registrationNumberInput.value.replace(/\D/g, "").slice(0, 4);
       });
 
       adminStudentIdInput.addEventListener("input", () => {
-        adminStudentIdInput.value = normalizeStudentId(adminStudentIdInput.value);
+        adminStudentIdInput.value = normalizeRegistrationNumber(adminStudentIdInput.value);
       });
 
       flashcardDisplayMode.addEventListener("change", () => {
@@ -6580,27 +6965,28 @@
 
       loginForm.addEventListener("submit", (event) => {
         event.preventDefault();
-        const username = normalizeStudentId(studentIdInput.value);
-        const password = passwordInput.value;
-        if (!STUDENT_ID_PATTERN.test(username)) {
-          loginError.textContent = "ユーザー名は3〜32文字の英数字・ハイフン・アンダーバーで入力してください。";
+        const registrationNumber = normalizeRegistrationNumber(registrationNumberInput.value);
+        const email = normalizeEmail(studentIdInput.value);
+        if (!REGISTRATION_NUMBER_PATTERN.test(registrationNumber)) {
+          loginError.textContent = "登録番号を2桁以上の数字で入力してください。";
+          registrationNumberInput.focus();
+          return;
+        }
+        if (!EMAIL_PATTERN.test(email)) {
+          loginError.textContent = "登録済みのメールアドレスを入力してください。";
           studentIdInput.focus();
           return;
         }
-        if (!password) {
-          loginError.textContent = "パスワードを入力してください。";
-          passwordInput.focus();
-          return;
-        }
         loginError.textContent = "";
-        signInWithUsername(username, password)
+        signInWithRegistration(email, registrationNumber)
           .then((user) => {
+            if (!user) throw new Error("missing-user");
             applySupabaseUser(user);
             setStatus("ログインしました。", "success");
           })
           .catch(() => {
-            loginError.textContent = "ユーザー名またはパスワードが違います。";
-            passwordInput.focus();
+            loginError.textContent = "登録番号またはメールアドレスが違います。管理者から届いた内容を確認してください。";
+            registrationNumberInput.focus();
           });
       });
 
@@ -6648,32 +7034,38 @@
 
       adminUserForm.addEventListener("submit", (event) => {
         event.preventDefault();
-        const studentId = normalizeStudentId(adminStudentIdInput.value);
-        if (!STUDENT_ID_PATTERN.test(studentId)) {
-          adminFormMessage.textContent = "ユーザー名は3〜32文字の英数字・ハイフン・アンダーバーで入力してください。";
-          adminStudentIdInput.focus();
+        const email = normalizeEmail(adminStudentEmailInput.value);
+        if (!EMAIL_PATTERN.test(email)) {
+          adminFormMessage.textContent = "登録するメールアドレスを入力してください。";
+          adminStudentEmailInput.focus();
           return;
         }
-        if (isRegisteredUser(studentId)) {
-          adminFormMessage.textContent = "そのユーザー名はすでに登録されています。";
-          adminStudentIdInput.focus();
-          return;
-        }
-        registeredUsers = normalizeUserRegistry([
-          ...registeredUsers,
-          {
-            studentId,
-            role: studentId === OFFICIAL_USER_ID ? "official" : "student",
-            createdAt: getTodayKey(),
-            email: adminStudentEmailInput.value.trim()
-          }
-        ]);
-        saveUserRegistry();
-        adminStudentIdInput.value = "";
-        adminStudentEmailInput.value = "";
-        adminFormMessage.textContent = `${studentId} を登録しました。`;
-        renderAdminPage();
-        setStatus(`${studentId} を登録しました。`, "success");
+        adminFormMessage.textContent = "登録中です...";
+        registerStudentByEmail(email)
+          .then((data) => {
+            const registrationNumber = normalizeRegistrationNumber(data.registrationNumber);
+            adminStudentIdInput.value = registrationNumber;
+            registeredUsers = normalizeUserRegistry([
+              ...registeredUsers,
+              {
+                studentId: registrationNumber,
+                registrationNumber,
+                role: "student",
+                createdAt: getTodayKey(),
+                email
+              }
+            ]);
+            saveUserRegistry();
+            adminStudentEmailInput.value = "";
+            adminFormMessage.textContent = `${registrationNumber} を ${email} に発行しました。`;
+            renderInviteOutput({ email, registrationNumber, appUrl: data.appUrl || PUBLIC_APP_URL });
+            renderAdminPage();
+            setStatus(`${registrationNumber} を登録しました。`, "success");
+          })
+          .catch(() => {
+            adminFormMessage.textContent = "登録できませんでした。Supabase関数・管理者権限・service role keyを確認してください。";
+            adminStudentEmailInput.focus();
+          });
       });
 
       pickVoice();

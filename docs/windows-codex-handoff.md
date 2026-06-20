@@ -56,6 +56,23 @@ Windows-side tool check from WSL found:
 
 For Windows native Codex, install or enable these on Windows if it needs to run Git, `npx supabase`, or a local HTTP server. Git for Windows installation was attempted with `winget`, but the installer requested UAC/admin confirmation.
 
+## Windows Native Follow-up
+
+Completed after opening this repository in Windows native Codex:
+
+- Confirmed Git for Windows is installed at `C:\Program Files\Git\cmd\git.exe`.
+- Added Git for Windows to the user PATH and confirmed the machine PATH also includes `C:\Program Files\Git\cmd`.
+- Installed Node.js LTS with `winget install --id OpenJS.NodeJS.LTS -e --source winget`.
+- Confirmed Node.js, npm, and npx are available from `C:\Program Files\nodejs`.
+- Set PowerShell `CurrentUser` execution policy to `RemoteSigned` so `npm` and `npx` can run normally.
+- Confirmed `npx supabase --version` works and resolved Supabase CLI `2.102.0`.
+- Confirmed Windows Python is available as `Python 3.10.11`.
+- Re-ran Git status and recent log checks on `main`.
+- Re-ran inline script parse checks for the four synchronized HTML files.
+- Served the app locally on `http://127.0.0.1:4173/` and checked both language pages in the browser.
+
+If an existing Codex or PowerShell session still cannot find `git`, `node`, `npm`, or `npx`, restart that session so it picks up the updated Windows PATH.
+
 Recommended checks after opening this folder in Windows native Codex:
 
 ```powershell

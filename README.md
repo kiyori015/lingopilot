@@ -8,6 +8,12 @@ language learning application for beginners
 
 ## QR codes
 
+### App login page
+
+Use this QR code for both smartphones and desktop users. Desktop users can also open the URL directly.
+
+![Lingopilot app QR code](src/assets/lingopilot-app-qr.png)
+
 ### Korean page
 
 ![Korean page QR code](src/assets/lingopilot-korean-page-qr.png)
