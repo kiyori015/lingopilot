@@ -416,6 +416,64 @@
         font-size: 0.9rem;
       }
 
+      .lesson-step-tabs,
+      .lesson-step-actions {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        align-items: center;
+      }
+
+      .lesson-step-tabs {
+        position: sticky;
+        top: 12px;
+        z-index: 3;
+        background: rgba(247, 242, 234, 0.92);
+        backdrop-filter: blur(10px);
+        border: 1px solid var(--border);
+        border-radius: 18px;
+        padding: 10px;
+        box-shadow: 0 12px 32px rgba(31, 28, 26, 0.08);
+      }
+
+      .lesson-step-btn {
+        border: 1px solid rgba(0, 127, 127, 0.18);
+        border-radius: 999px;
+        padding: 10px 14px;
+        background: #fff;
+        color: var(--ink);
+        font-weight: 700;
+        cursor: pointer;
+      }
+
+      .lesson-step-btn.active {
+        background: var(--accent);
+        border-color: var(--accent);
+        color: #fff;
+      }
+
+      .lesson-panel {
+        display: none;
+      }
+
+      .lesson-panel.active {
+        display: block;
+      }
+
+      .lesson-step-actions {
+        justify-content: space-between;
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 18px;
+        padding: 12px;
+        box-shadow: var(--shadow);
+      }
+
+      .lesson-step-counter {
+        color: var(--muted);
+        font-weight: 700;
+      }
+
       .sentence-list {
         display: grid;
         gap: 12px;
@@ -1731,6 +1789,9 @@
           flex-direction: column;
           align-items: flex-start;
         }
+        .lesson-step-tabs {
+          position: static;
+        }
 
         .sentence {
           flex-direction: column;
@@ -2112,6 +2173,8 @@
               </div>
             </div>
 
+            <div id="lesson-step-tabs" class="lesson-step-tabs" aria-label="学習ステップ"></div>
+
             <section id="scene-panel" class="panel">
               <div class="panel-title">
                 <h3>はじめに音声で場面を聞く</h3>
@@ -2293,6 +2356,12 @@
                 <button id="retry-wrong" class="secondary-btn" type="button">誤答のみ再挑戦</button>
               </div>
             </section>
+
+            <div class="lesson-step-actions">
+              <button id="lesson-step-prev" class="secondary-btn" type="button">前へ</button>
+              <span id="lesson-step-counter" class="lesson-step-counter">1 / 5</span>
+              <button id="lesson-step-next" class="primary-btn" type="button">次へ</button>
+            </div>
           </div>
         </section>
       </div>
@@ -2353,6 +2422,8 @@
       const QUIZ_COUNT_PER_DIRECTION = 14;
       const LISTENING_COUNT = 12;
       const STUDY_IDLE_MS = 2 * 60 * 1000;
+      const CORE_PHRASE_LIMIT = 5;
+      const CORE_GRAMMAR_LIMIT = 3;
       const isListeningChapter = (chapter) => chapter.type === "listening";
       const isColumnChapter = (chapter) => chapter.type === "column";
       const hasListeningPanel = (chapter) => isListeningChapter(chapter) || (!isColumnChapter(chapter) && chapter.id > 0 && chapter.id % 3 === 0);
@@ -3279,6 +3350,10 @@
       const adminUserList = document.getElementById("admin-user-list");
       const adminRecordList = document.getElementById("admin-record-list");
       const chapterList = document.getElementById("chapter-list");
+      const lessonStepTabs = document.getElementById("lesson-step-tabs");
+      const lessonStepPrevButton = document.getElementById("lesson-step-prev");
+      const lessonStepNextButton = document.getElementById("lesson-step-next");
+      const lessonStepCounter = document.getElementById("lesson-step-counter");
       const chapterLabel = document.getElementById("chapter-label");
       const chapterTitle = document.getElementById("chapter-title");
       const chapterSubtitle = document.getElementById("chapter-subtitle");
@@ -3363,6 +3438,9 @@
       let preferredVoice = null;
       let preferredJaVoice = null;
       let flashcardMode = "text";
+      let lessonStepIndex = 0;
+      let activeLessonSteps = [];
+      let lastLessonChapterKey = "";
       let vocabStudyMode = "cards";
       let vocabVisualMode = "text";
       let vocabDeckIndex = 0;
@@ -3898,6 +3976,10 @@
           </span>
         `;
       };
+      const getCoreItems = (items = [], limit = CORE_PHRASE_LIMIT) => items.slice(0, limit);
+      const getCoreBasics = (chapter) => getCoreItems(chapter.basics || [], CORE_PHRASE_LIMIT);
+      const getCoreVocab = (chapter) => getCoreItems(chapter.vocab || [], CORE_PHRASE_LIMIT);
+      const getCoreGrammar = (chapter) => getCoreItems(chapter.grammar || [], CORE_GRAMMAR_LIMIT);
       const renderChoiceMarkup = (text) => `
         <span class="quiz-option-body">
           <span class="quiz-option-text">${containsKorean(text) ? renderKoreanWithPronunciation(text, "ko") : `<span>${escapeHtml(text)}</span>`}</span>
@@ -4233,9 +4315,9 @@
 
       const buildPairsFromChapter = (chapter) => {
         const pairs = [
-          ...chapter.basics.map((item) => ({ ...item, kind: "sentence" })),
+          ...getCoreBasics(chapter).map((item) => ({ ...item, kind: "sentence" })),
           ...chapter.dialogues.map((item) => ({ ...item, kind: "sentence" })),
-          ...chapter.vocab.map((item) => ({ ...item, kind: "word" }))
+          ...getCoreVocab(chapter).map((item) => ({ ...item, kind: "word" }))
         ].map((item) => ({
           ko: item.ko,
           ja: item.ja,
@@ -4308,9 +4390,9 @@
       const getQuestionId = (chapterId, direction, index) => `c${chapterId}-${direction}-${index}`;
       const getCardId = (chapterId, index) => `c${chapterId}-card-${index}`;
       const getChapterFlashcardItems = (chapter) => [
-        ...(chapter.vocab || []).map((item) => ({ ...item, source: "単語" })),
-        ...(chapter.basics || []).map((item) => ({ ...item, source: "基本例文" })),
-        ...(chapter.dialogues || []).map((item) => ({ ...item, source: "会話表現" }))
+        ...getCoreVocab(chapter).map((item) => ({ ...item, source: "単語" })),
+        ...getCoreBasics(chapter).map((item) => ({ ...item, source: "基本例文" })),
+        ...getCoreItems(chapter.dialogues || [], 3).map((item) => ({ ...item, source: "会話表現" }))
       ].filter((item, index, array) => item.ko && item.ja && array.findIndex((other) => other.ko === item.ko && other.ja === item.ja) === index);
 
       const ensureQuizSets = (chapter) => {
@@ -5485,20 +5567,20 @@
       };
 
       const expandKoreanGrammarPoint = (point) => {
-        if (/이에요|예요/.test(point)) return "「Aです」と言いたい時の形です。前の単語に下の音が残る時は 이에요、残らない時は 예요。まずは 저는 ○○예요 を丸ごと覚えます。";
-        if (/은\/는|은|는/.test(point)) return "「私は」「これは」のように、話のテーマを出す印です。新しく説明を始める時に使います。難しく考えず、저는 を「私は」とセットで覚えます。";
-        if (/이\/가|이|가/.test(point)) return "「何が？誰が？」の答えをはっきり言う印です。場所や物がある時の 있어요/없어요 と一緒に出やすいです。";
-        if (/주세요/.test(point)) return "注文やお願いの「ください」です。食べ物・物の名前の後ろに 붙けます。例: 물 주세요 = 水ください。";
-        if (/에|에서/.test(point)) return "에 は「どこに・何時に」、에서 は「どこで何かをする」です。場所を言う時は、まず 에 있어요 を先に覚えます。";
-        if (/로|으로/.test(point)) return "交通手段や方向の「〜で・〜へ」です。버스로 は「バスで」、역으로 は「駅の方へ」のように使います。";
-        if (/아요|어요/.test(point)) return "動詞や形容詞を丁寧に言う基本の形です。細かい変化より、가요・먹어요・좋아요 のような音のかたまりで覚えます。";
-        return "まず例文を音でまねして、意味を確認します。そのあと、名詞や場所だけを入れ替えると使いやすいです。";
+        if (/이에요|예요/.test(point)) return "「Aです」。まず 저는 ○○예요 を丸ごと覚える。";
+        if (/은\/는|은|는/.test(point)) return "話題のしるし。「私は」「これは」でよく使う。";
+        if (/이\/가|이|가/.test(point)) return "「誰が・何が」をはっきり言うしるし。";
+        if (/주세요/.test(point)) return "お願いの「ください」。物の名前 + 주세요。";
+        if (/에|에서/.test(point)) return "에 は場所/時間、에서 は「そこで何かする」。";
+        if (/로|으로/.test(point)) return "手段や方向。「バスで」「駅へ」の形。";
+        if (/아요|어요/.test(point)) return "丁寧に言う基本形。音のかたまりで覚える。";
+        return "例文をまねして、単語だけ入れ替える。";
       };
 
       const renderGrammarDiagrams = (chapter) => {
         grammarDiagrams.innerHTML = "";
-        const examples = [...chapter.basics, ...chapter.dialogues].filter((item) => item && item.ko);
-        chapter.grammar.forEach((point, index) => {
+        const examples = [...getCoreBasics(chapter), ...chapter.dialogues].filter((item) => item && item.ko);
+        getCoreGrammar(chapter).forEach((point, index) => {
           const example = examples[index] || examples[0];
           const card = document.createElement("article");
           card.className = "vocab-item";
@@ -6686,6 +6768,60 @@
         summary.textContent = `採点結果: ${correct} / ${questions.length}`;
       };
 
+      const getLessonPanelDefinitions = () => [
+        { id: "scene", label: "場面", panel: scenePanel },
+        { id: "basic", label: "基本", panel: basicPanel },
+        { id: "grammar", label: "文法", panel: grammarPanel },
+        { id: "vocab", label: "単語", panel: vocabPanel },
+        { id: "cards", label: "カード", panel: flashcardPanel },
+        { id: "listening", label: "聞く", panel: listeningPanel },
+        { id: "quiz", label: "練習", panel: quizPanel },
+        { id: "result", label: "結果", panel: resultsPanel },
+        { id: "output", label: "話す", panel: outputPanel }
+      ];
+
+      const setLessonStep = (index, scrollToTabs = false) => {
+        if (!activeLessonSteps.length) return;
+        lessonStepIndex = Math.max(0, Math.min(index, activeLessonSteps.length - 1));
+        activeLessonSteps.forEach((step, stepIndex) => {
+          step.panel.classList.add("lesson-panel");
+          step.panel.classList.toggle("active", stepIndex === lessonStepIndex);
+        });
+        Array.from(lessonStepTabs.children).forEach((button, buttonIndex) => {
+          button.classList.toggle("active", buttonIndex === lessonStepIndex);
+        });
+        lessonStepPrevButton.disabled = lessonStepIndex === 0;
+        lessonStepNextButton.disabled = lessonStepIndex === activeLessonSteps.length - 1;
+        lessonStepCounter.textContent = `${lessonStepIndex + 1} / ${activeLessonSteps.length}`;
+        if (scrollToTabs) {
+          lessonStepTabs.scrollIntoView({ behavior: "smooth", block: "start" });
+        }
+      };
+
+      const renderLessonSteps = (chapter, mode = "main") => {
+        const key = `${mode}:${chapter.id}`;
+        if (lastLessonChapterKey !== key) {
+          lessonStepIndex = 0;
+          lastLessonChapterKey = key;
+        }
+        activeLessonSteps = getLessonPanelDefinitions().filter((step) => !step.panel.hidden);
+        lessonStepTabs.innerHTML = "";
+        activeLessonSteps.forEach((step, index) => {
+          step.panel.classList.add("lesson-panel");
+          const button = document.createElement("button");
+          button.type = "button";
+          button.className = "lesson-step-btn";
+          button.textContent = step.label;
+          button.addEventListener("click", () => setLessonStep(index, true));
+          lessonStepTabs.appendChild(button);
+        });
+        lessonStepTabs.hidden = activeLessonSteps.length <= 1;
+        lessonStepPrevButton.hidden = activeLessonSteps.length <= 1;
+        lessonStepNextButton.hidden = activeLessonSteps.length <= 1;
+        lessonStepCounter.hidden = activeLessonSteps.length <= 1;
+        setLessonStep(lessonStepIndex);
+      };
+
       const renderChapter = (mode = "main") => {
         showView(mode);
         const chapter = chapters[currentChapterIndex];
@@ -6709,14 +6845,14 @@
         resultsPanel.hidden = columnOnly;
 
         basicList.innerHTML = "";
-        chapter.basics.forEach((item) => {
+        getCoreBasics(chapter).forEach((item) => {
           basicList.appendChild(createSentenceRow(item));
         });
 
         grammarList.innerHTML = "";
-        chapter.grammar.forEach((point) => {
+        getCoreGrammar(chapter).forEach((point) => {
           const li = document.createElement("li");
-          li.textContent = `${point} - ${expandKoreanGrammarPoint(point)}`;
+          li.textContent = `${point}: ${expandKoreanGrammarPoint(point)}`;
           grammarList.appendChild(li);
         });
         renderGrammarDiagrams(chapter);
@@ -6725,7 +6861,7 @@
         dialogueList.innerHTML = "";
 
         vocabList.innerHTML = "";
-        chapter.vocab.forEach((item) => {
+        getCoreVocab(chapter).forEach((item) => {
           const vocabItem = document.createElement("div");
           vocabItem.className = "vocab-item";
           vocabItem.innerHTML = `
@@ -6762,6 +6898,7 @@
         if (!listeningOnly && !columnOnly) renderOutputPractice();
         updateQuizSummary(chapter, "krjp");
         updateQuizSummary(chapter, "jpkr");
+        renderLessonSteps(chapter, mode);
 
         updateAllStats();
       };
@@ -6828,6 +6965,14 @@
         if (currentChapterIndex >= chapters.length - 1) return;
         currentChapterIndex += 1;
         renderChapter("main");
+      });
+
+      lessonStepPrevButton.addEventListener("click", () => {
+        setLessonStep(lessonStepIndex - 1, true);
+      });
+
+      lessonStepNextButton.addEventListener("click", () => {
+        setLessonStep(lessonStepIndex + 1, true);
       });
 
       homeStartStudyButton.addEventListener("click", () => {
