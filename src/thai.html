@@ -415,6 +415,96 @@
         font-size: 0.9rem;
       }
 
+      .lesson-step-tabs,
+      .lesson-step-actions,
+      .audio-focus-actions,
+      .review-recommend-actions {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        align-items: center;
+      }
+
+      .lesson-step-tabs {
+        position: sticky;
+        top: 12px;
+        z-index: 3;
+        margin-bottom: 16px;
+        padding: 10px;
+        border: 1px solid var(--border);
+        border-radius: 18px;
+        background: rgba(255, 249, 243, 0.94);
+        backdrop-filter: blur(10px);
+        box-shadow: 0 12px 32px rgba(56, 37, 25, 0.08);
+      }
+
+      .lesson-step-btn {
+        border: 1px solid rgba(255, 126, 80, 0.24);
+        border-radius: 999px;
+        padding: 10px 14px;
+        background: #fff;
+        color: var(--ink);
+        font-weight: 700;
+        cursor: pointer;
+      }
+
+      .lesson-step-btn.active {
+        border-color: var(--accent);
+        background: var(--accent);
+        color: #fff;
+      }
+
+      .lesson-panel {
+        display: none;
+      }
+
+      .lesson-panel.active {
+        display: block;
+      }
+
+      .lesson-step-actions {
+        justify-content: space-between;
+        margin-top: 16px;
+        padding: 12px;
+        border: 1px solid var(--border);
+        border-radius: 18px;
+        background: var(--card);
+        box-shadow: var(--shadow);
+      }
+
+      .lesson-step-counter {
+        color: var(--muted);
+        font-weight: 700;
+      }
+
+      .audio-focus-grid,
+      .review-recommend-list {
+        display: grid;
+        gap: 12px;
+      }
+
+      .audio-focus-card,
+      .review-recommend-card {
+        padding: 14px;
+        border: 1px solid rgba(255, 126, 80, 0.2);
+        border-radius: 18px;
+        background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(255, 239, 224, 0.48));
+      }
+
+      .audio-focus-card .foreign-line {
+        display: none;
+      }
+
+      .audio-focus-card.show-text .foreign-line {
+        display: inline-flex;
+      }
+
+      .audio-focus-card .meaning-line {
+        margin: 8px 0 10px;
+        font-size: 1.05rem;
+        font-weight: 700;
+      }
+
       .sentence-list {
         display: grid;
         gap: 12px;
@@ -2477,6 +2567,9 @@
       }
 
       @media (max-width: 720px) {
+        .lesson-step-tabs {
+          position: static;
+        }
         body {
           padding: 20px 16px 40px;
         }
@@ -2690,6 +2783,11 @@
               <div class="panel-title">
                 <h3>学習記録</h3>
                 <p>毎日の進み具合を最初に確認できます。</p>
+              </div>
+              <div class="log-card" style="margin-bottom: 14px">
+                <h4>今日のおすすめ復習</h4>
+                <p class="admin-note">一度学んだ課を、翌日・3日後・7日後にもう一度聞いて定着させます。</p>
+                <div id="review-recommend-list" class="review-recommend-list"></div>
               </div>
               <div class="learning-summary">
                 <div class="log-card">
@@ -2987,12 +3085,28 @@
               </div>
             </div>
 
+            <div id="lesson-step-tabs" class="lesson-step-tabs" aria-label="学習ステップ"></div>
+
             <section id="scene-panel" class="panel">
               <div class="panel-title">
                 <h3>場面イメージ</h3>
                 <p>会話の状況を先にイメージしてから音声練習します。</p>
               </div>
               <div id="scene-illustration"></div>
+            </section>
+
+            <section id="audio-focus-panel" class="panel">
+              <div class="panel-title">
+                <div>
+                  <h3>音でわかる練習</h3>
+                  <p>文字を見る前に、音を聞いて意味を思い浮かべます。</p>
+                </div>
+                <div class="audio-focus-actions">
+                  <button id="audio-focus-play-all" class="primary-btn" type="button">5フレーズを聞く</button>
+                  <button id="audio-focus-repeat" class="secondary-btn" type="button">3回リピート</button>
+                </div>
+              </div>
+              <div id="audio-focus-list" class="audio-focus-grid"></div>
             </section>
 
             <section id="basic-panel" class="panel">
@@ -3093,6 +3207,7 @@
               </div>
               <div class="result-actions">
                 <button id="grade-all" class="secondary-btn" type="button">課の採点</button>
+                <button id="review-complete" class="secondary-btn" type="button">今日の復習完了</button>
                 <button id="support-open" class="secondary-btn" type="button" hidden>補講へ</button>
                 <button id="next-chapter" class="primary-btn" type="button">次の課へ</button>
               </div>
@@ -3105,6 +3220,12 @@
               </div>
               <div id="output-practice-shell"></div>
             </section>
+
+            <div class="lesson-step-actions">
+              <button id="lesson-step-prev" class="secondary-btn" type="button">前へ</button>
+              <span id="lesson-step-counter" class="lesson-step-counter">1 / 5</span>
+              <button id="lesson-step-next" class="primary-btn" type="button">次へ</button>
+            </div>
 
           </div>
 
@@ -3165,6 +3286,9 @@
       const QUIZ_COUNT_PER_DIRECTION = 14;
       const LISTENING_COUNT = 12;
       const STUDY_IDLE_MS = 2 * 60 * 1000;
+      const CORE_PHRASE_LIMIT = 5;
+      const CORE_GRAMMAR_LIMIT = 3;
+      const REVIEW_INTERVAL_DAYS = [1, 3, 7];
       const isColumnChapter = (chapter) => chapter.type === "column";
       const isBranchChapter = (chapter) => chapter.type === "branch";
       const isPracticeChapter = (chapter) => chapter.type === "text" || chapter.type === "branch";
@@ -3215,8 +3339,13 @@
       const getDateKey = (date = new Date()) =>
         `${date.getFullYear()}-${padNumber(date.getMonth() + 1)}-${padNumber(date.getDate())}`;
       const parseDateKey = (dateString) => {
-        const [year, month, day] = dateString.split("-").map(Number);
+        const [year, month, day] = String(dateString || "").split("-").map(Number);
         return new Date(year, (month || 1) - 1, day || 1);
+      };
+      const addDaysToDateKey = (dateKey, days) => {
+        const date = parseDateKey(dateKey);
+        date.setDate(date.getDate() + days);
+        return getDateKey(date);
       };
       const getTodayKey = () => getDateKey(new Date());
       const formatMinutes = (ms) => {
@@ -3251,6 +3380,7 @@
         if (!("localStorage" in window) || !signedInStudentId) return;
         try {
           localStorage.setItem(getScopedStorageKey(HISTORY_KEY), JSON.stringify(Object.fromEntries(history)));
+          scheduleRemoteSync();
         } catch (error) {
           /* ignore */
         }
@@ -3277,6 +3407,7 @@
       const saveOutputProgress = () => {
         if (!("localStorage" in window) || !signedInStudentId) return;
         localStorage.setItem(getScopedStorageKey(OUTPUT_STORAGE_KEY), JSON.stringify(Object.fromEntries(outputProgress)));
+        scheduleRemoteSync();
       };
 
       const ensureTodayRecord = () => {
@@ -3326,6 +3457,7 @@
         const date = parseDateKey(dateString);
         return `${date.getMonth() + 1}/${date.getDate()}`;
       };
+      const formatDateLabel = (dateString) => dateString ? getDateLabel(dateString) : "未学習";
 
 
       const navHomeButton = document.getElementById("nav-home");
@@ -3395,12 +3527,20 @@
       const vocabQuizCheckJaKo = document.getElementById("vocab-quiz-check-jako");
       const vocabBackHomeButton = document.getElementById("vocab-back-home");
       const chapterList = document.getElementById("chapter-list");
+      const lessonStepTabs = document.getElementById("lesson-step-tabs");
+      const lessonStepPrevButton = document.getElementById("lesson-step-prev");
+      const lessonStepNextButton = document.getElementById("lesson-step-next");
+      const lessonStepCounter = document.getElementById("lesson-step-counter");
       const chapterLabel = document.getElementById("chapter-label");
       const chapterTitle = document.getElementById("chapter-title");
       const chapterSubtitle = document.getElementById("chapter-subtitle");
       const chapterProgress = document.getElementById("chapter-progress");
       const scenePanel = document.getElementById("scene-panel");
       const sceneIllustration = document.getElementById("scene-illustration");
+      const audioFocusPanel = document.getElementById("audio-focus-panel");
+      const audioFocusList = document.getElementById("audio-focus-list");
+      const audioFocusPlayAllButton = document.getElementById("audio-focus-play-all");
+      const audioFocusRepeatButton = document.getElementById("audio-focus-repeat");
       const basicPanel = document.getElementById("basic-panel");
       const basicList = document.getElementById("basic-list");
       const grammarPanel = document.getElementById("grammar-panel");
@@ -3427,6 +3567,7 @@
       const chapterRating = document.getElementById("chapter-rating");
       const chapterRatingNote = document.getElementById("chapter-rating-note");
       const gradeAllButton = document.getElementById("grade-all");
+      const reviewCompleteButton = document.getElementById("review-complete");
       const supportOpenButton = document.getElementById("support-open");
       const nextChapterButton = document.getElementById("next-chapter");
       const overallScore = document.getElementById("overall-score");
@@ -3448,6 +3589,7 @@
       const reminderTimeInput = document.getElementById("reminder-time");
       const reminderSaveButton = document.getElementById("reminder-save");
       const reminderStatus = document.getElementById("reminder-status");
+      const reviewRecommendList = document.getElementById("review-recommend-list");
       const quickQuestionInput = document.getElementById("quick-question-input");
       const quickQuestionSaveButton = document.getElementById("quick-question-save");
       const quickQuestionAnswer = document.getElementById("quick-question-answer");
@@ -3461,7 +3603,15 @@
       let isAdminSession = false;
       let signedInStudentId = "";
       let signedInEmail = "";
+      let signedInAuthUserId = "";
       let registeredUsers = [];
+      let remoteSyncEnabled = true;
+      let remoteSyncInProgress = false;
+      let isLoadingRemoteData = false;
+      let remoteSyncTimer = null;
+      let lessonStepIndex = 0;
+      let activeLessonSteps = [];
+      let lastLessonChapterKey = "";
       let vocabStudyMode = "cards";
       let vocabVisualMode = "text";
       let vocabDeckIndex = 0;
@@ -3587,6 +3737,7 @@
         if (!username) {
           throw new Error("ユーザー情報を取得できませんでした。");
         }
+        signedInAuthUserId = user.id || "";
         signedInEmail = normalizeEmail(user.email || "");
         if (getAuthRole(user) === "admin" || username === ADMIN_USERNAME) {
           applyAdminState(username);
@@ -3655,6 +3806,7 @@
           time: reminderTimeInput.value
         };
         localStorage.setItem(getScopedStorageKey(REMINDER_STORAGE_KEY), JSON.stringify(data));
+        scheduleRemoteSync();
         reminderStatus.textContent = data.email && data.time
           ? `${data.email} に毎日 ${data.time} のリマインドを送る設定を保存しました（実送信はサーバー連携が必要）。`
           : "メールアドレスと時刻を入力すると保存できます。";
@@ -3686,6 +3838,7 @@
         }
         const data = { text, at: new Date().toISOString() };
         localStorage.setItem(getScopedStorageKey(QUICK_QUESTION_STORAGE_KEY), JSON.stringify(data));
+        scheduleRemoteSync();
         quickQuestionAnswer.textContent = "質問を保存しました。先生に共有する場合は、この内容を管理者へ送ってください。";
         setStatus("質問メモを保存しました。", "success");
       };
@@ -3726,6 +3879,142 @@
             localStorage.setItem(scopedKey, legacyValue);
           }
         });
+      };
+      const serializeProgress = () => ({
+        version: 3,
+        currentChapterIndex,
+        currentChapterId: chapters[currentChapterIndex] ? chapters[currentChapterIndex].id : null,
+        progress: Object.fromEntries(progress),
+        branches: chapters.filter((chapter) => isBranchChapter(chapter)).map((chapter) => serializeBranchChapter(chapter))
+      });
+      const serializeHistoryRows = () =>
+        Array.from(history.entries()).map(([date, record]) => ({
+          user_id: signedInAuthUserId,
+          record_date: date,
+          time_ms: Number(record.timeMs) || 0,
+          answered: Number(record.answered) || 0,
+          correct: Number(record.correct) || 0,
+          chapters_completed: Number(record.chaptersCompleted) || 0
+        }));
+      const scheduleRemoteSync = () => {
+        if (!remoteSyncEnabled || remoteSyncInProgress || isLoadingRemoteData || !signedInAuthUserId || !supabaseAuthClient) return;
+        window.clearTimeout(remoteSyncTimer);
+        remoteSyncTimer = window.setTimeout(syncCurrentUserToSupabase, 900);
+      };
+      const applyRemoteState = (stateRow, dailyRows = []) => {
+        isLoadingRemoteData = true;
+        try {
+          if (stateRow) {
+            const remoteData = stateRow.progress && typeof stateRow.progress === "object" ? stateRow.progress : {};
+            resetDynamicChapters();
+            restoreBranchChapters(remoteData.branches || []);
+            progress.clear();
+            Object.entries(remoteData.chapterProgress || remoteData).forEach(([key, value]) => {
+              const id = Number(key);
+              if (!Number.isNaN(id) && value && typeof value === "object") progress.set(id, value);
+            });
+            outputProgress.clear();
+            Object.entries(stateRow.output_progress || {}).forEach(([key, value]) => {
+              outputProgress.set(key, {
+                completedTurns: Number(value?.completedTurns) || 0,
+                score: Number(value?.score) || 0,
+                attempts: Number(value?.attempts) || 0
+              });
+            });
+            if (Number.isInteger(stateRow.current_chapter_id)) {
+              const chapterIndex = chapters.findIndex((chapter) => chapter.id === stateRow.current_chapter_id);
+              if (chapterIndex !== -1) currentChapterIndex = chapterIndex;
+            } else if (Number.isInteger(stateRow.current_chapter_index)) {
+              currentChapterIndex = Math.max(0, Math.min(stateRow.current_chapter_index, chapters.length - 1));
+            }
+            if ("localStorage" in window) {
+              localStorage.setItem(getScopedStorageKey(STORAGE_KEY), JSON.stringify(serializeProgress()));
+              localStorage.setItem(getScopedStorageKey(OUTPUT_STORAGE_KEY), JSON.stringify(Object.fromEntries(outputProgress)));
+              localStorage.setItem(getScopedStorageKey(REMINDER_STORAGE_KEY), JSON.stringify(stateRow.reminder || {}));
+              localStorage.setItem(getScopedStorageKey(QUICK_QUESTION_STORAGE_KEY), JSON.stringify(stateRow.quick_question || {}));
+            }
+          }
+          if (Array.isArray(dailyRows) && dailyRows.length) {
+            history.clear();
+            dailyRows.forEach((row) => {
+              history.set(row.record_date, {
+                timeMs: Number(row.time_ms) || 0,
+                answered: Number(row.answered) || 0,
+                correct: Number(row.correct) || 0,
+                chaptersCompleted: Number(row.chapters_completed) || 0
+              });
+            });
+            saveHistory();
+          }
+        } finally {
+          isLoadingRemoteData = false;
+        }
+      };
+      const loadRemoteUserData = async () => {
+        if (!remoteSyncEnabled || !signedInAuthUserId || !supabaseAuthClient) return false;
+        const activeViewBeforeSync = viewMode;
+        try {
+          const [stateResult, dailyResult] = await Promise.all([
+            supabaseAuthClient
+              .from("thai_user_app_state")
+              .select("current_chapter_id,current_chapter_index,progress,output_progress,reminder,quick_question")
+              .eq("user_id", signedInAuthUserId)
+              .maybeSingle(),
+            supabaseAuthClient
+              .from("thai_daily_learning_records")
+              .select("record_date,time_ms,answered,correct,chapters_completed")
+              .eq("user_id", signedInAuthUserId)
+              .order("record_date", { ascending: true })
+          ]);
+          if (stateResult.error) throw stateResult.error;
+          if (dailyResult.error) throw dailyResult.error;
+          applyRemoteState(stateResult.data, dailyResult.data || []);
+          renderChapter("text");
+          renderLearningLog();
+          renderHomePanels();
+          renderReminderSettings();
+          renderQuickQuestion();
+          renderVocabBook();
+          renderOutputMissions();
+          if (activeViewBeforeSync !== "text") showView(activeViewBeforeSync);
+          return true;
+        } catch (error) {
+          console.warn("Supabase Thai learning sync is not available yet.", error);
+          remoteSyncEnabled = false;
+          return false;
+        }
+      };
+      const syncCurrentUserToSupabase = async () => {
+        if (!remoteSyncEnabled || remoteSyncInProgress || isLoadingRemoteData || !signedInAuthUserId || !supabaseAuthClient) return;
+        remoteSyncInProgress = true;
+        try {
+          const serialized = serializeProgress();
+          const statePayload = {
+            user_id: signedInAuthUserId,
+            current_chapter_id: serialized.currentChapterId,
+            current_chapter_index: serialized.currentChapterIndex,
+            progress: { chapterProgress: serialized.progress, branches: serialized.branches },
+            output_progress: Object.fromEntries(outputProgress),
+            reminder: loadReminderSettings(),
+            quick_question: loadQuickQuestion()
+          };
+          const { error: stateError } = await supabaseAuthClient
+            .from("thai_user_app_state")
+            .upsert(statePayload, { onConflict: "user_id" });
+          if (stateError) throw stateError;
+          const rows = serializeHistoryRows();
+          if (rows.length) {
+            const { error: dailyError } = await supabaseAuthClient
+              .from("thai_daily_learning_records")
+              .upsert(rows, { onConflict: "user_id,record_date" });
+            if (dailyError) throw dailyError;
+          }
+        } catch (error) {
+          console.warn("Supabase Thai learning sync failed.", error);
+          setStatus("学習記録は端末に一時保存中です。Supabase設定後に同期されます。", "info");
+        } finally {
+          remoteSyncInProgress = false;
+        }
       };
       const resetDynamicChapters = () => {
         for (let index = chapters.length - 1; index >= 0; index -= 1) {
@@ -3822,10 +4111,12 @@
         renderQuickQuestion();
         renderOutputMissions();
         renderAdminPage();
+        if (!isAdminSession) loadRemoteUserData();
       };
 
       const applyAuthenticatedState = (studentId) => {
         isAuthenticated = true;
+        remoteSyncEnabled = true;
         signedInStudentId = normalizeStudentId(studentId);
         currentUserId.textContent = signedInEmail || signedInStudentId;
         loginError.textContent = "";
@@ -3838,6 +4129,7 @@
       const applyAdminState = (studentId = OFFICIAL_USER_ID) => {
         isAuthenticated = true;
         isAdminSession = true;
+        remoteSyncEnabled = true;
         signedInStudentId = normalizeStudentId(studentId);
         currentUserId.textContent = `${signedInEmail || signedInStudentId} / 管理者`;
         refreshRegisteredUsers();
@@ -3858,6 +4150,8 @@
         }
         signedInStudentId = "";
         signedInEmail = "";
+        signedInAuthUserId = "";
+        window.clearTimeout(remoteSyncTimer);
         clearAuthSession();
         currentUserId.textContent = "--";
         clearLoginForm();
@@ -3952,14 +4246,8 @@
       const saveProgress = () => {
         if (!("localStorage" in window) || !signedInStudentId) return;
         try {
-          const data = {
-            version: 2,
-            currentChapterIndex,
-            currentChapterId: chapters[currentChapterIndex] ? chapters[currentChapterIndex].id : null,
-            progress: Object.fromEntries(progress),
-            branches: chapters.filter((chapter) => isBranchChapter(chapter)).map((chapter) => serializeBranchChapter(chapter))
-          };
-          localStorage.setItem(getScopedStorageKey(STORAGE_KEY), JSON.stringify(data));
+          localStorage.setItem(getScopedStorageKey(STORAGE_KEY), JSON.stringify(serializeProgress()));
+          scheduleRemoteSync();
         } catch (error) {
           /* ignore storage errors */
         }
@@ -4073,6 +4361,7 @@
           { answered: 0, correct: 0, completed: 0 }
         );
         const totalStudyTime = Array.from(history.values()).reduce((sum, record) => sum + (record.timeMs || 0), 0);
+        renderReviewRecommendations();
 
         document.getElementById("today-study-time").textContent = formatMinutes(today.timeMs);
         document.getElementById("current-streak").textContent = `${streak}日`;
@@ -4180,6 +4469,96 @@
           accuracy: answered ? correct / answered : 0,
           completed: total > 0 && answered === total
         };
+      };
+
+      const getReviewIntervalDays = (reviewCount = 0) =>
+        REVIEW_INTERVAL_DAYS[Math.min(Math.max(reviewCount, 0), REVIEW_INTERVAL_DAYS.length - 1)];
+
+      const getChapterReviewInfo = (chapter) => {
+        const state = progress.get(chapter.id);
+        const review = state?.review || { count: 0, lastReviewed: "", nextReviewDate: "" };
+        return {
+          count: Number(review.count) || 0,
+          lastReviewed: review.lastReviewed || "",
+          nextReviewDate: review.nextReviewDate || ""
+        };
+      };
+
+      const getReviewRecommendations = () => {
+        const todayKey = getTodayKey();
+        return baseChapters
+          .map((chapter) => {
+            const state = progress.get(chapter.id);
+            if (!state || !isPracticeChapter(chapter)) return null;
+            const stats = computeStoredChapterStats(chapter, state);
+            if (!stats.completed) return null;
+            const review = getChapterReviewInfo(chapter);
+            const nextDate = review.nextReviewDate || todayKey;
+            if (nextDate > todayKey) return null;
+            return { chapter, review, nextDate, nextCount: review.count + 1 };
+          })
+          .filter(Boolean)
+          .sort((a, b) => a.nextDate.localeCompare(b.nextDate) || a.review.count - b.review.count)
+          .slice(0, 3);
+      };
+
+      const startReviewChapter = (chapterId) => {
+        const index = chapters.findIndex((chapter) => chapter.id === chapterId);
+        if (index < 0) return;
+        currentChapterIndex = index;
+        saveProgress();
+        renderChapter("text");
+        const audioIndex = activeLessonSteps.findIndex((step) => step.id === "audio");
+        setLessonStep(audioIndex >= 0 ? audioIndex : 0);
+        setStatus("今日は文字を見る前に、まず音だけで復習しましょう。", "success");
+      };
+
+      const renderReviewRecommendations = () => {
+        if (!reviewRecommendList) return;
+        const recommendations = getReviewRecommendations();
+        reviewRecommendList.innerHTML = "";
+        if (!recommendations.length) {
+          const empty = document.createElement("div");
+          empty.className = "review-recommend-card";
+          empty.innerHTML = "<strong>今日の復習はありません</strong><p>新しい課を進めるか、学習済みの課を音からもう一度練習できます。</p>";
+          reviewRecommendList.appendChild(empty);
+          return;
+        }
+        recommendations.forEach(({ chapter, review, nextDate, nextCount }) => {
+          const card = document.createElement("div");
+          card.className = "review-recommend-card";
+          card.innerHTML = `
+            <div>
+              <strong>${escapeHtml(chapter.title)}</strong>
+              <p>復習${nextCount}回目 / 予定日: ${formatDateLabel(nextDate)}</p>
+            </div>
+            <div class="review-recommend-actions">
+              <button type="button" data-review-chapter="${chapter.id}">音で復習</button>
+              <span>${review.lastReviewed ? `前回: ${formatDateLabel(review.lastReviewed)}` : "初回復習"}</span>
+            </div>
+          `;
+          card.querySelector("button").addEventListener("click", () => startReviewChapter(chapter.id));
+          reviewRecommendList.appendChild(card);
+        });
+      };
+
+      const markChapterReviewComplete = (chapter) => {
+        if (!chapter || !isPracticeChapter(chapter)) return;
+        const state = ensureProgress(chapter);
+        const todayKey = getTodayKey();
+        if (state.review.lastReviewed === todayKey) {
+          setStatus("この課の今日の復習はすでに記録済みです。", "info");
+          return;
+        }
+        const nextCount = (Number(state.review.count) || 0) + 1;
+        state.review.count = nextCount;
+        state.review.lastReviewed = todayKey;
+        state.review.nextReviewDate = addDaysToDateKey(todayKey, getReviewIntervalDays(nextCount - 1));
+        markStudyActivity();
+        saveProgress();
+        renderReviewRecommendations();
+        updateChapterStats(chapter);
+        setStatus(`復習${nextCount}回目を記録しました。次は${formatDateLabel(state.review.nextReviewDate)}です。`, "success");
       };
 
       const getStoredAreaTrends = (progressData) => {
@@ -4393,10 +4772,14 @@
       const getCardId = (chapterId, index) => `c${chapterId}-card-${index}`;
       const getBookCardId = (chapterId, sourceType, index) => `c${chapterId}-book-${sourceType}-${index}`;
       const getStudyEntryId = (entry) => `c${entry.chapter.id}-${entry.sourceType}-${entry.sourceIndex}`;
+      const getCoreItems = (items = [], limit = CORE_PHRASE_LIMIT) => items.slice(0, limit);
+      const getCoreBasics = (chapter) => getCoreItems(chapter.basics || [], CORE_PHRASE_LIMIT);
+      const getCoreVocab = (chapter) => getCoreItems(chapter.vocab || [], CORE_PHRASE_LIMIT);
+      const getCoreGrammar = (chapter) => getCoreItems(chapter.grammar || [], CORE_GRAMMAR_LIMIT);
       const getChapterFlashcardItems = (chapter) => [
-        ...(chapter.vocab || []).map((item) => ({ ...item, source: "単語" })),
-        ...(chapter.basics || []).map((item) => ({ ...item, source: "基本例文" })),
-        ...(chapter.dialogues || []).map((item) => ({ ...item, source: "会話表現" }))
+        ...getCoreVocab(chapter).map((item) => ({ ...item, source: "単語" })),
+        ...getCoreBasics(chapter).map((item) => ({ ...item, source: "基本例文" })),
+        ...getCoreItems(chapter.dialogues || [], 3).map((item) => ({ ...item, source: "会話表現" }))
       ].filter((item, index, array) => item.ko && item.ja && array.findIndex((other) => other.ko === item.ko && other.ja === item.ja) === index);
       const getBranchChildren = (chapter) => chapters.filter((item) => isBranchChapter(item) && item.branchParentId === chapter.id);
       const getSupportFocus = (rating) => (rating === "△" ? "sentence" : "word");
@@ -5811,8 +6194,8 @@
       });
 
       const buildStaticPairsFromChapter = (chapter) => {
-        const sentencePairs = [...chapter.basics, ...chapter.dialogues].map((item) => sentencePair(item.ko, item.ja));
-        const vocabPairs = chapter.vocab.map((item) => wordPair(item.ko, item.ja));
+        const sentencePairs = [...getCoreBasics(chapter), ...getCoreItems(chapter.dialogues || [], 3)].map((item) => sentencePair(item.ko, item.ja));
+        const vocabPairs = getCoreVocab(chapter).map((item) => wordPair(item.ko, item.ja));
         return uniqueBy([...sentencePairs, ...vocabPairs], (pair) => `${pair.ko}|${pair.ja}`);
       };
 
@@ -6149,11 +6532,13 @@
             completedOn: null,
             generationSeed: 1,
             exerciseSets: null,
-            exerciseVersion: EXERCISE_VERSION
+            exerciseVersion: EXERCISE_VERSION,
+            review: { count: 0, lastReviewed: "", nextReviewDate: "" }
           });
         }
 
         const state = progress.get(chapter.id);
+        if (!state.review) state.review = { count: 0, lastReviewed: "", nextReviewDate: "" };
 
         if (state.exerciseVersion !== EXERCISE_VERSION) {
           state.exerciseSets = null;
@@ -6349,6 +6734,68 @@
         }, delay);
       };
       const speakSlow = (text, targetEl, languageHint = "auto") => speakText(text, targetEl, 0, languageHint, 0.7);
+
+      const playAudioFocusItems = (items, repeat = 1) => {
+        if (!items.length || !("speechSynthesis" in window)) return;
+        primeSpeech();
+        pickVoice();
+        window.speechSynthesis.cancel();
+        const profile = getSpeechProfile("", "th");
+        for (let round = 0; round < repeat; round += 1) {
+          items.forEach((item) => {
+            const utterance = new SpeechSynthesisUtterance(item.ko);
+            utterance.lang = profile.lang;
+            utterance.rate = 0.7;
+            utterance.pitch = 1;
+            if (profile.voice) utterance.voice = profile.voice;
+            window.speechSynthesis.speak(utterance);
+          });
+        }
+        markStudyActivity();
+      };
+
+      const renderAudioFocusPanel = (chapter) => {
+        const focusItems = getCoreBasics(chapter);
+        audioFocusPanel.hidden = isColumnChapter(chapter) || !focusItems.length;
+        audioFocusList.innerHTML = "";
+        if (audioFocusPanel.hidden) return;
+
+        focusItems.forEach((item, index) => {
+          const card = document.createElement("article");
+          card.className = "audio-focus-card";
+          card.innerHTML = `
+            <span class="entry-badge">音 ${index + 1}</span>
+            <p class="meaning-line">${escapeHtml(item.ja)}</p>
+            ${renderThaiWithPronunciation(item.ko, "card-term")}
+            <div class="audio-focus-actions">
+              <button class="listen-btn" type="button" data-audio-focus-play>聞く</button>
+              <button class="secondary-btn" type="button" data-audio-focus-text>文字を見る</button>
+              <button class="record-btn" type="button" data-audio-focus-record>録音</button>
+              <audio data-audio-focus-playback controls hidden></audio>
+            </div>
+          `;
+          const playButton = card.querySelector("[data-audio-focus-play]");
+          const textButton = card.querySelector("[data-audio-focus-text]");
+          const recordButton = card.querySelector("[data-audio-focus-record]");
+          const playbackAudio = card.querySelector("[data-audio-focus-playback]");
+          playButton.addEventListener("click", () => speakSlow(item.ko, card, "th"));
+          textButton.addEventListener("click", () => {
+            card.classList.toggle("show-text");
+            textButton.textContent = card.classList.contains("show-text") ? "文字を隠す" : "文字を見る";
+            markStudyActivity();
+          });
+          if (recordingSupported) {
+            recordButton.addEventListener("click", () => toggleRecording(card, recordButton, playbackAudio));
+          } else {
+            recordButton.disabled = true;
+            recordButton.textContent = "録音不可";
+          }
+          audioFocusList.appendChild(card);
+        });
+
+        audioFocusPlayAllButton.onclick = () => playAudioFocusItems(focusItems, 1);
+        audioFocusRepeatButton.onclick = () => playAudioFocusItems(focusItems, 3);
+      };
 
       const speakSceneDialogue = (items, targetEl) => {
         const lines = items.filter((item) => item && item.ko).slice(0, 6);
@@ -7463,14 +7910,14 @@
         });
       };
       const simplifyThaiGrammarPoint = (point = "") => {
-        if (/ครับ|ค่ะ|丁寧/.test(point)) return `${point} - 文の最後に付けると丁寧になります。男性は ครับ、女性は ค่ะ を使うことが多いです。まず音で覚えます。`;
-        if (/ไหม|疑問/.test(point)) return `${point} - 文の最後に ไหม を付けると「〜ですか？」になります。語順は大きく変えなくて大丈夫です。`;
-        if (/ขอ|เอา|ください|注文/.test(point)) return `${point} - ขอ は「ください」、เอา は「これにする」に近い注文表現です。食べ物名を後ろに置きます。`;
-        if (/อยู่|場所|ที่/.test(point)) return `${point} - อยู่ は「いる・ある」です。อยู่ที่ + 場所 で「〜にいます」と言えます。`;
-        if (/ไป|ทาง|เลี้ยว|ตรง/.test(point)) return `${point} - 道案内では ไป「行く」、ตรงไป「まっすぐ」、เลี้ยว「曲がる」を音でセットにします。`;
-        if (/ไม่|否定/.test(point)) return `${point} - ไม่ を前に置くと「〜ではない・〜しない」です。ไม่เผ็ด は「辛くない」です。`;
-        if (/ตัวเลข|数|助数詞|คน|จาน|แก้ว/.test(point)) return `${point} - 数字は名詞の後ろに来ることが多いです。อาหารหนึ่งจาน のように、物+数+数える言葉で覚えます。`;
-        return `${point} - まず例文を聞いて、意味を確認します。そのあと単語だけ入れ替えて使います。`;
+        if (/ครับ|ค่ะ|丁寧/.test(point)) return `${point}: 文末に付ける丁寧表現。男性は ครับ、女性は ค่ะ。`;
+        if (/ไหม|疑問/.test(point)) return `${point}: 文末の ไหม で「〜ですか？」。`;
+        if (/ขอ|เอา|ください|注文/.test(point)) return `${point}: ขอ は「ください」、เอา は注文の「これにする」。`;
+        if (/อยู่|場所|ที่/.test(point)) return `${point}: อยู่ที่ + 場所で「〜にいます」。`;
+        if (/ไป|ทาง|เลี้ยว|ตรง/.test(point)) return `${point}: ไป「行く」、ตรงไป「まっすぐ」、เลี้ยว「曲がる」。`;
+        if (/ไม่|否定/.test(point)) return `${point}: ไม่ を前に置いて否定する。`;
+        if (/ตัวเลข|数|助数詞|คน|จาน|แก้ว/.test(point)) return `${point}: 物 + 数 + 助数詞を音のまとまりで覚える。`;
+        return `${point}: 例文をまねして、単語だけ入れ替える。`;
       };
 
       const createVocabQuizSet = (entries, direction, seedKey) => {
@@ -7817,6 +8264,12 @@
 
       const updateChapterStats = (chapter) => {
         const stats = computeChapterStats(chapter);
+        const review = getChapterReviewInfo(chapter);
+        reviewCompleteButton.hidden = !isPracticeChapter(chapter);
+        reviewCompleteButton.textContent = review.lastReviewed === getTodayKey()
+          ? `復習${review.count}回目 記録済み`
+          : `復習${review.count + 1}回目を記録`;
+        reviewCompleteButton.disabled = review.lastReviewed === getTodayKey();
         if (!isPracticeChapter(chapter)) {
           chapterScore.textContent = "このページは単語コラムです。";
           chapterProgressDetail.textContent = `まとめ単語: ${chapter.vocab.length}語`;
@@ -8599,6 +9052,65 @@
         renderAdminPage();
       };
 
+      const getLessonPanelDefinitions = () => [
+        { id: "scene", label: "場面", panel: scenePanel },
+        { id: "audio", label: "聞く", panel: audioFocusPanel },
+        { id: "basic", label: "基本", panel: basicPanel },
+        { id: "grammar", label: "文法", panel: grammarPanel },
+        { id: "vocab", label: "単語", panel: vocabPanel },
+        { id: "cards", label: "カード", panel: flashcardPanel },
+        { id: "listening", label: "聞き取り", panel: listeningPanel },
+        { id: "quiz", label: "練習", panel: quizPanel },
+        { id: "result", label: "結果", panel: resultsPanel },
+        { id: "output", label: "話す", panel: outputPanel }
+      ];
+
+      const setLessonStep = (index, scrollToTabs = false) => {
+        if (!activeLessonSteps.length) return;
+        lessonStepIndex = Math.max(0, Math.min(index, activeLessonSteps.length - 1));
+        activeLessonSteps.forEach((step, stepIndex) => {
+          step.panel.classList.add("lesson-panel");
+          step.panel.classList.toggle("active", stepIndex === lessonStepIndex);
+        });
+        Array.from(lessonStepTabs.children).forEach((button, buttonIndex) => {
+          button.classList.toggle("active", buttonIndex === lessonStepIndex);
+        });
+        lessonStepPrevButton.disabled = lessonStepIndex === 0;
+        lessonStepNextButton.disabled = lessonStepIndex === activeLessonSteps.length - 1;
+        lessonStepCounter.textContent = `${lessonStepIndex + 1} / ${activeLessonSteps.length}`;
+        if (scrollToTabs) lessonStepTabs.scrollIntoView({ behavior: "smooth", block: "start" });
+      };
+
+      const renderLessonSteps = (chapter, mode = "text") => {
+        const key = `${mode}:${chapter.id}`;
+        if (lastLessonChapterKey !== key) {
+          lessonStepIndex = 0;
+          lastLessonChapterKey = key;
+        }
+        const panelDefinitions = getLessonPanelDefinitions();
+        panelDefinitions.forEach((step) => {
+          step.panel.classList.add("lesson-panel");
+          step.panel.classList.remove("active");
+        });
+        activeLessonSteps = panelDefinitions.filter((step) => !step.panel.hidden);
+        lessonStepTabs.innerHTML = "";
+        activeLessonSteps.forEach((step, index) => {
+          step.panel.classList.add("lesson-panel");
+          const button = document.createElement("button");
+          button.type = "button";
+          button.className = "lesson-step-btn";
+          button.textContent = step.label;
+          button.addEventListener("click", () => setLessonStep(index, true));
+          lessonStepTabs.appendChild(button);
+        });
+        const showControls = activeLessonSteps.length > 1;
+        lessonStepTabs.hidden = !showControls;
+        lessonStepPrevButton.hidden = !showControls;
+        lessonStepNextButton.hidden = !showControls;
+        lessonStepCounter.hidden = !showControls;
+        setLessonStep(lessonStepIndex);
+      };
+
       const renderChapter = (mode = "text") => {
         showView(mode);
         const chapter = chapters[currentChapterIndex];
@@ -8615,19 +9127,20 @@
             : `Lesson ${chapter.lessonNumber}`;
 
         renderSceneIllustration(chapter);
-        basicPanel.hidden = chapter.basics.length === 0;
-        grammarPanel.hidden = chapter.grammar.length === 0;
+        renderAudioFocusPanel(chapter);
+        basicPanel.hidden = getCoreBasics(chapter).length === 0;
+        grammarPanel.hidden = getCoreGrammar(chapter).length === 0;
         dialoguePanel.hidden = true;
-        vocabPanel.hidden = chapter.vocab.length === 0;
+        vocabPanel.hidden = getCoreVocab(chapter).length === 0;
         flashcardPanel.hidden = !isPracticeChapter(chapter);
         quizPanel.hidden = !isPracticeChapter(chapter);
         resultsPanel.hidden = isColumn;
 
         basicList.innerHTML = "";
-        chapter.basics.forEach((item) => basicList.appendChild(createSentenceRow(item)));
+        getCoreBasics(chapter).forEach((item) => basicList.appendChild(createSentenceRow(item)));
 
         grammarList.innerHTML = "";
-        chapter.grammar.forEach((point) => {
+        getCoreGrammar(chapter).forEach((point) => {
           const li = document.createElement("li");
           li.textContent = simplifyThaiGrammarPoint(point);
           grammarList.appendChild(li);
@@ -8637,7 +9150,7 @@
         dialogueList.innerHTML = "";
 
         vocabList.innerHTML = "";
-        chapter.vocab.forEach((item) => {
+        getCoreVocab(chapter).forEach((item) => {
           vocabList.appendChild(createVocabItem(item));
         });
 
@@ -8665,6 +9178,7 @@
           listeningPanel.hidden = true;
           outputPanel.hidden = true;
         }
+        renderLessonSteps(chapter, mode);
         updateAllStats();
         const firstAudioItem = chapter.dialogues[0] || chapter.basics[0] || chapter.vocab[0];
         if (mode === "text" && firstAudioItem) {
@@ -8732,6 +9246,10 @@
         renderChapter("text");
         setStatus(`${getFocusLabel(focus)}問題を新しい内容に差し替えました。`, "success");
       });
+
+      lessonStepPrevButton.addEventListener("click", () => setLessonStep(lessonStepIndex - 1, true));
+      lessonStepNextButton.addEventListener("click", () => setLessonStep(lessonStepIndex + 1, true));
+      reviewCompleteButton.addEventListener("click", () => markChapterReviewComplete(chapters[currentChapterIndex]));
 
       navHomeButton.addEventListener("click", () => {
         showView("home");
