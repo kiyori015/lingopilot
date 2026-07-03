@@ -502,6 +502,128 @@
         margin: 0 0 10px;
       }
 
+      .home-dashboard-tabs {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 8px;
+        margin: 0 0 14px;
+        padding: 6px;
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        background: rgba(255, 255, 255, 0.72);
+      }
+
+      .home-dashboard-tab {
+        border: 0;
+        border-radius: 12px;
+        padding: 11px 10px;
+        background: transparent;
+        color: var(--muted);
+        font-weight: 800;
+        cursor: pointer;
+      }
+
+      .home-dashboard-tab.active {
+        background: var(--accent);
+        color: #fff;
+        box-shadow: 0 8px 20px rgba(0, 127, 127, 0.2);
+      }
+
+      .home-dashboard-panel {
+        display: none;
+      }
+
+      .home-dashboard-panel.active {
+        display: grid;
+        gap: 14px;
+        animation: panelIn 0.24s ease;
+      }
+
+      .home-dashboard-panel[data-home-dashboard-panel="records"],
+      .home-dashboard-panel[data-home-dashboard-panel="settings"] {
+        grid-template-columns: minmax(0, 1.35fr) minmax(280px, 0.65fr);
+        align-items: start;
+      }
+
+      .home-dashboard-panel .calendar-wrap,
+      .home-dashboard-panel .daily-log-wrap,
+      .home-dashboard-panel .stats-card,
+      .home-dashboard-panel .log-card {
+        margin-top: 0 !important;
+      }
+
+      .home-dashboard-panel #badge-strip {
+        grid-column: 1 / -1;
+      }
+
+      .home-dashboard-panel[data-home-dashboard-panel="overview"] .learning-summary {
+        grid-template-columns: repeat(6, minmax(0, 1fr));
+        gap: 8px;
+      }
+
+      .home-dashboard-panel[data-home-dashboard-panel="overview"] .log-card {
+        padding: 10px;
+      }
+
+      .lesson-step-tabs[hidden],
+      #lesson-step-prev[hidden],
+      #lesson-step-next[hidden],
+      #lesson-step-counter[hidden] {
+        display: none !important;
+      }
+
+      .intro-guide-panel {
+        overflow: hidden;
+        background: linear-gradient(145deg, rgba(255,255,255,0.98), rgba(230,242,240,0.72));
+      }
+
+      .intro-guide-head {
+        display: flex;
+        justify-content: space-between;
+        gap: 16px;
+        align-items: flex-start;
+        margin-bottom: 16px;
+      }
+
+      .intro-guide-head h3,
+      .intro-tip h4 {
+        margin: 0;
+      }
+
+      .intro-guide-head p,
+      .intro-tip p {
+        margin: 6px 0 0;
+        color: var(--muted);
+      }
+
+      .intro-guide-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px;
+      }
+
+      .intro-tip {
+        padding: 16px;
+        border: 1px solid rgba(0, 127, 127, 0.16);
+        border-radius: 16px;
+        background: rgba(255,255,255,0.88);
+      }
+
+      .intro-example {
+        display: block;
+        margin-top: 10px;
+        padding: 10px 12px;
+        border-radius: 12px;
+        background: rgba(0, 127, 127, 0.1);
+        font-weight: 800;
+      }
+
+      .intro-guide-action {
+        display: flex;
+        justify-content: flex-end;
+        margin-top: 16px;
+      }
+
       .audio-focus-actions,
       .review-recommend-actions {
         display: flex;
@@ -1817,6 +1939,19 @@
       }
 
       @media (max-width: 720px) {
+        .home-dashboard-panel[data-home-dashboard-panel="records"],
+        .home-dashboard-panel[data-home-dashboard-panel="settings"],
+        .intro-guide-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .intro-guide-head {
+          flex-direction: column;
+        }
+
+        .home-dashboard-panel[data-home-dashboard-panel="overview"] .learning-summary {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
         body {
           padding: 20px 16px 40px;
         }
@@ -2018,7 +2153,7 @@
             </article>
             <article class="log-card">
               <h4>完了章</h4>
-              <p id="completed-chapters">0 / 21章</p>
+              <p id="completed-chapters">0 / 20章</p>
             </article>
           </div>
           <div class="stats-grid">
@@ -2215,6 +2350,42 @@
             </div>
 
             <div id="lesson-step-tabs" class="lesson-step-tabs" aria-label="学習ステップ"></div>
+
+            <section id="intro-panel" class="panel intro-guide-panel" hidden>
+              <div class="intro-guide-head">
+                <div>
+                  <p class="chapter-label">3〜5分で確認</p>
+                  <h3>韓国語を始める前に、これだけ</h3>
+                  <p>暗記や問題はありません。最初に知っておくと、これからの学習が楽になる4つの基本です。</p>
+                </div>
+                <span class="chip">超入門ガイド</span>
+              </div>
+              <div class="intro-guide-grid">
+                <article class="intro-tip">
+                  <h4>1. 語順は日本語とほぼ同じ</h4>
+                  <p>「私は・水を・飲みます」の並びを、そのまま韓国語にできます。</p>
+                  <span class="intro-example">저는 ・ 물을 ・ 마셔요<br />私は ・ 水を ・ 飲みます</span>
+                </article>
+                <article class="intro-tip">
+                  <h4>2. 丁寧な会話は「요」で終わる</h4>
+                  <p>初心者のうちは、文末が「ヨ」と聞こえる形をまねすれば十分です。</p>
+                  <span class="intro-example">안녕하세요（こんにちは）<br />감사해요（ありがとうございます）</span>
+                </article>
+                <article class="intro-tip">
+                  <h4>3. ハングルは音を表す文字</h4>
+                  <p>一文字ずつではなく、四角いかたまりで一つの音になります。最初から全部読めなくても大丈夫です。</p>
+                  <span class="intro-example">한 = ㅎ + ㅏ + ㄴ<br />まずは音と形を一緒に見る</span>
+                </article>
+                <article class="intro-tip">
+                  <h4>4. 文字より先に音を聞く</h4>
+                  <p>完璧な発音より、「聞いて意味が分かる」「短くまねできる」を目標に進めます。</p>
+                  <span class="intro-example">聞く → 意味を確認 → まねする</span>
+                </article>
+              </div>
+              <div class="intro-guide-action">
+                <button id="intro-next" class="primary-btn" type="button">確認できたので第1章へ</button>
+              </div>
+            </section>
 
             <section id="scene-panel" class="panel">
               <div class="panel-title">
@@ -2481,8 +2652,10 @@
       const CORE_PHRASE_LIMIT = 5;
       const CORE_GRAMMAR_LIMIT = 3;
       const REVIEW_INTERVAL_DAYS = [1, 3, 7];
+      const isIntroChapter = (chapter) => Number(chapter && chapter.id) === 0;
       const isListeningChapter = (chapter) => chapter.type === "listening";
       const isColumnChapter = (chapter) => chapter.type === "column";
+      const getScoredBaseChapters = () => baseChapters.filter((chapter) => !isIntroChapter(chapter));
       const hasListeningPanel = (chapter) => isListeningChapter(chapter) || (!isColumnChapter(chapter) && chapter.id > 0 && chapter.id % 3 === 0);
       const AUTH_STORAGE_KEY = "starter-auth-session";
       const USER_REGISTRY_KEY = "starter-user-registry";
@@ -3428,6 +3601,8 @@
       const dialogueList = document.getElementById("dialogue-list");
       const scenePanel = document.getElementById("scene-panel");
       const sceneIllustration = document.getElementById("scene-illustration");
+      const introPanel = document.getElementById("intro-panel");
+      const introNextButton = document.getElementById("intro-next");
       const audioFocusPanel = document.getElementById("audio-focus-panel");
       const audioFocusList = document.getElementById("audio-focus-list");
       const audioFocusPlayAllButton = document.getElementById("audio-focus-play-all");
@@ -3536,6 +3711,82 @@
         statusTimer = window.setTimeout(() => {
           statusEl.classList.remove("show");
         }, 3000);
+      };
+
+      const setupHomeDashboard = () => {
+        if (!homeView || homeView.dataset.dashboardReady === "true") return;
+        const host = homeView.querySelector(".learning-log") || homeView.querySelector(".home-grid .home-stack .panel");
+        if (!host) return;
+        homeView.dataset.dashboardReady = "true";
+        host.classList.add("home-dashboard");
+        const homeGrid = homeView.querySelector(".home-grid");
+        if (homeGrid) homeGrid.classList.add("home-grid--dashboard");
+
+        const title = host.querySelector(":scope > .panel-title");
+        if (title) {
+          const heading = title.querySelector("h3");
+          const note = title.querySelector("p");
+          if (heading) heading.textContent = "マイページ";
+          if (note) note.textContent = "必要な情報だけ、タブで切り替えて確認できます。";
+        }
+
+        const tabs = document.createElement("div");
+        tabs.className = "home-dashboard-tabs";
+        tabs.setAttribute("role", "tablist");
+        const panelDefinitions = [
+          { id: "overview", label: "概要" },
+          { id: "records", label: "学習記録" },
+          { id: "settings", label: "設定・質問" }
+        ];
+        const panels = {};
+        panelDefinitions.forEach(({ id, label }, index) => {
+          const button = document.createElement("button");
+          button.type = "button";
+          button.className = `home-dashboard-tab${index === 0 ? " active" : ""}`;
+          button.dataset.homeDashboardTarget = id;
+          button.setAttribute("role", "tab");
+          button.setAttribute("aria-selected", index === 0 ? "true" : "false");
+          button.textContent = label;
+          tabs.appendChild(button);
+
+          const panel = document.createElement("div");
+          panel.className = `home-dashboard-panel${index === 0 ? " active" : ""}`;
+          panel.dataset.homeDashboardPanel = id;
+          panel.setAttribute("role", "tabpanel");
+          panels[id] = panel;
+        });
+
+        const reviewCard = reviewRecommendList && reviewRecommendList.closest(".stats-card, .log-card");
+        const summary = homeView.querySelector(".learning-summary");
+        const trendSource = document.getElementById("strong-areas");
+        const trends = trendSource && trendSource.closest(".stats-grid, .log-card");
+        const featureGrid = homeView.querySelector(".feature-grid");
+        const calendar = homeView.querySelector(".calendar-wrap");
+        const daily = homeView.querySelector(".daily-log-wrap");
+        const badges = document.getElementById("badge-strip");
+        const reminder = reminderStatus && reminderStatus.closest(".stats-card, .log-card");
+        const question = quickQuestionAnswer && quickQuestionAnswer.closest(".stats-card, .log-card");
+        [reviewCard, summary, featureGrid, trends].filter(Boolean).forEach((node) => panels.overview.appendChild(node));
+        [calendar, daily, badges].filter(Boolean).forEach((node) => panels.records.appendChild(node));
+        [reminder, question].filter(Boolean).forEach((node) => panels.settings.appendChild(node));
+
+        host.appendChild(tabs);
+        panelDefinitions.forEach(({ id }) => host.appendChild(panels[id]));
+        homeView.querySelectorAll(".home-grid > .home-stack").forEach((stack) => {
+          if (!stack.children.length) stack.hidden = true;
+        });
+
+        tabs.querySelectorAll("[data-home-dashboard-target]").forEach((button) => {
+          button.addEventListener("click", () => {
+            const target = button.dataset.homeDashboardTarget;
+            tabs.querySelectorAll("[data-home-dashboard-target]").forEach((tabButton) => {
+              const active = tabButton.dataset.homeDashboardTarget === target;
+              tabButton.classList.toggle("active", active);
+              tabButton.setAttribute("aria-selected", active ? "true" : "false");
+            });
+            Object.entries(panels).forEach(([id, panel]) => panel.classList.toggle("active", id === target));
+          });
+        });
       };
 
       const padNumber = (value) => String(value).padStart(2, "0");
@@ -5848,6 +6099,9 @@
       };
 
       const computeChapterStats = (chapter) => {
+        if (isIntroChapter(chapter)) {
+          return { total: 0, answered: 0, correct: 0, accuracy: 0, rating: "超入門" };
+        }
         const state = ensureProgress(chapter);
         const totalQuiz = chapter.quizSets.krjp.length + chapter.quizSets.jpkr.length;
         const totalListening = chapter.quizSets.listening.length;
@@ -5886,6 +6140,9 @@
       };
 
       const computeStoredChapterStats = (chapter, state) => {
+        if (isIntroChapter(chapter)) {
+          return { total: 0, answered: 0, correct: 0, accuracy: 0, completed: false };
+        }
         if (!state) {
           return { total: 0, answered: 0, correct: 0, accuracy: 0, completed: false };
         }
@@ -5935,7 +6192,7 @@
         return baseChapters
           .map((chapter) => {
             const state = progress.get(chapter.id);
-            if (!state || isListeningChapter(chapter) || isColumnChapter(chapter)) return null;
+            if (!state || isIntroChapter(chapter) || isListeningChapter(chapter) || isColumnChapter(chapter)) return null;
             const stats = computeStoredChapterStats(chapter, state);
             if (!stats.completed) return null;
             const review = getChapterReviewInfo(chapter);
@@ -6000,7 +6257,7 @@
       };
 
       const markChapterReviewComplete = (chapter) => {
-        if (!chapter || isListeningChapter(chapter) || isColumnChapter(chapter)) return;
+        if (!chapter || isIntroChapter(chapter) || isListeningChapter(chapter) || isColumnChapter(chapter)) return;
         const state = ensureProgress(chapter);
         const todayKey = getTodayKey();
         if (state.review.lastReviewed === todayKey) {
@@ -6101,7 +6358,8 @@
         const monthCalendar = getMonthCalendar(new Date());
         const recent = getRecentHistory(7);
         const streak = computeCurrentStreak(Object.fromEntries(history));
-        const totals = baseChapters.reduce((acc, chapter) => {
+        const scoredChapters = getScoredBaseChapters();
+        const totals = scoredChapters.reduce((acc, chapter) => {
           const stats = computeChapterStats(chapter);
           acc.answered += stats.answered;
           acc.correct += stats.correct;
@@ -6115,7 +6373,7 @@
         document.getElementById("total-study-time").textContent = formatMinutes(totalStudyTime);
         document.getElementById("total-answered").textContent = `${totals.answered}問`;
         document.getElementById("total-accuracy").textContent = totals.answered ? `${Math.round((totals.correct / totals.answered) * 100)}%` : "--%";
-        document.getElementById("completed-chapters").textContent = `${totals.completed} / ${baseChapters.length}章`;
+        document.getElementById("completed-chapters").textContent = `${totals.completed} / ${scoredChapters.length}章`;
         const trends = getAreaTrends();
         document.getElementById("strong-areas").textContent = trends.strong.length ? `得意: ${trends.strong.join("、")}` : "得意分野はまだ集計中です。";
         document.getElementById("weak-areas").textContent = trends.weak.length ? `苦手: ${trends.weak.join("、")}` : "苦手分野はまだ集計中です。";
@@ -6444,6 +6702,15 @@
 
       const updateChapterStats = (chapter) => {
         const stats = computeChapterStats(chapter);
+        if (isIntroChapter(chapter)) {
+          reviewCompleteButton.hidden = true;
+          gradeAllButton.hidden = true;
+          supportOpenButton.hidden = true;
+          nextChapterButton.disabled = false;
+          return;
+        }
+        reviewCompleteButton.hidden = false;
+        gradeAllButton.hidden = false;
         const percent = Math.round(stats.accuracy * 100);
         const review = getChapterReviewInfo(chapter);
         if (reviewCompleteButton) {
@@ -6612,13 +6879,13 @@
           });
       };
       const getVocabSourceChapters = (value = "all") => {
-        if (value === "all" || value === "text") return baseChapters;
+        if (value === "all" || value === "text") return getScoredBaseChapters();
         if (value === "column") return columnChapters;
         if (value.startsWith("chapter-")) {
           const id = Number(value.replace("chapter-", ""));
-          return chapters.filter((chapter) => chapter.id === id);
+          return chapters.filter((chapter) => chapter.id === id && !isIntroChapter(chapter));
         }
-        return baseChapters;
+        return getScoredBaseChapters();
       };
       const getVisibleVocabEntries = (value = "all") => getVocabSourceChapters(value).flatMap(buildStudyEntriesFromChapter);
       const filterVocabEntriesByStatus = (entries, statusValue) =>
@@ -6891,6 +7158,7 @@
         const previous = vocabFilter.value || "all";
         vocabFilter.innerHTML = `<option value="all">全チャプター</option><option value="text">20章のテキスト</option><option value="column">単語コラム</option>`;
         chapters.forEach((chapter) => {
+          if (isIntroChapter(chapter)) return;
           if (!buildStudyEntriesFromChapter(chapter).length) return;
           const option = document.createElement("option");
           option.value = `chapter-${chapter.id}`;
@@ -6923,7 +7191,7 @@
         let correct = 0;
         let completed = 0;
 
-        chapters.forEach((chapter) => {
+        getScoredBaseChapters().forEach((chapter) => {
           const stats = computeChapterStats(chapter);
           total += stats.total;
           answered += stats.answered;
@@ -6936,7 +7204,7 @@
         const percent = total ? Math.round((correct / total) * 100) : 0;
         overallScore.textContent = `正答率: ${percent}%`;
         overallProgress.textContent = `回答済み: ${answered} / ${total}`;
-        overallComplete.textContent = `完了章: ${completed} / ${baseChapters.length}`;
+        overallComplete.textContent = `完了章: ${completed} / ${getScoredBaseChapters().length}`;
       };
 
       const updateChapterList = () => {
@@ -6950,8 +7218,9 @@
             button.classList.add("active");
           }
 
-          const statusText =
-            stats.answered === 0
+          const statusText = isIntroChapter(chapter)
+            ? "ガイド"
+            : stats.answered === 0
               ? "--"
               : stats.answered < stats.total
                 ? "途中"
@@ -6961,6 +7230,7 @@
           if (stats.rating === "○") statusClass += " good";
           if (stats.rating === "△") statusClass += " mid";
           if (stats.rating === "×") statusClass += " bad";
+          if (isIntroChapter(chapter)) statusClass += " good";
           if (isColumnChapter(chapter)) statusClass += " good";
 
           button.innerHTML = `
@@ -7009,6 +7279,7 @@
       };
 
       const getLessonPanelDefinitions = () => [
+        { id: "intro", label: "超入門", panel: introPanel },
         { id: "scene", label: "場面", panel: scenePanel },
         { id: "audio", label: "聞く", panel: audioFocusPanel },
         { id: "basic", label: "基本", panel: basicPanel },
@@ -7045,7 +7316,12 @@
           lessonStepIndex = 0;
           lastLessonChapterKey = key;
         }
-        activeLessonSteps = getLessonPanelDefinitions().filter((step) => !step.panel.hidden);
+        const panelDefinitions = getLessonPanelDefinitions();
+        panelDefinitions.forEach((step) => {
+          step.panel.classList.add("lesson-panel");
+          step.panel.classList.remove("active");
+        });
+        activeLessonSteps = panelDefinitions.filter((step) => !step.panel.hidden);
         lessonStepTabs.innerHTML = "";
         activeLessonSteps.forEach((step, index) => {
           step.panel.classList.add("lesson-panel");
@@ -7066,14 +7342,25 @@
       const renderChapter = (mode = "main") => {
         showView(mode);
         const chapter = chapters[currentChapterIndex];
-        const state = ensureProgress(chapter);
+        const introOnly = isIntroChapter(chapter);
         const listeningOnly = isListeningChapter(chapter);
         const columnOnly = isColumnChapter(chapter);
 
         chapterTitle.textContent = chapter.title;
         chapterSubtitle.textContent = chapter.subtitle;
         chapterProgress.textContent = `${currentChapterIndex + 1} / ${chapters.length}`;
-        chapterLabel.textContent = isColumnChapter(chapter) ? `Vocabulary Column ${chapter.columnNumber}` : listeningOnly ? "Listening Chapter" : "Chapter";
+        chapterLabel.textContent = introOnly ? "Quick Start" : isColumnChapter(chapter) ? `Vocabulary Column ${chapter.columnNumber}` : listeningOnly ? "Listening Chapter" : "Chapter";
+
+        introPanel.hidden = !introOnly;
+        if (introOnly) {
+          [scenePanel, audioFocusPanel, basicPanel, grammarPanel, dialoguePanel, vocabPanel, flashcardPanel, listeningPanel, quizPanel, resultsPanel, outputPanel]
+            .forEach((panel) => { panel.hidden = true; });
+          renderLessonSteps(chapter, mode);
+          updateAllStats();
+          return;
+        }
+
+        const state = ensureProgress(chapter);
 
         renderSceneIllustration(chapter);
         renderAudioFocusPanel(chapter);
@@ -7208,6 +7495,15 @@
         if (currentChapterIndex >= chapters.length - 1) return;
         currentChapterIndex += 1;
         renderChapter("main");
+      });
+
+      introNextButton.addEventListener("click", () => {
+        const firstLessonIndex = chapters.findIndex((chapter) => !isIntroChapter(chapter) && !isListeningChapter(chapter) && !isColumnChapter(chapter));
+        if (firstLessonIndex < 0) return;
+        currentChapterIndex = firstLessonIndex;
+        saveProgress();
+        renderChapter("main");
+        setStatus("超入門を確認しました。第1章から始めましょう。", "success");
       });
 
       lessonStepPrevButton.addEventListener("click", () => {
@@ -7486,6 +7782,7 @@
         setStatus("録音はこのブラウザで利用できません。", "warn");
       }
 
+      setupHomeDashboard();
       refreshRegisteredUsers();
       clearAuthSession();
       setAppVisibility(false);
