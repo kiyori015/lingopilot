@@ -951,16 +951,93 @@
         color: #b25e80;
       }
 
+      .card-wrapper {
+        position: relative;
+      }
+
       .card-wrapper.correct .card-inner {
-        border-color: rgba(255, 156, 82, 0.5);
+        border: 2px solid #1a8f4d;
+        box-shadow: 0 0 0 3px rgba(26, 143, 77, 0.16);
+      }
+
+      .card-wrapper.correct .card-face {
+        background: linear-gradient(140deg, #eaf7ef, #d9f0e2);
       }
 
       .card-wrapper.review .card-inner {
-        border-color: rgba(255, 202, 106, 0.56);
+        border: 2px solid #c07f1a;
+        box-shadow: 0 0 0 3px rgba(192, 127, 26, 0.16);
+      }
+
+      .card-wrapper.review .card-face {
+        background: linear-gradient(140deg, #fdf4e3, #f9ead0);
       }
 
       .card-wrapper.incorrect .card-inner {
-        border-color: rgba(201, 61, 45, 0.5);
+        border: 2px solid #d03b2c;
+        box-shadow: 0 0 0 3px rgba(208, 59, 44, 0.16);
+      }
+
+      .card-wrapper.incorrect .card-face {
+        background: linear-gradient(140deg, #fdecea, #f9dcd7);
+      }
+
+      .card-wrapper.correct::after,
+      .card-wrapper.review::after,
+      .card-wrapper.incorrect::after {
+        position: absolute;
+        top: -10px;
+        right: -6px;
+        z-index: 2;
+        padding: 4px 10px;
+        border-radius: 999px;
+        font-size: 0.75rem;
+        font-weight: 800;
+        color: #fff;
+        box-shadow: 0 6px 14px rgba(31, 28, 26, 0.18);
+      }
+
+      #flashcard-list .card-wrapper.correct::after {
+        content: "○ 正解";
+        background: #1a8f4d;
+      }
+
+      #flashcard-list .card-wrapper.incorrect::after {
+        content: "× 不正解";
+        background: #d03b2c;
+      }
+
+      #vocab-page-list .card-wrapper.correct::after {
+        content: "○ 覚えた";
+        background: #1a8f4d;
+      }
+
+      #vocab-page-list .card-wrapper.review::after {
+        content: "△ 不安";
+        background: #c07f1a;
+      }
+
+      #vocab-page-list .card-wrapper.incorrect::after {
+        content: "× 覚えてない";
+        background: #d03b2c;
+      }
+
+      .card-actions .mark-good.selected,
+      .study-actions .mark-good.selected {
+        background: #1a8f4d;
+        color: #fff;
+      }
+
+      .card-actions .mark-review.selected,
+      .study-actions .mark-review.selected {
+        background: #c07f1a;
+        color: #fff;
+      }
+
+      .card-actions .mark-bad.selected,
+      .study-actions .mark-bad.selected {
+        background: #d03b2c;
+        color: #fff;
       }
 
       .quiz-wrap {
@@ -1148,19 +1225,49 @@
       }
 
       .quiz-option.correct {
-        border-color: rgba(255, 156, 82, 0.42);
-        background: rgba(255, 156, 82, 0.13);
+        border-color: #1a8f4d;
+        background: #e7f6ed;
+        box-shadow: inset 4px 0 0 #1a8f4d;
       }
 
       .quiz-option.incorrect {
-        border-color: rgba(240, 127, 168, 0.42);
-        background: rgba(255, 193, 214, 0.28);
+        border-color: #d03b2c;
+        background: #fdeae7;
+        box-shadow: inset 4px 0 0 #d03b2c;
+      }
+
+      .quiz-option.correct .quiz-option-body::before {
+        content: "✓";
+        color: #15803d;
+        font-weight: 900;
+        font-size: 1.1rem;
+        margin-right: 4px;
+      }
+
+      .quiz-option.incorrect .quiz-option-body::before {
+        content: "✕";
+        color: #b91c1c;
+        font-weight: 900;
+        font-size: 1.1rem;
+        margin-right: 4px;
       }
 
       .quiz-result {
         margin: 8px 0 0;
         font-size: 0.85rem;
         color: var(--muted);
+      }
+
+      .quiz-result.ok {
+        color: #15803d;
+        font-weight: 800;
+        font-size: 0.95rem;
+      }
+
+      .quiz-result.ng {
+        color: #b91c1c;
+        font-weight: 800;
+        font-size: 0.95rem;
       }
 
       .stats-grid {
@@ -1952,13 +2059,15 @@
       }
 
       .game-option.correct {
-        border-color: rgba(255, 156, 82, 0.42);
-        background: rgba(255, 156, 82, 0.12);
+        border-color: #1a8f4d;
+        background: #e7f6ed;
+        font-weight: 700;
       }
 
       .game-option.incorrect {
-        border-color: rgba(255, 168, 143, 0.46);
-        background: rgba(255, 201, 184, 0.28);
+        border-color: #d03b2c;
+        background: #fdeae7;
+        font-weight: 700;
       }
 
       .game-empty {
@@ -2666,6 +2775,193 @@
         backdrop-filter: blur(10px);
       }
 
+      #vocab-deck-good.selected {
+        background: #1a8f4d;
+        color: #fff;
+      }
+
+      #vocab-deck-review.selected {
+        background: #c07f1a;
+        color: #fff;
+      }
+
+      #vocab-deck-bad.selected {
+        background: #d03b2c;
+        color: #fff;
+      }
+
+      .grammar-formula {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .grammar-formula .block {
+        padding: 10px 14px;
+        border-radius: 12px;
+        font-weight: 800;
+        background: rgba(255, 155, 94, 0.16);
+        color: var(--accent-strong);
+        border: 1px solid rgba(255, 155, 94, 0.34);
+      }
+
+      .grammar-formula .block.alt {
+        background: rgba(88, 158, 141, 0.16);
+        color: #2e6e5e;
+        border-color: rgba(88, 158, 141, 0.36);
+      }
+
+      .grammar-formula .equals {
+        font-weight: 800;
+        color: var(--muted);
+      }
+
+      .grammar-formula .meaning {
+        padding: 10px 14px;
+        border-radius: 12px;
+        background: rgba(31, 28, 26, 0.06);
+        font-weight: 700;
+      }
+
+      .grammar-pattern span.hit {
+        background: var(--accent-strong);
+        color: #fff;
+      }
+
+      .review-alert {
+        position: fixed;
+        bottom: 24px;
+        left: 24px;
+        z-index: 20;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        border: 2px solid rgba(255, 155, 94, 0.6);
+        background: #fff4ea;
+        border-radius: 999px;
+        padding: 10px 16px;
+        font-weight: 700;
+        box-shadow: var(--shadow);
+        cursor: pointer;
+        font-size: 0.9rem;
+      }
+
+      .review-alert[hidden] {
+        display: none;
+      }
+
+      .nav-badge {
+        display: inline-flex;
+        min-width: 20px;
+        height: 20px;
+        align-items: center;
+        justify-content: center;
+        border-radius: 999px;
+        background: #d03b2c;
+        color: #fff;
+        font-size: 0.72rem;
+        margin-left: 6px;
+        padding: 0 6px;
+      }
+
+      .output-transcript-main {
+        font-size: 1.15rem;
+        font-weight: 800;
+        margin: 0;
+      }
+
+      .output-transcript .translation-line,
+      .output-translation .translation-line {
+        margin: 4px 0 0;
+        color: var(--ink);
+        font-size: 0.92rem;
+      }
+
+      .output-translation {
+        border-radius: 14px;
+        padding: 10px 12px;
+        background: rgba(255, 155, 94, 0.12);
+        border: 1px solid rgba(255, 155, 94, 0.32);
+      }
+
+      .output-translation[hidden] {
+        display: none;
+      }
+
+      .output-goal-box {
+        border: 1px solid rgba(255, 155, 94, 0.3);
+        background: rgba(255, 155, 94, 0.08);
+        border-radius: 16px;
+        padding: 12px 14px;
+        display: grid;
+        gap: 8px;
+      }
+
+      .output-goal-box p {
+        margin: 0;
+        font-size: 0.9rem;
+      }
+
+      .output-keyword-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+
+      .output-keyword {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        border-radius: 999px;
+        padding: 6px 10px;
+        background: #fff;
+        border: 1px solid rgba(31, 28, 26, 0.14);
+        font-weight: 700;
+        font-size: 0.88rem;
+      }
+
+      .output-keyword.hit {
+        background: #e7f6ed;
+        border-color: #1a8f4d;
+        color: #15803d;
+      }
+
+      .output-examples {
+        display: grid;
+        gap: 8px;
+      }
+
+      .output-example {
+        display: grid;
+        gap: 4px;
+        padding: 10px 12px;
+        border-radius: 12px;
+        background: rgba(255, 155, 94, 0.08);
+      }
+
+      .output-example .example-label {
+        font-size: 0.78rem;
+        font-weight: 800;
+        color: var(--accent-strong);
+      }
+
+      .save-status-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 10px;
+      }
+
+      .save-status-grid .log-card p {
+        font-size: 0.92rem;
+      }
+
+      .vocab-quiz-progress {
+        color: var(--muted);
+        font-weight: 700;
+        margin: 0 0 10px;
+      }
+
       @media (max-width: 980px) {
         .app-header,
         .hero-card {
@@ -2936,6 +3232,23 @@
                 <h3>学習記録</h3>
                 <p>毎日の進み具合を最初に確認できます。</p>
               </div>
+              <div class="log-card" id="save-status-card" style="margin-bottom: 14px">
+                <h4>データ保存の状態</h4>
+                <div class="save-status-grid">
+                  <article class="log-card">
+                    <h4>最終保存</h4>
+                    <p id="save-status-last">--</p>
+                  </article>
+                  <article class="log-card">
+                    <h4>サーバー同期</h4>
+                    <p id="save-status-sync">--</p>
+                  </article>
+                  <article class="log-card">
+                    <h4>前回の続き</h4>
+                    <p id="save-status-resume">--</p>
+                  </article>
+                </div>
+              </div>
               <div class="log-card" style="margin-bottom: 14px">
                 <h4>今日のおすすめ復習</h4>
                 <p class="admin-note">一度学んだ課を、翌日・3日後・7日後にもう一度聞いて定着させます。</p>
@@ -3139,16 +3452,16 @@
           <div class="quiz-wrap">
             <div class="quiz-group">
               <div class="quiz-head">
-                <h4>タイ語 → 日本語</h4>
-                <button id="vocab-quiz-check-koja" class="check-btn" type="button">採点</button>
+                <h4>タイ語 → 日本語（1問ずつ出題）</h4>
+                <button id="vocab-quiz-check-koja" class="check-btn" type="button">最初からやり直す</button>
               </div>
               <p id="vocab-quiz-summary-koja" class="quiz-summary">未採点</p>
               <div id="vocab-quiz-koja" class="quiz-list"></div>
             </div>
             <div class="quiz-group">
               <div class="quiz-head">
-                <h4>日本語 → タイ語</h4>
-                <button id="vocab-quiz-check-jako" class="check-btn" type="button">採点</button>
+                <h4>日本語 → タイ語（1問ずつ出題）</h4>
+                <button id="vocab-quiz-check-jako" class="check-btn" type="button">最初からやり直す</button>
               </div>
               <p id="vocab-quiz-summary-jako" class="quiz-summary">未採点</p>
               <div id="vocab-quiz-jako" class="quiz-list"></div>
@@ -3466,6 +3779,10 @@
         </section>
       </div>
 
+      <button id="review-alert" class="review-alert" type="button" hidden>
+        <span aria-hidden="true">🔔</span>
+        <span id="review-alert-text">今日の復習があります</span>
+      </button>
       <div id="status" class="status" role="status" aria-live="polite"></div>
     </main>
 
@@ -3570,6 +3887,8 @@
         if (!("localStorage" in window) || !signedInStudentId) return;
         try {
           localStorage.setItem(getScopedStorageKey(HISTORY_KEY), JSON.stringify(Object.fromEntries(history)));
+          lastLocalSaveAt = Date.now();
+          updateSaveStatusCard();
           scheduleRemoteSync();
         } catch (error) {
           /* ignore */
@@ -3597,6 +3916,8 @@
       const saveOutputProgress = () => {
         if (!("localStorage" in window) || !signedInStudentId) return;
         localStorage.setItem(getScopedStorageKey(OUTPUT_STORAGE_KEY), JSON.stringify(Object.fromEntries(outputProgress)));
+        lastLocalSaveAt = Date.now();
+        updateSaveStatusCard();
         scheduleRemoteSync();
       };
 
@@ -3804,11 +4125,12 @@
       let lessonStepIndex = 0;
       let activeLessonSteps = [];
       let lastLessonChapterKey = "";
-      let vocabStudyMode = "cards";
+      let vocabStudyMode = "deck";
       let vocabVisualMode = "text";
       let vocabDeckIndex = 0;
       let vocabDeckFlipped = false;
       let vocabGameState = createEmptyVocabGameState();
+      const vocabQuizIndex = { koja: 0, jako: 0 };
       let vocabQuizState = {
         key: "",
         koja: createEmptyVocabQuizBucket(),
@@ -3819,6 +4141,7 @@
       let outputReactionText = "";
       let outputRecognizedText = "";
       let outputRecognizedScore = 0;
+      let outputRequiredHits = null;
       let outputEvaluationText = "まだ音声認識していません。";
       let nextBranchChapterId = 2000;
       let statusTimer = null;
@@ -3890,6 +4213,7 @@
           panels[id] = panel;
         });
 
+        const saveCard = document.getElementById("save-status-card");
         const reviewCard = reviewRecommendList && reviewRecommendList.closest(".stats-card, .log-card");
         const summary = homeView.querySelector(".learning-summary");
         const trendSource = document.getElementById("strong-areas");
@@ -3909,7 +4233,7 @@
         const badges = document.getElementById("badge-strip");
         const reminder = reminderStatus && reminderStatus.closest(".stats-card, .log-card");
         const question = quickQuestionAnswer && quickQuestionAnswer.closest(".stats-card, .log-card");
-        [reviewCard, summary, progressCard, trends].filter(Boolean).forEach((node) => panels.overview.appendChild(node));
+        [saveCard, reviewCard, summary, progressCard, trends].filter(Boolean).forEach((node) => panels.overview.appendChild(node));
         [calendar, daily, badges].filter(Boolean).forEach((node) => panels.records.appendChild(node));
         [reminder, question].filter(Boolean).forEach((node) => panels.settings.appendChild(node));
         if (featureGrid) {
@@ -4014,6 +4338,16 @@
         });
         return data;
       };
+      const recordLastLoginAt = async () => {
+        if (!signedInAuthUserId || !supabaseAuthClient) return;
+        try {
+          await supabaseAuthClient
+            .from("thai_user_app_state")
+            .upsert({ user_id: signedInAuthUserId, last_login_at: new Date().toISOString() }, { onConflict: "user_id" });
+        } catch (error) {
+          /* last_login_at 列が未追加の環境でも本体機能には影響させない */
+        }
+      };
       const applySupabaseUser = (user) => {
         const username = getAuthUsername(user);
         if (!username) {
@@ -4021,6 +4355,7 @@
         }
         signedInAuthUserId = user.id || "";
         signedInEmail = normalizeEmail(user.email || "");
+        recordLastLoginAt();
         if (getAuthRole(user) === "admin" || username === ADMIN_USERNAME) {
           applyAdminState(username);
         } else {
@@ -4291,8 +4626,12 @@
               .upsert(rows, { onConflict: "user_id,record_date" });
             if (dailyError) throw dailyError;
           }
+          lastRemoteSyncAt = Date.now();
+          updateSaveStatusCard();
         } catch (error) {
           console.warn("Supabase Thai learning sync failed.", error);
+          lastRemoteSyncFailedAt = Date.now();
+          updateSaveStatusCard();
           setStatus("学習記録は端末に一時保存中です。Supabase設定後に同期されます。", "info");
         } finally {
           remoteSyncInProgress = false;
@@ -4529,6 +4868,8 @@
         if (!("localStorage" in window) || !signedInStudentId) return;
         try {
           localStorage.setItem(getScopedStorageKey(STORAGE_KEY), JSON.stringify(serializeProgress()));
+          lastLocalSaveAt = Date.now();
+          updateSaveStatusCard();
           scheduleRemoteSync();
         } catch (error) {
           /* ignore storage errors */
@@ -4625,6 +4966,7 @@
       };
 
       const renderLearningLog = () => {
+        updateSaveStatusCard();
         const recent = getRecentHistory(7);
         const monthCalendar = getMonthCalendar(new Date());
         const today = ensureTodayRecord();
@@ -4792,6 +5134,7 @@
         const index = chapters.findIndex((chapter) => chapter.id === chapterId);
         if (index < 0) return;
         currentChapterIndex = index;
+        reviewAutoSession = { chapterId, actions: 0 };
         saveProgress();
         renderChapter("text");
         const audioIndex = activeLessonSteps.findIndex((step) => step.id === "audio");
@@ -4802,6 +5145,7 @@
       const renderReviewRecommendations = () => {
         if (!reviewRecommendList) return;
         const recommendations = getReviewRecommendations();
+        updateReviewReminderBadges(recommendations.length);
         reviewRecommendList.innerHTML = "";
         if (!recommendations.length) {
           const empty = document.createElement("div");
@@ -4828,23 +5172,62 @@
         });
       };
 
-      const markChapterReviewComplete = (chapter) => {
+      const markChapterReviewComplete = (chapter, { auto = false } = {}) => {
         if (!chapter || !isPracticeChapter(chapter)) return;
         const state = ensureProgress(chapter);
         const todayKey = getTodayKey();
         if (state.review.lastReviewed === todayKey) {
-          setStatus("この課の今日の復習はすでに記録済みです。", "info");
+          if (!auto) setStatus("この課の今日の復習はすでに記録済みです。", "info");
           return;
         }
         const nextCount = (Number(state.review.count) || 0) + 1;
         state.review.count = nextCount;
         state.review.lastReviewed = todayKey;
         state.review.nextReviewDate = addDaysToDateKey(todayKey, getReviewIntervalDays(nextCount - 1));
+        if (reviewAutoSession && reviewAutoSession.chapterId === chapter.id) reviewAutoSession = null;
         markStudyActivity();
         saveProgress();
         renderReviewRecommendations();
         updateChapterStats(chapter);
-        setStatus(`復習${nextCount}回目を記録しました。次は${formatDateLabel(state.review.nextReviewDate)}です。`, "success");
+        setStatus(
+          auto
+            ? `しっかり練習できたので、復習${nextCount}回目を自動で記録しました。次は${formatDateLabel(state.review.nextReviewDate)}です。`
+            : `復習${nextCount}回目を記録しました。次は${formatDateLabel(state.review.nextReviewDate)}です。`,
+          "success"
+        );
+      };
+
+      const updateReviewReminderBadges = (pendingCount) => {
+        const navButton = document.getElementById("nav-home");
+        if (navButton) {
+          let badge = navButton.querySelector(".nav-badge");
+          if (pendingCount > 0) {
+            if (!badge) {
+              badge = document.createElement("span");
+              badge.className = "nav-badge";
+              navButton.appendChild(badge);
+            }
+            badge.textContent = `復習${pendingCount}`;
+          } else if (badge) {
+            badge.remove();
+          }
+        }
+        const alertButton = document.getElementById("review-alert");
+        const alertText = document.getElementById("review-alert-text");
+        if (!alertButton || !alertText) return;
+        if (!alertButton.dataset.wired) {
+          alertButton.dataset.wired = "true";
+          alertButton.addEventListener("click", () => {
+            const recommendations = getReviewRecommendations();
+            if (recommendations.length) {
+              startReviewChapter(recommendations[0].chapter.id);
+            } else {
+              showView("home");
+            }
+          });
+        }
+        alertButton.hidden = pendingCount === 0 || !signedInStudentId;
+        alertText.textContent = `今日の復習が${pendingCount}課あります。タップで開始`;
       };
 
       const getStoredAreaTrends = (progressData) => {
@@ -5332,6 +5715,68 @@
           <button class="quiz-option-audio" type="button" data-option-audio="${escapeHtml(text)}">ゆっくり音声</button>
         </span>
       `;
+      const TRANSLATION_CACHE_KEY = "lingopilot-translation-cache";
+      const TRANSLATION_MAX_CHARS = 180;
+      const loadTranslationCache = () => {
+        try {
+          const raw = "localStorage" in window ? localStorage.getItem(TRANSLATION_CACHE_KEY) : null;
+          const data = raw ? JSON.parse(raw) : null;
+          return data && typeof data === "object" ? new Map(Object.entries(data)) : new Map();
+        } catch (error) {
+          return new Map();
+        }
+      };
+      const translationCache = loadTranslationCache();
+      const persistTranslationCache = () => {
+        if (!("localStorage" in window)) return;
+        try {
+          const entries = Array.from(translationCache.entries()).slice(-300);
+          localStorage.setItem(TRANSLATION_CACHE_KEY, JSON.stringify(Object.fromEntries(entries)));
+        } catch (error) {
+          /* ignore storage errors */
+        }
+      };
+      const fetchTranslation = async (text, targetLang, sourceLang = "th") => {
+        const trimmed = String(text).trim().slice(0, TRANSLATION_MAX_CHARS);
+        if (!trimmed) return "";
+        const cacheKey = `${sourceLang}|${targetLang}|${trimmed}`;
+        if (translationCache.has(cacheKey)) return translationCache.get(cacheKey);
+        const url = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(trimmed)}&langpair=${sourceLang}|${targetLang}`;
+        const response = await fetch(url);
+        if (!response.ok) throw new Error(`translation http ${response.status}`);
+        const data = await response.json();
+        if (data && data.responseStatus && Number(data.responseStatus) !== 200) {
+          throw new Error(`translation api status ${data.responseStatus}`);
+        }
+        const value = data && data.responseData && data.responseData.translatedText ? String(data.responseData.translatedText) : "";
+        if (value) {
+          translationCache.set(cacheKey, value);
+          persistTranslationCache();
+        }
+        return value;
+      };
+      let lastLocalSaveAt = 0;
+      let lastRemoteSyncAt = 0;
+      let lastRemoteSyncFailedAt = 0;
+      let reviewAutoSession = null;
+      const REVIEW_AUTO_COMPLETE_ACTIONS = 8;
+      const formatClockTime = (timestamp) => (timestamp ? new Date(timestamp).toLocaleTimeString("ja-JP", { hour: "2-digit", minute: "2-digit", second: "2-digit" }) : "--");
+      const updateSaveStatusCard = () => {
+        const lastEl = document.getElementById("save-status-last");
+        const syncEl = document.getElementById("save-status-sync");
+        const resumeEl = document.getElementById("save-status-resume");
+        if (!lastEl || !syncEl || !resumeEl) return;
+        lastEl.textContent = lastLocalSaveAt ? `${formatClockTime(lastLocalSaveAt)}（この端末）` : "まだ保存していません";
+        if (lastRemoteSyncAt && lastRemoteSyncAt >= lastRemoteSyncFailedAt) {
+          syncEl.textContent = `${formatClockTime(lastRemoteSyncAt)} 同期済み`;
+        } else if (lastRemoteSyncFailedAt) {
+          syncEl.textContent = "同期エラー（端末には保存済み）";
+        } else {
+          syncEl.textContent = "未同期（端末には保存済み）";
+        }
+        const chapter = chapters[currentChapterIndex];
+        resumeEl.textContent = chapter ? chapter.title : "--";
+      };
       const isStudyViewMode = (mode = viewMode) => mode === "text" || mode === "support" || mode === "vocab" || mode === "output";
       const pauseStudyTimer = () => {
         if (!studyTimerStartedAt) return;
@@ -5374,6 +5819,14 @@
         if (!isStudyViewMode()) return;
         startStudyTimer();
         resetStudyIdleTimer();
+        if (reviewAutoSession && chapters[currentChapterIndex] && chapters[currentChapterIndex].id === reviewAutoSession.chapterId) {
+          reviewAutoSession.actions += 1;
+          if (reviewAutoSession.actions >= REVIEW_AUTO_COMPLETE_ACTIONS) {
+            const chapter = chapters[currentChapterIndex];
+            reviewAutoSession = null;
+            markChapterReviewComplete(chapter, { auto: true });
+          }
+        }
       };
       const tokenizeStudySentence = (value = "") =>
         String(value)
@@ -5699,7 +6152,7 @@
           id: 1,
           title: "あいさつの基本",
           subtitle: "こんにちは、こんばんは、おやすみを自然に言う",
-          grammar: ["基本あいさつ", "タイ語はまず音のまねから慣れる"],
+          grammar: ["あいさつ: สวัสดี + ตอนเช้า / ตอนเย็น", "丁寧の語尾: ค่ะ / ครับ"],
           basics: [
             { ko: "สวัสดีตอนเช้า", ja: "おはよう。" },
             { ko: "สวัสดี", ja: "こんにちは。" },
@@ -5723,7 +6176,7 @@
           id: 2,
           title: "はじめまして・自己紹介",
           subtitle: "名前、出身、はじめまして、よろしくを言う",
-          grammar: ["ฉันชื่อ...", "มาจาก..."],
+          grammar: ["私の名前は〜です: ฉันชื่อ...", "〜から来ました: มาจาก..."],
           basics: [
             { ko: "ยินดีที่ได้รู้จัก", ja: "はじめまして。" },
             { ko: "ฉันชื่อยูนะ", ja: "私の名前はユナです。" },
@@ -5748,7 +6201,7 @@
           id: 3,
           title: "年齢・出身・家族",
           subtitle: "年齢、家族、兄弟、ペットを紹介する",
-          grammar: ["อายุ...ปี", "มี..."],
+          grammar: ["年齢は〜歳です: อายุ...ปี", "〜がいます・あります: มี..."],
           basics: [
             { ko: "ฉันอายุยี่สิบปี", ja: "20歳です。" },
             { ko: "ฉันมีน้องชายหนึ่งคน", ja: "弟が一人います。" },
@@ -5773,7 +6226,7 @@
           id: 4,
           title: "ありがとう・ごめんね",
           subtitle: "ありがとう、ごめんね、はい、いいえ、私もを使う",
-          grammar: ["短い応答表現", "私も: ฉันก็เหมือนกัน"],
+          grammar: ["ありがとう／ごめんね: ขอบคุณ / ขอโทษ", "私も: ฉันก็เหมือนกัน"],
           basics: [
             { ko: "ขอบคุณ", ja: "ありがとう。" },
             { ko: "ขอโทษ", ja: "ごめんね。" },
@@ -5798,7 +6251,7 @@
           id: 5,
           title: "学習サポート表現",
           subtitle: "ゆっくり、もう一回、タイ語で何と言うかを聞く",
-          grammar: ["คำนี้ภาษาไทย...", "ช่วย...ได้ไหม"],
+          grammar: ["この言葉はタイ語で〜: คำนี้ภาษาไทย...", "〜してもらえますか: ช่วย...ได้ไหม"],
           basics: [
             { ko: "คำนี้ภาษาไทยพูดว่าอะไร", ja: "これはタイ語で何と言いますか。" },
             { ko: "ช่วยพูดช้าๆ ได้ไหม", ja: "ゆっくり話してもらえますか。" },
@@ -5822,7 +6275,7 @@
           id: 6,
           title: "曜日・日付・時間",
           subtitle: "今何時、何日、何曜日かを聞く",
-          grammar: ["กี่โมง", "วันที่", "วัน..."],
+          grammar: ["何時ですか: กี่โมง", "〜日（日付）: วันที่...", "〜曜日: วัน..."],
           basics: [
             { ko: "ตอนนี้กี่โมง", ja: "今何時ですか。" },
             { ko: "วันนี้วันที่เท่าไร", ja: "今日は何日ですか。" },
@@ -5846,7 +6299,7 @@
           id: 7,
           title: "学校で使う表現",
           subtitle: "時間目、宿題、始まった、終わった、一緒にやろう",
-          grammar: ["ตอนนี้คาบ...", "เสร็จแล้ว"],
+          grammar: ["今は〜時間目です: ตอนนี้คาบ...", "終わりました: เสร็จแล้ว"],
           basics: [
             { ko: "ตอนนี้คาบสาม", ja: "今は3時間目です。" },
             { ko: "การบ้านเสร็จแล้ว", ja: "宿題は終わりました。" },
@@ -5871,7 +6324,7 @@
           id: 8,
           title: "今どこにいる？",
           subtitle: "家・外・中・学校・駅、待っている、着くを言う",
-          grammar: ["อยู่ที่...", "กำลัง...อยู่", "ใกล้ถึงแล้ว"],
+          grammar: ["〜にいます: อยู่ที่...", "〜している最中: กำลัง...อยู่", "もうすぐ着きます: ใกล้ถึงแล้ว"],
           basics: [
             { ko: "ตอนนี้ฉันอยู่ที่โรงเรียน", ja: "今学校にいます。" },
             { ko: "ฉันกำลังรออยู่หน้าสถานี", ja: "駅前で待っています。" },
@@ -5896,7 +6349,7 @@
           id: 9,
           title: "道案内の基本",
           subtitle: "どうやって行くか、まっすぐ、左右、前後を使う",
-          grammar: ["ไปยังไง", "ตรงไป / เลี้ยว..."],
+          grammar: ["どうやって行きますか: ไปยังไง", "まっすぐ／曲がる: ตรงไป / เลี้ยว..."],
           basics: [
             { ko: "ไปที่นั่นยังไง", ja: "そこへどうやって行きますか。" },
             { ko: "ตรงไปแล้วเลี้ยวขวา", ja: "まっすぐ行って右に曲がってください。" },
@@ -5921,7 +6374,7 @@
           id: 10,
           title: "交通機関と駅",
           subtitle: "電車・バス・徒歩、何番、出口、ロッカー、トイレを聞く",
-          grammar: ["ไปด้วย...", "ขึ้นรถเมล์สาย...", "อยู่ที่ไหน"],
+          grammar: ["〜で行きます: ไปด้วย...", "〜番のバスに乗ります: ขึ้นรถเมล์สาย...", "どこにありますか: อยู่ที่ไหน"],
           basics: [
             { ko: "ไปด้วยรถเมล์", ja: "バスで行きます。" },
             { ko: "ต้องขึ้นรถเมล์สายอะไร", ja: "何番のバスに乗ればいいですか。" },
@@ -5946,7 +6399,7 @@
           id: 11,
           title: "注文の基本",
           subtitle: "これ・それ・あれ、サイズ、量、何人前で注文する",
-          grammar: ["เอา...", "ขอ...หน่อย", "สำหรับ...คน"],
+          grammar: ["〜にします: เอา...", "〜をください: ขอ...หน่อย", "〜人分: สำหรับ...คน"],
           basics: [
             { ko: "เอาอันนี้หนึ่งที่", ja: "これを1つください。" },
             { ko: "ขอไซซ์ใหญ่", ja: "大きいサイズでお願いします。" },
@@ -5971,7 +6424,7 @@
           id: 12,
           title: "味・追加・抜き",
           subtitle: "甘い・酸っぱい・辛い、追加、抜き、減らすを伝える",
-          grammar: ["รสชาติเป็นยังไง", "ไม่ใส่ / เพิ่ม / ลด"],
+          grammar: ["味はどうですか: รสชาติเป็นยังไง", "入れない／追加／減らす: ไม่ใส่ / เพิ่ม / ลด"],
           basics: [
             { ko: "เผ็ดไหม", ja: "辛いですか。" },
             { ko: "ไม่ใส่หัวหอม", ja: "玉ねぎは抜いてください。" },
@@ -5997,7 +6450,7 @@
           id: 13,
           title: "買い物と会計",
           subtitle: "いくら、もっと安いもの、何個、袋をたずねる",
-          grammar: ["ราคาเท่าไร", "มี...ไหม"],
+          grammar: ["いくらですか: ราคาเท่าไร", "〜はありますか: มี...ไหม"],
           basics: [
             { ko: "อันนี้ราคาเท่าไร", ja: "これはいくらですか。" },
             { ko: "มีอันที่ถูกกว่านี้ไหม", ja: "もっと安いのはありますか。" },
@@ -6022,7 +6475,7 @@
           id: 14,
           title: "チケット・割引・支払い",
           subtitle: "大人・子ども・学生、現金・カード、学生割引を確認する",
-          grammar: ["ขอ...ใบ", "จ่ายด้วย...", "ลดราคา"],
+          grammar: ["〜を1枚ください: ขอ...ใบ", "〜で払います: จ่ายด้วย...", "値引き: ลดราคา"],
           basics: [
             { ko: "ขอตั๋วผู้ใหญ่สองใบ", ja: "大人2枚ください。" },
             { ko: "จ่ายด้วยบัตรได้ไหม", ja: "カードで支払えますか。" },
@@ -6048,7 +6501,7 @@
           id: 15,
           title: "ホテル・宿",
           subtitle: "何泊、いつまで、食事、何階かを確認する",
-          grammar: ["พัก...คืน", "ถึงวัน...", "รวม...ไหม"],
+          grammar: ["〜泊します: พัก...คืน", "〜曜日まで: ถึงวัน...", "〜込みですか: รวม...ไหม"],
           basics: [
             { ko: "พักสองคืน", ja: "2泊します。" },
             { ko: "อยู่ถึงวันเสาร์", ja: "土曜日までいます。" },
@@ -6073,7 +6526,7 @@
           id: 16,
           title: "元気？気分はどう？",
           subtitle: "元気ですか、最近どう、うれしい、悲しいを言う",
-          grammar: ["สบายดีไหม", "รู้สึก..."],
+          grammar: ["元気ですか: สบายดีไหม", "〜と感じます: รู้สึก..."],
           basics: [
             { ko: "สบายดีไหม", ja: "元気ですか。" },
             { ko: "วันนี้ฉันดีใจ", ja: "今日はうれしいです。" },
@@ -6098,7 +6551,7 @@
           id: 17,
           title: "体調を伝える",
           subtitle: "のどが渇いた、おなかがすいた、疲れたを言う",
-          grammar: ["หิว...", "เหนื่อย / ง่วง"],
+          grammar: ["おなかがすいた: หิว...", "疲れた／眠い: เหนื่อย / ง่วง"],
           basics: [
             { ko: "ฉันหิวน้ำ", ja: "のどが渇きました。" },
             { ko: "ฉันหิวข้าว", ja: "おなかがすきました。" },
@@ -6123,7 +6576,7 @@
           id: 18,
           title: "天気・気温",
           subtitle: "明日の天気、晴れ・曇り・雨、寒い・暑い、傘が必要かを聞く",
-          grammar: ["อากาศเป็นยังไง", "ต้องใช้...ไหม"],
+          grammar: ["天気はどうですか: อากาศเป็นยังไง", "〜が必要ですか: ต้องใช้...ไหม"],
           basics: [
             { ko: "พรุ่งนี้อากาศเป็นยังไง", ja: "明日の天気はどうですか。" },
             { ko: "วันนี้อากาศหนาวนิดหน่อย", ja: "今日は少し寒いです。" },
@@ -6149,7 +6602,7 @@
           id: 19,
           title: "食べ物・場所の話題",
           subtitle: "食べ物の名前、場所の名前、よく行く場所を話す",
-          grammar: ["ชอบกิน...", "ไป...บ่อย"],
+          grammar: ["〜を食べるのが好きです: ชอบกิน...", "よく〜へ行きます: ไป...บ่อย"],
           basics: [
             { ko: "ฉันกินผัดไทยบ่อย", ja: "パッタイをよく食べます。" },
             { ko: "ฉันไปคาเฟ่บ่อย", ja: "カフェによく行きます。" },
@@ -6174,7 +6627,7 @@
           id: 20,
           title: "色・好き嫌い・感想",
           subtitle: "色の名前、好き・嫌い、いいね、ちがうを言う",
-          grammar: ["ชอบ / ไม่ชอบ", "ดีนะ / ต่างกัน"],
+          grammar: ["好き／嫌い: ชอบ / ไม่ชอบ", "いいね／違うね: ดีนะ / ต่างกัน"],
           basics: [
             { ko: "ฉันชอบสีฟ้า", ja: "青が好きです。" },
             { ko: "ฉันไม่ค่อยชอบอาหารเผ็ด", ja: "辛い食べ物はあまり好きではありません。" },
@@ -6205,7 +6658,7 @@
           afterLesson: 5,
           title: "コラム 1 数字・数え方・時間",
           subtitle: "数字、時間、人数、個数の言い方をまとめる",
-          grammar: ["หนึ่ง / สอง / สาม", "เวลา + โมง", "คน / ชิ้น / ใบ", "タイ語は助数詞を音で覚える"],
+          grammar: ["1・2・3: หนึ่ง / สอง / สาม", "〜時: ...โมง", "人・個・枚の数え方: คน / ชิ้น / ใบ", "タイ語は助数詞を音で覚える"],
           basics: [
             { ko: "ตอนนี้หนึ่งโมง", ja: "今1時です。" },
             { ko: "มีสองคน", ja: "2人います。" },
@@ -6229,7 +6682,7 @@
           afterLesson: 10,
           title: "コラム 2 食べ物・飲み物・注文単語",
           subtitle: "食べ物名、サイズ、味、注文でよく使う単語を整理する",
-          grammar: ["อาหาร / เครื่องดื่ม", "ใหญ่ / กลาง / เล็ก", "หวาน / เผ็ด"],
+          grammar: ["食べ物／飲み物: อาหาร / เครื่องดื่ม", "大／中／小: ใหญ่ / กลาง / เล็ก", "甘い／辛い: หวาน / เผ็ด"],
           basics: [
             { ko: "ขอชาเย็นหนึ่งแก้ว", ja: "タイアイスティーを1杯ください。" },
             { ko: "เอาไซซ์เล็ก", ja: "小さいサイズにします。" },
@@ -6254,7 +6707,7 @@
           afterLesson: 15,
           title: "コラム 3 場所・建物・移動単語",
           subtitle: "駅、店、学校、出口、ロッカーなど移動の単語をまとめる",
-          grammar: ["場所名詞", "ไปด้วย...", "ข้างหน้า / ข้างๆ / ตรงข้าม"],
+          grammar: ["駅・店・学校など: สถานี / ร้าน / โรงเรียน", "〜で行きます: ไปด้วย...", "前／隣／向かい: ข้างหน้า / ข้างๆ / ตรงข้าม"],
           basics: [
             { ko: "เจอกันหน้าสถานี", ja: "駅前で会いましょう。" },
             { ko: "ทางออกอยู่ทางซ้าย", ja: "出口は左側です。" },
@@ -6280,7 +6733,7 @@
           afterLesson: 20,
           title: "コラム 4 感情・天気・色まとめ",
           subtitle: "気持ち、体調、天気、色の重要語彙を最後に整理する",
-          grammar: ["気持ちを表す語", "天気の語", "色の名前", "タイ語は語尾の音変化も耳で確認する"],
+          grammar: ["うれしい／悲しい: ดีใจ / เศร้า", "晴れ／雨: แดดออก / ฝนตก", "〜色: สีเขียว / สีดำ", "タイ語は語尾の音変化も耳で確認する"],
           basics: [
             { ko: "วันนี้ฉันดีใจมาก", ja: "今日はとてもうれしいです。" },
             { ko: "พรุ่งนี้แดดออก", ja: "明日は晴れです。" },
@@ -7212,9 +7665,18 @@
           goal: "名前・日本から来たこと・よろしくを短く返す。",
           required: ["ฉันชื่อ...", "มาจากญี่ปุ่น", "ยินดีที่ได้รู้จัก"],
           turns: [
-            { partnerKo: "สวัสดีค่ะ คุณชื่ออะไรคะ", partnerJa: "こんにちは。お名前は何ですか。", task: "自分の名前を言ってください。", modelKo: "ฉันชื่อยูนะค่ะ", modelJa: "私はゆなです。" },
-            { partnerKo: "คุณมาจากที่ไหนคะ", partnerJa: "どこから来ましたか。", task: "日本から来たと答えてください。", modelKo: "มาจากญี่ปุ่นค่ะ", modelJa: "日本から来ました。" },
-            { partnerKo: "ยินดีที่ได้รู้จักค่ะ", partnerJa: "よろしくお願いします。", task: "こちらこそ、という気持ちで返してください。", modelKo: "ยินดีที่ได้รู้จักเช่นกันค่ะ", modelJa: "こちらこそよろしくお願いします。" }
+            { partnerKo: "สวัสดีค่ะ คุณชื่ออะไรคะ", partnerJa: "こんにちは。お名前は何ですか。", task: "自分の名前を言ってください。", modelKo: "ฉันชื่อยูนะค่ะ", modelJa: "私はゆなです。", alternatives: [
+              { ko: "ผมชื่อยูตะครับ", ja: "私はゆうたです。（男性の言い方）" },
+              { ko: "ชื่อยูนะค่ะ", ja: "ゆなです。（短い言い方）" }
+            ] },
+            { partnerKo: "คุณมาจากที่ไหนคะ", partnerJa: "どこから来ましたか。", task: "日本から来たと答えてください。", modelKo: "มาจากญี่ปุ่นค่ะ", modelJa: "日本から来ました。", alternatives: [
+              { ko: "ฉันเป็นคนญี่ปุ่นค่ะ", ja: "私は日本人です。" },
+              { ko: "มาจากโตเกียวค่ะ", ja: "東京から来ました。" }
+            ] },
+            { partnerKo: "ยินดีที่ได้รู้จักค่ะ", partnerJa: "よろしくお願いします。", task: "こちらこそ、という気持ちで返してください。", modelKo: "ยินดีที่ได้รู้จักเช่นกันค่ะ", modelJa: "こちらこそよろしくお願いします。", alternatives: [
+              { ko: "ยินดีเช่นกันค่ะ", ja: "こちらこそうれしいです。" },
+              { ko: "ขอบคุณค่ะ ยินดีค่ะ", ja: "ありがとうございます。うれしいです。" }
+            ] }
           ],
           reactions: { successKo: "ดีมากค่ะ พูดเข้าใจง่ายค่ะ", retryKo: "ขออีกครั้งช้า ๆ ได้ไหมคะ", hintKo: "ลองพูดสั้น ๆ แบบนี้ก็ได้ค่ะ" }
         },
@@ -7225,9 +7687,18 @@
           goal: "ほしい料理・数・辛さを伝える。",
           required: ["ขอ...", "หนึ่ง", "ไม่เผ็ด"],
           turns: [
-            { partnerKo: "รับอะไรดีครับ", partnerJa: "何にしますか。", task: "料理を一つくださいと伝えてください。", modelKo: "ขอผัดไทยหนึ่งจานค่ะ", modelJa: "パッタイを一皿ください。" },
-            { partnerKo: "เอาเผ็ดไหมครับ", partnerJa: "辛くしますか。", task: "辛くしないでほしいと伝えてください。", modelKo: "ไม่เผ็ดค่ะ", modelJa: "辛くしないでください。" },
-            { partnerKo: "เอาน้ำด้วยไหมครับ", partnerJa: "水もいりますか。", task: "水も一つくださいと頼んでください。", modelKo: "ขอน้ำหนึ่งขวดด้วยค่ะ", modelJa: "水を一本もください。" }
+            { partnerKo: "รับอะไรดีครับ", partnerJa: "何にしますか。", task: "料理を一つくださいと伝えてください。", modelKo: "ขอผัดไทยหนึ่งจานค่ะ", modelJa: "パッタイを一皿ください。", alternatives: [
+              { ko: "ขอข้าวผัดหนึ่งจานค่ะ", ja: "チャーハンを一皿ください。" },
+              { ko: "เอาผัดไทยหนึ่งที่ค่ะ", ja: "パッタイを一つにします。" }
+            ] },
+            { partnerKo: "เอาเผ็ดไหมครับ", partnerJa: "辛くしますか。", task: "辛くしないでほしいと伝えてください。", modelKo: "ไม่เผ็ดค่ะ", modelJa: "辛くしないでください。", alternatives: [
+              { ko: "ขอไม่เผ็ดนะคะ", ja: "辛くしないでくださいね。" },
+              { ko: "เผ็ดน้อยค่ะ", ja: "辛さ控えめでお願いします。" }
+            ] },
+            { partnerKo: "เอาน้ำด้วยไหมครับ", partnerJa: "水もいりますか。", task: "水も一つくださいと頼んでください。", modelKo: "ขอน้ำหนึ่งขวดด้วยค่ะ", modelJa: "水を一本もください。", alternatives: [
+              { ko: "ขอน้ำเปล่าหนึ่งแก้วค่ะ", ja: "お水を一杯ください。" },
+              { ko: "เอาน้ำด้วยค่ะ", ja: "水もお願いします。" }
+            ] }
           ],
           reactions: { successKo: "ได้ครับ รอสักครู่นะครับ", retryKo: "ขอโทษครับ พูดอีกครั้งได้ไหมครับ", hintKo: "เวลาสั่งของ ใช้ ขอ... ได้ง่ายค่ะ" }
         },
@@ -7238,9 +7709,18 @@
           goal: "駅やトイレの場所を聞き、近いか確認する。",
           required: ["อยู่ที่ไหน", "ไปยังไง", "ใกล้ไหม"],
           turns: [
-            { partnerKo: "คุณจะไปไหนครับ", partnerJa: "どこへ行きたいですか。", task: "駅へ行きたいと言ってください。", modelKo: "อยากไปสถานีค่ะ", modelJa: "駅へ行きたいです。" },
-            { partnerKo: "เดินตรงไป แล้วเลี้ยวซ้ายครับ", partnerJa: "まっすぐ歩いて、左に曲がります。", task: "近いか聞いてください。", modelKo: "ใกล้ไหมคะ", modelJa: "近いですか。" },
-            { partnerKo: "ใกล้ครับ ประมาณห้านาที", partnerJa: "近いです。5分くらいです。", task: "ありがとうと返してください。", modelKo: "ขอบคุณค่ะ", modelJa: "ありがとうございます。" }
+            { partnerKo: "คุณจะไปไหนครับ", partnerJa: "どこへ行きたいですか。", task: "駅へ行きたいと言ってください。", modelKo: "อยากไปสถานีค่ะ", modelJa: "駅へ行きたいです。", alternatives: [
+              { ko: "สถานีอยู่ที่ไหนคะ", ja: "駅はどこですか。" },
+              { ko: "ไปสถานียังไงคะ", ja: "駅へはどうやって行きますか。" }
+            ] },
+            { partnerKo: "เดินตรงไป แล้วเลี้ยวซ้ายครับ", partnerJa: "まっすぐ歩いて、左に曲がります。", task: "近いか聞いてください。", modelKo: "ใกล้ไหมคะ", modelJa: "近いですか。", alternatives: [
+              { ko: "ไกลไหมคะ", ja: "遠いですか。" },
+              { ko: "เดินไปได้ไหมคะ", ja: "歩いて行けますか。" }
+            ] },
+            { partnerKo: "ใกล้ครับ ประมาณห้านาที", partnerJa: "近いです。5分くらいです。", task: "ありがとうと返してください。", modelKo: "ขอบคุณค่ะ", modelJa: "ありがとうございます。", alternatives: [
+              { ko: "ขอบคุณมากค่ะ", ja: "どうもありがとうございます。" },
+              { ko: "ขอบคุณนะคะ", ja: "ありがとうね。（やわらかい言い方）" }
+            ] }
           ],
           reactions: { successKo: "ใช่ค่ะ แบบนี้ถามทางได้ดีค่ะ", retryKo: "พูดช้าลงอีกนิดนะคะ", hintKo: "ถามที่อยู่ด้วย อยู่ที่ไหน ได้ค่ะ" }
         },
@@ -7251,9 +7731,18 @@
           goal: "何泊・朝食・部屋の階を確認する。",
           required: ["พัก", "กี่คืน", "อาหารเช้า"],
           turns: [
-            { partnerKo: "จองไว้หรือเปล่าคะ", partnerJa: "予約していますか。", task: "予約していると答えてください。", modelKo: "จองไว้ค่ะ", modelJa: "予約しています。" },
-            { partnerKo: "พักกี่คืนคะ", partnerJa: "何泊しますか。", task: "二泊すると答えてください。", modelKo: "พักสองคืนค่ะ", modelJa: "二泊します。" },
-            { partnerKo: "มีอาหารเช้าค่ะ", partnerJa: "朝食があります。", task: "部屋は何階か聞いてください。", modelKo: "ห้องอยู่ชั้นไหนคะ", modelJa: "部屋は何階ですか。" }
+            { partnerKo: "จองไว้หรือเปล่าคะ", partnerJa: "予約していますか。", task: "予約していると答えてください。", modelKo: "จองไว้ค่ะ", modelJa: "予約しています。", alternatives: [
+              { ko: "มีจองแล้วค่ะ", ja: "予約があります。" },
+              { ko: "จองทางอินเทอร์เน็ตค่ะ", ja: "ネットで予約しました。" }
+            ] },
+            { partnerKo: "พักกี่คืนคะ", partnerJa: "何泊しますか。", task: "二泊すると答えてください。", modelKo: "พักสองคืนค่ะ", modelJa: "二泊します。", alternatives: [
+              { ko: "สองคืนค่ะ", ja: "二泊です。（短い言い方）" },
+              { ko: "พักถึงวันเสาร์ค่ะ", ja: "土曜日まで泊まります。" }
+            ] },
+            { partnerKo: "มีอาหารเช้าค่ะ", partnerJa: "朝食があります。", task: "部屋は何階か聞いてください。", modelKo: "ห้องอยู่ชั้นไหนคะ", modelJa: "部屋は何階ですか。", alternatives: [
+              { ko: "อยู่ชั้นอะไรคะ", ja: "何階にありますか。" },
+              { ko: "ลิฟต์อยู่ที่ไหนคะ", ja: "エレベーターはどこですか。" }
+            ] }
           ],
           reactions: { successKo: "เข้าใจค่ะ เดี๋ยวเช็กอินให้นะคะ", retryKo: "ขอพูดอีกครั้งนะคะ", hintKo: "โรงแรมใช้ พักกี่คืน บ่อยค่ะ" }
         }
@@ -7279,7 +7768,7 @@
           title: `${getChapterStudyTitle(chapter)} アウトプット`,
           partner: theme.speakers && theme.speakers[1] ? theme.speakers[1] : "相手",
           goal: "この課の基本表現を使い、音声で短く返答する。",
-          required: items.map((item) => item.ko.split(/\s+/)[0]).filter(Boolean).slice(0, 3),
+          required: Array.from(new Set(items.map((item) => String(item.ko).split(/\s+/)[0].replace(/[.,!?。！？]/g, "")).filter(Boolean))).slice(0, 3),
           turns: turns.length ? turns : [{ partnerKo: "สวัสดีค่ะ", partnerJa: "こんにちは。", task: "あいさつを返してください。", modelKo: "สวัสดีค่ะ", modelJa: "こんにちは。" }],
           reactions: { successKo: "ดีมากค่ะ พูดเข้าใจง่ายค่ะ", retryKo: "ขออีกครั้งช้า ๆ ได้ไหมคะ", hintKo: "ฟังตัวอย่างแล้วลองพูดตามนะคะ" }
         };
@@ -7325,6 +7814,7 @@
         outputReactionText = "";
         outputRecognizedText = "";
         outputRecognizedScore = 0;
+        outputRequiredHits = null;
         outputEvaluationText = "まだ音声認識していません。";
         renderOutputPractice();
         showView("output");
@@ -7342,6 +7832,7 @@
         outputReactionText = mission.reactions.successKo;
         outputRecognizedText = "";
         outputRecognizedScore = 0;
+        outputRequiredHits = null;
         outputEvaluationText = "まだ音声認識していません。";
         saveOutputProgress();
         renderLearningLog();
@@ -7364,19 +7855,83 @@
           .filter((item) => item.length >= 2)));
       };
 
+      const getRequiredExpressionHits = (mission, transcript) => {
+        const normalized = normalizeOutputText(transcript);
+        return (mission.required || []).map((expression) => {
+          const normalizedExpression = normalizeOutputText(String(expression).replace(/\.\.\./g, ""));
+          return {
+            text: expression,
+            hit: Boolean(normalized && normalizedExpression && normalized.includes(normalizedExpression))
+          };
+        });
+      };
+
       const evaluateOutputSpeech = (mission, turn, transcript) => {
         const normalized = normalizeOutputText(transcript);
+        const requiredHits = getRequiredExpressionHits(mission, transcript);
         if (!normalized) {
-          return { score: 0, message: "音声を認識できませんでした。もう一度、少しゆっくり話してください。" };
+          return { score: 0, message: "音声を認識できませんでした。もう一度、少しゆっくり話してください。", requiredHits };
         }
         const matched = getOutputKeywords(mission, turn).filter((keyword) => normalized.includes(keyword));
         const score = Math.min(3, 1 + matched.length);
         const message = score >= 3
-          ? `3点: 必要な表現がよく入っています。認識: ${transcript}`
+          ? "🌟 3点満点！キーワードがしっかり入っています。"
           : score === 2
-            ? `2点: 意味はかなり近いです。もう少し指定表現を入れるとよいです。認識: ${transcript}`
-            : `1点: 音声は取れました。ヒントを見て、指定表現を増やしましょう。認識: ${transcript}`;
-        return { score, message };
+            ? "◎ 2点: 伝わる返答です。下のキーワードをあと1つ入れると満点です。"
+            : "○ 1点: 声は認識できました。下のキーワードを入れて、もう一度話してみましょう。";
+        return { score, message, requiredHits };
+      };
+
+      const updateOutputKeywordChips = (mission) => {
+        const row = outputPracticeShell.querySelector("[data-output-keywords]");
+        if (!row) return;
+        const hits = outputRecognizedText && outputRequiredHits
+          ? outputRequiredHits
+          : getRequiredExpressionHits(mission, "");
+        row.innerHTML = hits
+          .map((item) => `<span class="output-keyword${item.hit ? " hit" : ""}">${item.hit ? "✓" : "・"} ${escapeHtml(item.text)}</span>`)
+          .join("");
+      };
+
+      const renderOutputRecognitionDetails = (mission) => {
+        const transcriptEl = outputPracticeShell.querySelector("[data-output-transcript]");
+        const translationEl = outputPracticeShell.querySelector("[data-output-translation]");
+        const scoreEl = outputPracticeShell.querySelector("[data-output-score]");
+        if (scoreEl) scoreEl.textContent = `${outputRecognizedScore} / 3点`;
+        updateOutputKeywordChips(mission);
+        if (!transcriptEl) return;
+        if (!outputRecognizedText) {
+          transcriptEl.textContent = outputEvaluationText;
+          if (translationEl) translationEl.hidden = true;
+          return;
+        }
+        transcriptEl.innerHTML = `
+          <p class="output-transcript-main">「${escapeHtml(outputRecognizedText)}」</p>
+          <p class="translation-line">読み方: ${escapeHtml(thaiPronunciationKana(outputRecognizedText))}</p>
+          <p class="translation-line">${escapeHtml(outputEvaluationText)}</p>
+        `;
+        if (translationEl) {
+          translationEl.hidden = false;
+          translationEl.innerHTML = `<p class="translation-line">認識したタイ語の日本語・英語訳を取得中…</p>`;
+          const requested = outputRecognizedText;
+          Promise.all([
+            fetchTranslation(requested, "ja", "th").catch(() => ""),
+            fetchTranslation(requested, "en", "th").catch(() => "")
+          ]).then(([ja, en]) => {
+            if (outputRecognizedText !== requested) return;
+            const el = outputPracticeShell.querySelector("[data-output-translation]");
+            if (!el) return;
+            if (!ja && !en) {
+              el.innerHTML = `<p class="translation-line">訳を取得できませんでした（通信環境を確認してください）。読み方と下の例文を参考にしてください。</p>`;
+              return;
+            }
+            el.innerHTML = `
+              ${ja ? `<p class="translation-line">🇯🇵 日本語の意味: ${escapeHtml(ja)}</p>` : ""}
+              ${en ? `<p class="translation-line">🇬🇧 English: ${escapeHtml(en)}</p>` : ""}
+              <p class="translation-line">※自動翻訳の目安です。</p>
+            `;
+          });
+        }
       };
 
       const startOutputSpeechRecognition = (mission, turn, button) => {
@@ -7393,7 +7948,6 @@
         button.textContent = "認識中...";
         outputEvaluationText = "聞き取り中です。返答を話してください。";
         const transcriptEl = outputPracticeShell.querySelector("[data-output-transcript]");
-        const scoreEl = outputPracticeShell.querySelector("[data-output-score]");
         if (transcriptEl) transcriptEl.textContent = outputEvaluationText;
         recognition.onresult = (event) => {
           const transcript = Array.from(event.results)
@@ -7403,9 +7957,9 @@
           const evaluation = evaluateOutputSpeech(mission, turn, transcript);
           outputRecognizedText = transcript;
           outputRecognizedScore = evaluation.score;
+          outputRequiredHits = evaluation.requiredHits;
           outputEvaluationText = evaluation.message;
-          if (transcriptEl) transcriptEl.textContent = outputEvaluationText;
-          if (scoreEl) scoreEl.textContent = `${outputRecognizedScore} / 3点`;
+          renderOutputRecognitionDetails(mission);
           setStatus("音声認識で採点しました。", "success");
         };
         recognition.onerror = () => {
@@ -7419,6 +7973,21 @@
         };
         recognition.start();
         markStudyActivity();
+      };
+
+      const getTurnExampleAnswers = (mission, turn) => {
+        const examples = [{ ko: turn.modelKo, ja: turn.modelJa, label: "基本の言い方" }];
+        (turn.alternatives || []).forEach((alt) => {
+          if (alt && alt.ko) examples.push({ ko: alt.ko, ja: alt.ja || "", label: "別の言い方" });
+        });
+        const fillers = [
+          { ko: "ค่ะ เข้าใจแล้วค่ะ", ja: "はい、わかりました。（短くつなぐ言い方）", label: "短く返すとき" },
+          { ko: "พูดอีกครั้งช้า ๆ ได้ไหมคะ", ja: "もう一度ゆっくり言ってもらえますか。（聞き返したいとき）", label: "困ったとき" }
+        ];
+        fillers.forEach((filler) => {
+          if (examples.length < 3) examples.push(filler);
+        });
+        return examples.slice(0, 3);
       };
 
       const renderOutputPractice = () => {
@@ -7470,27 +8039,49 @@
                 <div class="output-recognition">
                   <button class="secondary-btn" type="button" data-output-recognize>音声認識で採点</button>
                   <div class="output-transcript" data-output-transcript>${escapeHtml(outputEvaluationText)}</div>
+                  <div class="output-translation" data-output-translation hidden></div>
                   <span class="chip" data-output-score>${outputRecognizedScore} / 3点</span>
+                </div>
+                <div class="output-goal-box">
+                  <strong>満点（3点）のとり方</strong>
+                  <p>下の「使ってほしいキーワード」を<strong>2つ以上</strong>入れて話すと3点満点です。1つなら2点、キーワードなしでも声が認識できれば1点です。</p>
+                  <div class="output-keyword-row" data-output-keywords></div>
+                  <p>認識できたキーワードは緑色の ✓ に変わります。</p>
+                  <p>※採点は「キーワードが入っているか」で判定します。発音の細かい正確さまでは判定しないので、まず伝わる声の大きさ・速さで話してみましょう。</p>
                 </div>
                 <div class="output-actions">
                   <button class="primary-btn" type="button" data-output-success>判定結果で次へ</button>
                   <button class="secondary-btn" type="button" data-output-retry>もう一回言う</button>
-                  <button class="secondary-btn" type="button" data-output-hint>別の言い方を見る</button>
+                  <button class="secondary-btn" type="button" data-output-hint>言い方の例を見る（3つ）</button>
                 </div>
               </div>
             </div>
             <div class="output-reaction" ${outputReactionText ? "" : "hidden"}>${escapeHtml(outputReactionText)}</div>
             <div class="output-turn" data-output-model hidden>
-              <strong>言い方の例</strong>
-              ${renderThaiWithPronunciation(turn.modelKo, "ko")}
-              <p class="ja">${escapeHtml(turn.modelJa)}</p>
-              <p>使う表現: ${mission.required.map(escapeHtml).join(" / ")}</p>
+              <strong>言い方の例（どれでもOK）</strong>
+              <div class="output-examples">
+                ${getTurnExampleAnswers(mission, turn).map((example) => `
+                  <div class="output-example">
+                    <span class="example-label">${escapeHtml(example.label)}</span>
+                    ${renderThaiWithPronunciation(example.ko, "ko")}
+                    <p class="ja">${escapeHtml(example.ja)}</p>
+                    <button class="listen-btn" type="button" data-example-listen="${escapeHtml(example.ko)}">音声を聞く</button>
+                  </div>
+                `).join("")}
+              </div>
             </div>
           </div>
         `;
         const recordRow = outputPracticeShell.querySelector("[data-output-record-row]");
         const recordButton = outputPracticeShell.querySelector("[data-output-record]");
         const audioEl = outputPracticeShell.querySelector("[data-output-audio]");
+        renderOutputRecognitionDetails(mission);
+        outputPracticeShell.querySelectorAll("[data-example-listen]").forEach((exampleButton) => {
+          exampleButton.addEventListener("click", () => {
+            speakSlow(exampleButton.dataset.exampleListen, outputPracticeShell, "th");
+            markStudyActivity();
+          });
+        });
         outputPracticeShell.querySelector("[data-output-listen]").addEventListener("click", () => speakSlow(turn.partnerKo, outputPracticeShell, "th"));
         recordButton.addEventListener("click", () => toggleRecording(recordRow, recordButton, audioEl));
         outputPracticeShell.querySelector("[data-output-recognize]").addEventListener("click", (event) => {
@@ -7506,6 +8097,7 @@
             outputReactionText = mission.reactions.retryKo;
             outputRecognizedText = "";
             outputRecognizedScore = 0;
+            outputRequiredHits = null;
             outputEvaluationText = "もう一度、相手に伝わるように話してみましょう。";
             saveOutputProgress();
             renderOutputPractice();
@@ -7644,6 +8236,7 @@
           }
         });
 
+        result.classList.remove("ok", "ng");
         if (record.correct === null) {
           result.textContent = "";
           return;
@@ -7651,9 +8244,11 @@
         if (record.selected === null) {
           result.textContent = "未回答";
         } else if (record.correct) {
-          result.textContent = "正解！";
+          result.textContent = "⭕ 正解！";
+          result.classList.add("ok");
         } else {
-          result.textContent = `不正解。正解は ${String.fromCharCode(65 + question.answer)}。`;
+          result.textContent = `❌ 不正解… 正解は ${String.fromCharCode(65 + question.answer)} です。`;
+          result.classList.add("ng");
         }
       };
 
@@ -8168,22 +8763,65 @@
         });
       };
 
+      const parseGrammarPoint = (point) => {
+        const text = String(point).trim();
+        const parenMatch = text.match(/^(.*?)[（(]([^（）()]*)[）)]\s*$/);
+        let formulaText = (parenMatch ? parenMatch[1] : text).trim();
+        let meaningText = parenMatch ? parenMatch[2].trim() : "";
+        const colonMatch = formulaText.match(/^([^:：]+)[:：]\s*(.+)$/);
+        if (colonMatch) {
+          const hasThaiRight = /[฀-๿]/.test(colonMatch[2]);
+          const hasThaiLeft = /[฀-๿]/.test(colonMatch[1]);
+          if (hasThaiRight && !hasThaiLeft) {
+            // 「日本語ラベル: タイ語表現」はタイ語側を文型ブロックにする
+            meaningText = meaningText || colonMatch[1].trim();
+            formulaText = colonMatch[2].trim();
+          } else {
+            formulaText = colonMatch[1].trim();
+            meaningText = meaningText || colonMatch[2].trim();
+          }
+        }
+        const blocks = formulaText.split(/\s*\+\s*/).map((block) => block.trim()).filter(Boolean);
+        return { formulaText, meaningText, blocks };
+      };
+
+      const extractThaiMorphemes = (formulaText) =>
+        (String(formulaText).match(/[฀-๿]+/g) || [])
+          .flatMap((part) => part.split("/"))
+          .map((part) => part.trim())
+          .filter((part) => part.length >= 1);
+
       const renderGrammarDiagrams = (chapter) => {
         grammarDiagrams.innerHTML = "";
         const examples = [...chapter.dialogues, ...chapter.basics];
         if (!chapter.grammar.length || !examples.length) return;
-        chapter.grammar.slice(0, 3).forEach((point, index) => {
+        // 長い解説文は文法リスト側に残し、図解は短い文型だけを対象にする
+        const diagramPoints = chapter.grammar.filter((point) => !/[。]/.test(String(point)) && String(point).length <= 44);
+        diagramPoints.slice(0, 3).forEach((point, index) => {
           const example = examples[index] || examples[0];
+          const { meaningText, blocks } = parseGrammarPoint(point);
+          const morphemes = extractThaiMorphemes(blocks.join(" "));
           const tokens = tokenizeStudySentence(example.ko);
           const diagram = document.createElement("article");
           diagram.className = "grammar-diagram";
+          const formulaMarkup = blocks
+            .map((block, blockIndex) => {
+              const chip = `<span class="block${blockIndex % 2 ? " alt" : ""}">${escapeHtml(block)}</span>`;
+              return blockIndex < blocks.length - 1 ? `${chip}<span class="equals">＋</span>` : chip;
+            })
+            .join("");
           diagram.innerHTML = `
-            <span class="entry-badge">Pattern ${index + 1}</span>
-            <h4>${escapeHtml(point)}</h4>
-            <div class="grammar-pattern">
-              ${tokens.map((token) => `<span>${escapeHtml(token)}</span>`).join("")}
+            <span class="entry-badge">文法${index + 1}</span>
+            <div class="grammar-formula">
+              ${formulaMarkup}
+              <span class="equals">→</span>
+              <span class="meaning">${escapeHtml(meaningText || simplifyThaiGrammarPoint(point).replace(/^[^:：]*[:：]\s*/, ""))}</span>
             </div>
-            <p class="grammar-note">${escapeHtml(example.ja)}</p>
+            <p class="grammar-note">${escapeHtml(simplifyThaiGrammarPoint(point))}</p>
+            <div class="grammar-pattern">
+              ${tokens.map((token) => `<span class="${morphemes.some((morpheme) => token.includes(morpheme)) ? "hit" : ""}">${escapeHtml(token)}</span>`).join("")}
+            </div>
+            <p class="grammar-note">${escapeHtml(example.ja)}（色つきの部分が今回の文法です）</p>
             <button class="secondary-btn" type="button" data-grammar-listen="${escapeHtml(example.ko)}">例文音声</button>
           `;
           const button = diagram.querySelector("[data-grammar-listen]");
@@ -8247,6 +8885,8 @@
           koja: createVocabQuizSet(entries, "koja", seedKey),
           jako: createVocabQuizSet(entries, "jako", seedKey)
         };
+        vocabQuizIndex.koja = 0;
+        vocabQuizIndex.jako = 0;
       };
 
       const renderStandaloneQuizResult = (card, question) => {
@@ -8263,14 +8903,17 @@
           }
         });
 
+        result.classList.remove("ok", "ng");
         if (question.correct === null) {
           result.textContent = "";
         } else if (question.selected === null) {
           result.textContent = "未回答";
         } else if (question.correct) {
-          result.textContent = "正解！";
+          result.textContent = "⭕ 正解！";
+          result.classList.add("ok");
         } else {
-          result.textContent = `不正解。正解は ${String.fromCharCode(65 + question.answer)}。`;
+          result.textContent = `❌ 不正解… 正解は ${String.fromCharCode(65 + question.answer)} です。`;
+          result.classList.add("ng");
         }
       };
 
@@ -8300,61 +8943,98 @@
           updateVocabQuizSummary(direction);
           return;
         }
-        bucket.questions.forEach((question, index) => {
-          const card = document.createElement("div");
-          card.className = "quiz-card";
-          const name = `${question.id}-${index}`;
-          card.innerHTML = `
-            ${getQuizPromptMarkup(question, index, { allowAudio: direction === "koja" })}
-            <div class="quiz-options">
-              ${question.options
-                .map(
-                  (option, optionIndex) => `
-                    <label class="quiz-option">
-                      <input type="radio" name="${name}" value="${optionIndex}" />
-                      ${renderChoiceMarkup(option)}
-                    </label>
-                  `
-                )
-                .join("")}
-            </div>
-            <p class="quiz-result" aria-live="polite"></p>
+        const questions = bucket.questions;
+        const total = questions.length;
+        const summaryEl = direction === "koja" ? vocabQuizSummaryKoJa : vocabQuizSummaryJaKo;
+        const gradedCount = questions.filter((question) => question.correct !== null).length;
+        const correctCount = questions.filter((question) => question.correct).length;
+        if (gradedCount >= total) {
+          summaryEl.textContent = `結果: ${correctCount} / ${total} 正解`;
+          const done = document.createElement("div");
+          done.className = "quiz-card";
+          done.innerHTML = `
+            <p class="quiz-prompt">全${total}問が終わりました！</p>
+            <p class="quiz-result ${correctCount === total ? "ok" : ""}">${correctCount} / ${total} 正解でした。</p>
+            <button class="check-btn" type="button" data-vocab-quiz-restart>もう一度挑戦</button>
           `;
-          const promptButton = card.querySelector("[data-audio-prompt]");
-          if (promptButton) {
-            promptButton.addEventListener("click", () => {
-              speakText(question.ko, card);
-              markStudyActivity();
-            });
-          }
-          attachOptionAudioHandlers(card);
-          card.querySelectorAll("input").forEach((input) => {
-            input.addEventListener("change", () => {
-              question.selected = Number(input.value);
+          done.querySelector("[data-vocab-quiz-restart]").addEventListener("click", () => {
+            questions.forEach((question) => {
+              question.selected = null;
               question.correct = null;
-              renderStandaloneQuizResult(card, question);
-              updateVocabQuizSummary(direction);
-              markStudyActivity();
             });
+            vocabQuizIndex[direction] = 0;
+            renderVocabQuizGroup(container, direction);
+            markStudyActivity();
           });
-          if (question.selected !== null) {
-            const selectedInput = card.querySelector(`input[value="${question.selected}"]`);
-            if (selectedInput) selectedInput.checked = true;
-          }
-          renderStandaloneQuizResult(card, question);
-          container.appendChild(card);
+          container.appendChild(done);
+          return;
+        }
+        let currentIndex = Math.min(vocabQuizIndex[direction] || 0, total - 1);
+        if (questions[currentIndex].correct !== null) {
+          const nextPending = questions.findIndex((question) => question.correct === null);
+          if (nextPending !== -1) currentIndex = nextPending;
+          vocabQuizIndex[direction] = currentIndex;
+        }
+        summaryEl.textContent = `第${currentIndex + 1}問 / 全${total}問（ここまで ${correctCount} 問正解）`;
+        const question = questions[currentIndex];
+        const card = document.createElement("div");
+        card.className = "quiz-card";
+        const name = `${question.id}-${currentIndex}`;
+        card.innerHTML = `
+          <p class="vocab-quiz-progress">1問答えると、自動で次の問題に進みます。</p>
+          ${getQuizPromptMarkup(question, currentIndex, { allowAudio: direction === "koja" })}
+          <div class="quiz-options">
+            ${question.options
+              .map(
+                (option, optionIndex) => `
+                  <label class="quiz-option">
+                    <input type="radio" name="${name}" value="${optionIndex}" />
+                    ${renderChoiceMarkup(option)}
+                  </label>
+                `
+              )
+              .join("")}
+          </div>
+          <p class="quiz-result" aria-live="polite"></p>
+        `;
+        const promptButton = card.querySelector("[data-audio-prompt]");
+        if (promptButton) {
+          promptButton.addEventListener("click", () => {
+            speakText(question.ko, card);
+            markStudyActivity();
+          });
+        }
+        attachOptionAudioHandlers(card);
+        card.querySelectorAll("input").forEach((input) => {
+          input.addEventListener("change", () => {
+            if (question.correct !== null) return;
+            question.selected = Number(input.value);
+            question.correct = question.selected === question.answer;
+            addTodayAnswers(1, question.correct ? 1 : 0);
+            card.querySelectorAll("input").forEach((otherInput) => {
+              otherInput.disabled = true;
+            });
+            renderStandaloneQuizResult(card, question);
+            markStudyActivity();
+            window.setTimeout(() => {
+              vocabQuizIndex[direction] = currentIndex + 1;
+              renderVocabQuizGroup(container, direction);
+              renderLearningLog();
+            }, 1100);
+          });
         });
-        updateVocabQuizSummary(direction);
+        container.appendChild(card);
       };
 
-      const gradeVocabQuiz = (direction) => {
+      const resetVocabQuiz = (direction) => {
         const bucket = vocabQuizState[direction];
         const container = direction === "koja" ? vocabQuizKoJa : vocabQuizJaKo;
-        bucket.questions.forEach((question, index) => {
-          question.correct = question.selected === question.answer;
-          renderStandaloneQuizResult(container.children[index], question);
+        bucket.questions.forEach((question) => {
+          question.selected = null;
+          question.correct = null;
         });
-        updateVocabQuizSummary(direction);
+        vocabQuizIndex[direction] = 0;
+        renderVocabQuizGroup(container, direction);
         markStudyActivity();
       };
 
@@ -8457,9 +9137,19 @@
           actions.className = "card-actions";
           actions.innerHTML = `
             <button type="button" class="flip-card">めくる ↻</button>
-            <button type="button" class="mark-good">正解</button>
-            <button type="button" class="mark-bad">不正解</button>
+            <button type="button" class="mark-good">○ 正解</button>
+            <button type="button" class="mark-bad">× 不正解</button>
           `;
+
+          const markGoodButton = actions.querySelector(".mark-good");
+          const markBadButton = actions.querySelector(".mark-bad");
+          const reflectCardMark = () => {
+            const record = state.cards[cardId];
+            wrapper.classList.toggle("correct", record.correct === true);
+            wrapper.classList.toggle("incorrect", record.correct === false);
+            markGoodButton.classList.toggle("selected", record.correct === true);
+            markBadButton.classList.toggle("selected", record.correct === false);
+          };
 
           flashcard.addEventListener("click", () => {
             speakText(item.ko, wrapper);
@@ -8472,32 +9162,29 @@
             markStudyActivity();
           });
 
-          actions.querySelector(".mark-good").addEventListener("click", (event) => {
+          markGoodButton.addEventListener("click", (event) => {
             event.stopPropagation();
             if (state.cards[cardId].correct === null) {
               addTodayAnswers(1, 1);
             }
             state.cards[cardId].correct = true;
-            wrapper.classList.add("correct");
-            wrapper.classList.remove("incorrect");
+            reflectCardMark();
             markStudyActivity();
             updateAllStats();
           });
 
-          actions.querySelector(".mark-bad").addEventListener("click", (event) => {
+          markBadButton.addEventListener("click", (event) => {
             event.stopPropagation();
             if (state.cards[cardId].correct === null) {
               addTodayAnswers(1, 0);
             }
             state.cards[cardId].correct = false;
-            wrapper.classList.add("incorrect");
-            wrapper.classList.remove("correct");
+            reflectCardMark();
             markStudyActivity();
             updateAllStats();
           });
 
-          if (state.cards[cardId].correct === true) wrapper.classList.add("correct");
-          if (state.cards[cardId].correct === false) wrapper.classList.add("incorrect");
+          reflectCardMark();
 
           wrapper.appendChild(flashcard);
           wrapper.appendChild(actions);
@@ -8846,6 +9533,9 @@
 
           const stateClass = getVocabStateClass(remembered);
           if (stateClass) wrapper.classList.add(stateClass);
+          actions.querySelector(".mark-good").classList.toggle("selected", remembered === "known");
+          actions.querySelector(".mark-review").classList.toggle("selected", remembered === "review");
+          actions.querySelector(".mark-bad").classList.toggle("selected", remembered === "unknown");
 
           wrapper.appendChild(flashcard);
           wrapper.appendChild(actions);
@@ -8908,9 +9598,9 @@
                 <button id="vocab-deck-next" class="secondary-btn" type="button">次へ</button>
               </div>
               <div class="study-actions">
-                <button id="vocab-deck-good" class="primary-btn" type="button">覚えた</button>
-                <button id="vocab-deck-review" class="secondary-btn" type="button">不安</button>
-                <button id="vocab-deck-bad" class="secondary-btn" type="button">覚えてない</button>
+                <button id="vocab-deck-good" class="primary-btn${remembered === "known" ? " selected" : ""}" type="button">${remembered === "known" ? "✓ " : ""}覚えた</button>
+                <button id="vocab-deck-review" class="secondary-btn${remembered === "review" ? " selected" : ""}" type="button">${remembered === "review" ? "✓ " : ""}不安</button>
+                <button id="vocab-deck-bad" class="secondary-btn${remembered === "unknown" ? " selected" : ""}" type="button">${remembered === "unknown" ? "✓ " : ""}覚えてない</button>
               </div>
             </div>
           </div>
@@ -9665,8 +10355,8 @@
       vocabModeCardsButton.addEventListener("click", () => setVocabMode("cards"));
       vocabModeDeckButton.addEventListener("click", () => setVocabMode("deck"));
       vocabModeGameButton.addEventListener("click", () => setVocabMode("game"));
-      vocabQuizCheckKoJa.addEventListener("click", () => gradeVocabQuiz("koja"));
-      vocabQuizCheckJaKo.addEventListener("click", () => gradeVocabQuiz("jako"));
+      vocabQuizCheckKoJa.addEventListener("click", () => resetVocabQuiz("koja"));
+      vocabQuizCheckJaKo.addEventListener("click", () => resetVocabQuiz("jako"));
       adminRefreshButton.addEventListener("click", () => {
         renderAdminPage();
         setStatus("管理画面を更新しました。", "success");

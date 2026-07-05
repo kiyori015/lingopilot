@@ -893,12 +893,81 @@
         color: #9e2e23;
       }
 
+      .card-wrapper {
+        position: relative;
+      }
+
       .card-wrapper.correct .card-inner {
-        border-color: rgba(0, 127, 127, 0.5);
+        border: 2px solid #1a8f4d;
+        box-shadow: 0 0 0 3px rgba(26, 143, 77, 0.16);
+      }
+
+      .card-wrapper.correct .card-face {
+        background: linear-gradient(140deg, #eaf7ef, #d9f0e2);
       }
 
       .card-wrapper.incorrect .card-inner {
-        border-color: rgba(201, 61, 45, 0.5);
+        border: 2px solid #d03b2c;
+        box-shadow: 0 0 0 3px rgba(208, 59, 44, 0.16);
+      }
+
+      .card-wrapper.incorrect .card-face {
+        background: linear-gradient(140deg, #fdecea, #f9dcd7);
+      }
+
+      .card-wrapper.correct::after,
+      .card-wrapper.incorrect::after {
+        position: absolute;
+        top: -10px;
+        right: -6px;
+        z-index: 2;
+        padding: 4px 10px;
+        border-radius: 999px;
+        font-size: 0.75rem;
+        font-weight: 800;
+        color: #fff;
+        box-shadow: 0 6px 14px rgba(31, 28, 26, 0.18);
+      }
+
+      .card-wrapper.correct::after {
+        content: "○ 正解";
+        background: #1a8f4d;
+      }
+
+      .card-wrapper.incorrect::after {
+        content: "× 不正解";
+        background: #d03b2c;
+      }
+
+      .card-actions .mark-good.selected {
+        background: #1a8f4d;
+        color: #fff;
+      }
+
+      .card-actions .mark-bad.selected {
+        background: #d03b2c;
+        color: #fff;
+      }
+
+      .vocab-card-actions [data-state].selected,
+      .deck-actions [data-state].selected {
+        color: #fff;
+        border-color: transparent;
+      }
+
+      .vocab-card-actions [data-state="known"].selected,
+      .deck-actions [data-state="known"].selected {
+        background: #1a8f4d;
+      }
+
+      .vocab-card-actions [data-state="unsure"].selected,
+      .deck-actions [data-state="unsure"].selected {
+        background: #c07f1a;
+      }
+
+      .vocab-card-actions [data-state="unknown"].selected,
+      .deck-actions [data-state="unknown"].selected {
+        background: #d03b2c;
       }
 
       .quiz-wrap {
@@ -1063,19 +1132,49 @@
       }
 
       .quiz-option.correct {
-        border-color: rgba(0, 127, 127, 0.4);
-        background: rgba(0, 127, 127, 0.12);
+        border-color: #1a8f4d;
+        background: #e7f6ed;
+        box-shadow: inset 4px 0 0 #1a8f4d;
       }
 
       .quiz-option.incorrect {
-        border-color: rgba(201, 61, 45, 0.4);
-        background: rgba(201, 61, 45, 0.12);
+        border-color: #d03b2c;
+        background: #fdeae7;
+        box-shadow: inset 4px 0 0 #d03b2c;
+      }
+
+      .quiz-option.correct .quiz-option-body::before {
+        content: "✓";
+        color: #15803d;
+        font-weight: 900;
+        font-size: 1.1rem;
+        margin-right: 4px;
+      }
+
+      .quiz-option.incorrect .quiz-option-body::before {
+        content: "✕";
+        color: #b91c1c;
+        font-weight: 900;
+        font-size: 1.1rem;
+        margin-right: 4px;
       }
 
       .quiz-result {
         margin: 8px 0 0;
         font-size: 0.85rem;
         color: var(--muted);
+      }
+
+      .quiz-result.ok {
+        color: #15803d;
+        font-weight: 800;
+        font-size: 0.95rem;
+      }
+
+      .quiz-result.ng {
+        color: #b91c1c;
+        font-weight: 800;
+        font-size: 0.95rem;
       }
 
       .stats-grid {
@@ -1376,13 +1475,15 @@
       }
 
       .game-option.correct {
-        border-color: rgba(0, 127, 127, 0.34);
-        background: rgba(0, 127, 127, 0.12);
+        border-color: #1a8f4d;
+        background: #e7f6ed;
+        font-weight: 700;
       }
 
       .game-option.incorrect {
-        border-color: rgba(201, 61, 45, 0.32);
-        background: rgba(201, 61, 45, 0.1);
+        border-color: #d03b2c;
+        background: #fdeae7;
+        font-weight: 700;
       }
 
       .rating-pill {
@@ -1923,6 +2024,205 @@
         color: var(--ink);
       }
 
+      .grammar-diagram {
+        display: grid;
+        gap: 12px;
+        padding: 16px;
+        border-radius: 18px;
+        background: #fff;
+        border: 1px solid rgba(0, 127, 127, 0.14);
+      }
+
+      .grammar-formula {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .grammar-formula .block {
+        padding: 10px 14px;
+        border-radius: 12px;
+        font-weight: 800;
+        background: rgba(0, 127, 127, 0.13);
+        color: var(--accent-strong);
+        border: 1px solid rgba(0, 127, 127, 0.24);
+      }
+
+      .grammar-formula .block.alt {
+        background: rgba(244, 163, 82, 0.2);
+        color: #8a5316;
+        border-color: rgba(244, 163, 82, 0.4);
+      }
+
+      .grammar-formula .equals {
+        font-weight: 800;
+        color: var(--muted);
+      }
+
+      .grammar-formula .meaning {
+        padding: 10px 14px;
+        border-radius: 12px;
+        background: rgba(31, 28, 26, 0.06);
+        font-weight: 700;
+      }
+
+      .grammar-pattern {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+
+      .grammar-pattern span {
+        padding: 8px 12px;
+        border-radius: 999px;
+        background: rgba(31, 28, 26, 0.05);
+        font-weight: 700;
+      }
+
+      .grammar-pattern span.hit {
+        background: var(--accent);
+        color: #fff;
+      }
+
+      .grammar-note {
+        margin: 0;
+        color: var(--muted);
+      }
+
+      .review-alert {
+        position: fixed;
+        bottom: 24px;
+        left: 24px;
+        z-index: 20;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        border: 2px solid rgba(244, 163, 82, 0.6);
+        background: #fff7ec;
+        border-radius: 999px;
+        padding: 10px 16px;
+        font-weight: 700;
+        box-shadow: var(--shadow);
+        cursor: pointer;
+        font-size: 0.9rem;
+      }
+
+      .review-alert[hidden] {
+        display: none;
+      }
+
+      .nav-badge {
+        display: inline-flex;
+        min-width: 20px;
+        height: 20px;
+        align-items: center;
+        justify-content: center;
+        border-radius: 999px;
+        background: #d03b2c;
+        color: #fff;
+        font-size: 0.72rem;
+        margin-left: 6px;
+        padding: 0 6px;
+      }
+
+      .output-transcript-main {
+        font-size: 1.15rem;
+        font-weight: 800;
+        margin: 0;
+      }
+
+      .output-transcript .translation-line,
+      .output-translation .translation-line {
+        margin: 4px 0 0;
+        color: var(--ink);
+        font-size: 0.92rem;
+      }
+
+      .output-translation {
+        border-radius: 14px;
+        padding: 10px 12px;
+        background: rgba(244, 163, 82, 0.12);
+        border: 1px solid rgba(244, 163, 82, 0.3);
+      }
+
+      .output-translation[hidden] {
+        display: none;
+      }
+
+      .output-goal-box {
+        border: 1px solid rgba(0, 127, 127, 0.22);
+        background: rgba(0, 127, 127, 0.06);
+        border-radius: 16px;
+        padding: 12px 14px;
+        display: grid;
+        gap: 8px;
+      }
+
+      .output-goal-box p {
+        margin: 0;
+        font-size: 0.9rem;
+      }
+
+      .output-keyword-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+
+      .output-keyword {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        border-radius: 999px;
+        padding: 6px 10px;
+        background: #fff;
+        border: 1px solid rgba(31, 28, 26, 0.14);
+        font-weight: 700;
+        font-size: 0.88rem;
+      }
+
+      .output-keyword.hit {
+        background: #e7f6ed;
+        border-color: #1a8f4d;
+        color: #15803d;
+      }
+
+      .output-examples {
+        display: grid;
+        gap: 8px;
+      }
+
+      .output-example {
+        display: grid;
+        gap: 4px;
+        padding: 10px 12px;
+        border-radius: 12px;
+        background: rgba(0, 127, 127, 0.06);
+      }
+
+      .output-example .example-label {
+        font-size: 0.78rem;
+        font-weight: 800;
+        color: var(--accent-strong);
+      }
+
+      .save-status-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 10px;
+      }
+
+      .save-status-grid .log-card p {
+        font-size: 0.92rem;
+      }
+
+      .vocab-quiz-progress {
+        color: var(--muted);
+        font-weight: 700;
+        margin: 0 0 10px;
+      }
+
       @media (max-width: 980px) {
         .layout {
           grid-template-columns: 1fr;
@@ -2125,6 +2425,23 @@
             <h3>学習記録</h3>
             <p>学習時間、連続日数、正答率、得意・苦手をここで確認します。</p>
           </div>
+          <div class="stats-card" id="save-status-card" style="margin-bottom: 14px">
+            <h4>データ保存の状態</h4>
+            <div class="save-status-grid">
+              <article class="log-card">
+                <h4>最終保存</h4>
+                <p id="save-status-last">--</p>
+              </article>
+              <article class="log-card">
+                <h4>サーバー同期</h4>
+                <p id="save-status-sync">--</p>
+              </article>
+              <article class="log-card">
+                <h4>前回の続き</h4>
+                <p id="save-status-resume">--</p>
+              </article>
+            </div>
+          </div>
           <div class="stats-card" style="margin-bottom: 14px">
             <h4>今日のおすすめ復習</h4>
             <p class="support-note">一度学んだ章を、翌日・3日後・7日後にもう一度聞いて定着させます。</p>
@@ -2279,16 +2596,16 @@
           <div class="quiz-wrap">
             <div class="quiz-group">
               <div class="quiz-head">
-                <h4>韓国語 → 日本語</h4>
-                <button id="vocab-quiz-check-koja" class="check-btn" type="button">答え合わせ</button>
+                <h4>韓国語 → 日本語（1問ずつ出題）</h4>
+                <button id="vocab-quiz-check-koja" class="check-btn" type="button">最初からやり直す</button>
               </div>
               <p id="vocab-quiz-summary-koja" class="quiz-summary">未採点</p>
               <div id="vocab-quiz-koja" class="quiz-list"></div>
             </div>
             <div class="quiz-group">
               <div class="quiz-head">
-                <h4>日本語 → 韓国語</h4>
-                <button id="vocab-quiz-check-jako" class="check-btn" type="button">答え合わせ</button>
+                <h4>日本語 → 韓国語（1問ずつ出題）</h4>
+                <button id="vocab-quiz-check-jako" class="check-btn" type="button">最初からやり直す</button>
               </div>
               <p id="vocab-quiz-summary-jako" class="quiz-summary">未採点</p>
               <div id="vocab-quiz-jako" class="quiz-list"></div>
@@ -2641,6 +2958,10 @@
         </section>
       </section>
 
+      <button id="review-alert" class="review-alert" type="button" hidden>
+        <span aria-hidden="true">🔔</span>
+        <span id="review-alert-text">今日の復習があります</span>
+      </button>
       <div id="status" class="status" role="status" aria-live="polite"></div>
     </main>
 
@@ -3679,17 +4000,19 @@
       let lessonStepIndex = 0;
       let activeLessonSteps = [];
       let lastLessonChapterKey = "";
-      let vocabStudyMode = "cards";
+      let vocabStudyMode = "deck";
       let vocabVisualMode = "text";
       let vocabDeckIndex = 0;
       let vocabDeckFlipped = false;
       let vocabGameState = null;
       let vocabQuizState = null;
+      const vocabQuizIndex = { koja: 0, jako: 0 };
       let outputMissionId = "intro";
       let outputTurnIndex = 0;
       let outputReactionText = "";
       let outputRecognizedText = "";
       let outputRecognizedScore = 0;
+      let outputRequiredHits = null;
       let outputEvaluationText = "まだ音声認識していません。";
       let studyTimerStartedAt = 0;
       let studyIdleTimer = null;
@@ -3886,6 +4209,16 @@
         });
         return data;
       };
+      const recordLastLoginAt = async () => {
+        if (!signedInAuthUserId || !supabaseAuthClient) return;
+        try {
+          await supabaseAuthClient
+            .from("user_app_state")
+            .upsert({ user_id: signedInAuthUserId, last_login_at: new Date().toISOString() }, { onConflict: "user_id" });
+        } catch (error) {
+          /* last_login_at 列が未追加の環境でも本体機能には影響させない */
+        }
+      };
       const applySupabaseUser = (user) => {
         const username = getAuthUsername(user);
         if (!username) {
@@ -3893,6 +4226,7 @@
         }
         signedInAuthUserId = user.id || "";
         signedInEmail = normalizeEmail(user.email || "");
+        recordLastLoginAt();
         if (getAuthRole(user) === "admin" || username === ADMIN_USERNAME) {
           applyAdminState(username);
         } else {
@@ -4155,8 +4489,12 @@
               .upsert(rows, { onConflict: "user_id,record_date" });
             if (dailyError) throw dailyError;
           }
+          lastRemoteSyncAt = Date.now();
+          updateSaveStatusCard();
         } catch (error) {
           console.warn("Supabase learning sync failed.", error);
+          lastRemoteSyncFailedAt = Date.now();
+          updateSaveStatusCard();
           setStatus("学習記録は端末に一時保存中です。Supabase設定後に同期されます。", "info");
         } finally {
           remoteSyncInProgress = false;
@@ -4305,6 +4643,92 @@
           <button class="quiz-option-audio" type="button" data-option-audio="${escapeHtml(text)}">ゆっくり音声</button>
         </span>
       `;
+      const applyQuizResult = (resultEl, record, question) => {
+        if (!resultEl) return;
+        resultEl.classList.remove("ok", "ng");
+        if (!record || record.correct === null) {
+          resultEl.textContent = "";
+          return;
+        }
+        if (record.selected === null) {
+          resultEl.textContent = "未回答";
+          return;
+        }
+        if (record.correct) {
+          resultEl.textContent = "⭕ 正解！";
+          resultEl.classList.add("ok");
+        } else {
+          resultEl.textContent = `❌ 不正解… 正解は ${String.fromCharCode(65 + question.answer)} です。`;
+          resultEl.classList.add("ng");
+        }
+      };
+      const clearQuizResult = (resultEl) => {
+        if (!resultEl) return;
+        resultEl.textContent = "";
+        resultEl.classList.remove("ok", "ng");
+      };
+      const TRANSLATION_CACHE_KEY = "lingopilot-translation-cache";
+      const TRANSLATION_MAX_CHARS = 180;
+      const loadTranslationCache = () => {
+        try {
+          const raw = "localStorage" in window ? localStorage.getItem(TRANSLATION_CACHE_KEY) : null;
+          const data = raw ? JSON.parse(raw) : null;
+          return data && typeof data === "object" ? new Map(Object.entries(data)) : new Map();
+        } catch (error) {
+          return new Map();
+        }
+      };
+      const translationCache = loadTranslationCache();
+      const persistTranslationCache = () => {
+        if (!("localStorage" in window)) return;
+        try {
+          const entries = Array.from(translationCache.entries()).slice(-300);
+          localStorage.setItem(TRANSLATION_CACHE_KEY, JSON.stringify(Object.fromEntries(entries)));
+        } catch (error) {
+          /* ignore storage errors */
+        }
+      };
+      const fetchTranslation = async (text, targetLang, sourceLang = "ko") => {
+        const trimmed = String(text).trim().slice(0, TRANSLATION_MAX_CHARS);
+        if (!trimmed) return "";
+        const cacheKey = `${sourceLang}|${targetLang}|${trimmed}`;
+        if (translationCache.has(cacheKey)) return translationCache.get(cacheKey);
+        const url = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(trimmed)}&langpair=${sourceLang}|${targetLang}`;
+        const response = await fetch(url);
+        if (!response.ok) throw new Error(`translation http ${response.status}`);
+        const data = await response.json();
+        if (data && data.responseStatus && Number(data.responseStatus) !== 200) {
+          throw new Error(`translation api status ${data.responseStatus}`);
+        }
+        const value = data && data.responseData && data.responseData.translatedText ? String(data.responseData.translatedText) : "";
+        if (value) {
+          translationCache.set(cacheKey, value);
+          persistTranslationCache();
+        }
+        return value;
+      };
+      let lastLocalSaveAt = 0;
+      let lastRemoteSyncAt = 0;
+      let lastRemoteSyncFailedAt = 0;
+      let reviewAutoSession = null;
+      const REVIEW_AUTO_COMPLETE_ACTIONS = 8;
+      const formatClockTime = (timestamp) => (timestamp ? new Date(timestamp).toLocaleTimeString("ja-JP", { hour: "2-digit", minute: "2-digit", second: "2-digit" }) : "--");
+      const updateSaveStatusCard = () => {
+        const lastEl = document.getElementById("save-status-last");
+        const syncEl = document.getElementById("save-status-sync");
+        const resumeEl = document.getElementById("save-status-resume");
+        if (!lastEl || !syncEl || !resumeEl) return;
+        lastEl.textContent = lastLocalSaveAt ? `${formatClockTime(lastLocalSaveAt)}（この端末）` : "まだ保存していません";
+        if (lastRemoteSyncAt && lastRemoteSyncAt >= lastRemoteSyncFailedAt) {
+          syncEl.textContent = `${formatClockTime(lastRemoteSyncAt)} 同期済み`;
+        } else if (lastRemoteSyncFailedAt) {
+          syncEl.textContent = "同期エラー（端末には保存済み）";
+        } else {
+          syncEl.textContent = "未同期（端末には保存済み）";
+        }
+        const chapter = chapters[currentChapterIndex];
+        resumeEl.textContent = chapter ? chapter.title : "--";
+      };
       const isStudyViewMode = (mode = viewMode) => mode === "main" || mode === "support" || mode === "vocab" || mode === "output";
       const pauseStudyTimer = () => {
         if (!studyTimerStartedAt) return;
@@ -4342,6 +4766,14 @@
         if (!isStudyViewMode()) return;
         startStudyTimer();
         resetStudyIdleTimer();
+        if (reviewAutoSession && chapters[currentChapterIndex] && chapters[currentChapterIndex].id === reviewAutoSession.chapterId) {
+          reviewAutoSession.actions += 1;
+          if (reviewAutoSession.actions >= REVIEW_AUTO_COMPLETE_ACTIONS) {
+            const chapter = chapters[currentChapterIndex];
+            reviewAutoSession = null;
+            markChapterReviewComplete(chapter, { auto: true });
+          }
+        }
       };
       const queueAutoPlay = (text, targetEl, languageHint = "auto", delay = 140) => {
         window.clearTimeout(autoPlayTimer);
@@ -4380,6 +4812,8 @@
         if (!("localStorage" in window) || !signedInStudentId) return;
         try {
           localStorage.setItem(getScopedStorageKey(HISTORY_KEY), JSON.stringify(Object.fromEntries(history)));
+          lastLocalSaveAt = Date.now();
+          updateSaveStatusCard();
           scheduleRemoteSync();
         } catch (error) {
           /* ignore storage errors */
@@ -4405,6 +4839,8 @@
       const saveOutputProgress = () => {
         if (!("localStorage" in window) || !signedInStudentId) return;
         localStorage.setItem(getScopedStorageKey(OUTPUT_STORAGE_KEY), JSON.stringify(Object.fromEntries(outputProgress)));
+        lastLocalSaveAt = Date.now();
+        updateSaveStatusCard();
         scheduleRemoteSync();
       };
       const ensureTodayRecord = () => {
@@ -4617,6 +5053,8 @@
         if (!("localStorage" in window) || !signedInStudentId) return;
         try {
           localStorage.setItem(getScopedStorageKey(STORAGE_KEY), JSON.stringify(serializeProgress()));
+          lastLocalSaveAt = Date.now();
+          updateSaveStatusCard();
           scheduleRemoteSync();
         } catch (error) {
           /* ignore storage errors */
@@ -5236,9 +5674,18 @@
           goal: "名前・出身・よろしくを自分の言葉で返す。",
           required: ["저는 ...예요", "일본에서 왔어요", "잘 부탁합니다"],
           turns: [
-            { partnerKo: "안녕하세요. 이름이 뭐예요?", partnerJa: "こんにちは。名前は何ですか。", task: "名前を言ってください。", modelKo: "저는 유우예요.", modelJa: "私はゆうです。" },
-            { partnerKo: "어디에서 왔어요?", partnerJa: "どこから来ましたか。", task: "出身を言ってください。", modelKo: "일본에서 왔어요.", modelJa: "日本から来ました。" },
-            { partnerKo: "만나서 반가워요.", partnerJa: "会えてうれしいです。", task: "うれしい気持ちとよろしくを返してください。", modelKo: "저도 반가워요. 잘 부탁합니다.", modelJa: "私もうれしいです。よろしくお願いします。" }
+            { partnerKo: "안녕하세요. 이름이 뭐예요?", partnerJa: "こんにちは。名前は何ですか。", task: "名前を言ってください。", modelKo: "저는 유우예요.", modelJa: "私はゆうです。", alternatives: [
+              { ko: "제 이름은 유우예요.", ja: "私の名前はゆうです。" },
+              { ko: "유우라고 해요.", ja: "ゆうといいます。" }
+            ] },
+            { partnerKo: "어디에서 왔어요?", partnerJa: "どこから来ましたか。", task: "出身を言ってください。", modelKo: "일본에서 왔어요.", modelJa: "日本から来ました。", alternatives: [
+              { ko: "저는 일본 사람이에요.", ja: "私は日本人です。" },
+              { ko: "도쿄에서 왔어요.", ja: "東京から来ました。" }
+            ] },
+            { partnerKo: "만나서 반가워요.", partnerJa: "会えてうれしいです。", task: "うれしい気持ちとよろしくを返してください。", modelKo: "저도 반가워요. 잘 부탁합니다.", modelJa: "私もうれしいです。よろしくお願いします。", alternatives: [
+              { ko: "만나서 반가워요.", ja: "お会いできてうれしいです。" },
+              { ko: "잘 부탁드려요.", ja: "よろしくお願いします。" }
+            ] }
           ],
           reactions: { successKo: "좋아요. 자연스러웠어요.", retryKo: "천천히 다시 말해 주세요.", hintKo: "이렇게 말해도 좋아요." }
         },
@@ -5249,9 +5696,18 @@
           goal: "注文・味の希望・追加を音声で伝える。",
           required: ["주세요", "빼 주세요", "더 주세요"],
           turns: [
-            { partnerKo: "어서 오세요. 무엇을 드릴까요?", partnerJa: "いらっしゃいませ。何にしますか。", task: "ほしい料理を一つ注文してください。", modelKo: "비빔밥 하나 주세요.", modelJa: "ビビンバを一つください。" },
-            { partnerKo: "매운맛도 괜찮아요?", partnerJa: "辛い味でも大丈夫ですか。", task: "辛さを減らしてほしいと伝えてください。", modelKo: "조금 덜 맵게 해 주세요.", modelJa: "少し辛くなくしてください。" },
-            { partnerKo: "더 필요한 게 있어요?", partnerJa: "追加で必要なものはありますか。", task: "水や袋などを追加で頼んでください。", modelKo: "물도 더 주세요.", modelJa: "水も追加でください。" }
+            { partnerKo: "어서 오세요. 무엇을 드릴까요?", partnerJa: "いらっしゃいませ。何にしますか。", task: "ほしい料理を一つ注文してください。", modelKo: "비빔밥 하나 주세요.", modelJa: "ビビンバを一つください。", alternatives: [
+              { ko: "김밥 하나 주세요.", ja: "キンパを一つください。" },
+              { ko: "불고기 주세요.", ja: "プルコギをください。" }
+            ] },
+            { partnerKo: "매운맛도 괜찮아요?", partnerJa: "辛い味でも大丈夫ですか。", task: "辛さを減らしてほしいと伝えてください。", modelKo: "조금 덜 맵게 해 주세요.", modelJa: "少し辛くなくしてください。", alternatives: [
+              { ko: "안 맵게 해 주세요.", ja: "辛くしないでください。" },
+              { ko: "맵지 않게 부탁해요.", ja: "辛くならないようにお願いします。" }
+            ] },
+            { partnerKo: "더 필요한 게 있어요?", partnerJa: "追加で必要なものはありますか。", task: "水や袋などを追加で頼んでください。", modelKo: "물도 더 주세요.", modelJa: "水も追加でください。", alternatives: [
+              { ko: "물 한 잔 주세요.", ja: "水を一杯ください。" },
+              { ko: "봉투도 주세요.", ja: "袋もください。" }
+            ] }
           ],
           reactions: { successKo: "네, 준비해 드릴게요.", retryKo: "죄송해요. 다시 말씀해 주세요.", hintKo: "주문할 때는 주세요를 쓰면 좋아요." }
         },
@@ -5262,9 +5718,18 @@
           goal: "場所を尋ね、曲がる・近いなどを確認する。",
           required: ["어떻게 가요", "오른쪽", "가까워요"],
           turns: [
-            { partnerKo: "어디에 가고 싶어요?", partnerJa: "どこへ行きたいですか。", task: "駅へ行きたいと伝えてください。", modelKo: "역에 가고 싶어요.", modelJa: "駅に行きたいです。" },
-            { partnerKo: "이 길로 쭉 가세요.", partnerJa: "この道をまっすぐ行ってください。", task: "次にどちらへ曲がるか聞いてください。", modelKo: "다음에는 어디로 돌아요?", modelJa: "次はどちらへ曲がりますか。" },
-            { partnerKo: "오른쪽으로 돌면 바로 보여요.", partnerJa: "右に曲がるとすぐ見えます。", task: "近いか確認してください。", modelKo: "가까워요?", modelJa: "近いですか。" }
+            { partnerKo: "어디에 가고 싶어요?", partnerJa: "どこへ行きたいですか。", task: "駅へ行きたいと伝えてください。", modelKo: "역에 가고 싶어요.", modelJa: "駅に行きたいです。", alternatives: [
+              { ko: "역이 어디예요?", ja: "駅はどこですか。" },
+              { ko: "역에 어떻게 가요?", ja: "駅へはどうやって行きますか。" }
+            ] },
+            { partnerKo: "이 길로 쭉 가세요.", partnerJa: "この道をまっすぐ行ってください。", task: "次にどちらへ曲がるか聞いてください。", modelKo: "다음에는 어디로 돌아요?", modelJa: "次はどちらへ曲がりますか。", alternatives: [
+              { ko: "오른쪽으로 가요?", ja: "右へ行きますか。" },
+              { ko: "왼쪽이에요, 오른쪽이에요?", ja: "左ですか、右ですか。" }
+            ] },
+            { partnerKo: "오른쪽으로 돌면 바로 보여요.", partnerJa: "右に曲がるとすぐ見えます。", task: "近いか確認してください。", modelKo: "가까워요?", modelJa: "近いですか。", alternatives: [
+              { ko: "여기서 가까워요?", ja: "ここから近いですか。" },
+              { ko: "걸어서 갈 수 있어요?", ja: "歩いて行けますか。" }
+            ] }
           ],
           reactions: { successKo: "네, 그렇게 말하면 잘 통해요.", retryKo: "천천히 다시 물어봐 주세요.", hintKo: "길을 물을 때는 어떻게 가요를 써 보세요." }
         },
@@ -5275,9 +5740,18 @@
           goal: "宿泊数・朝食・階数を確認する。",
           required: ["몇 박", "아침 식사", "몇 층"],
           turns: [
-            { partnerKo: "예약하셨어요?", partnerJa: "予約されていますか。", task: "予約していることを伝えてください。", modelKo: "네, 예약했어요.", modelJa: "はい、予約しました。" },
-            { partnerKo: "며칠 동안 머무르세요?", partnerJa: "何日間泊まりますか。", task: "二泊すると答えてください。", modelKo: "이 박 묵어요.", modelJa: "二泊します。" },
-            { partnerKo: "아침 식사는 포함되어 있어요.", partnerJa: "朝食は含まれています。", task: "何階か聞いてください。", modelKo: "방은 몇 층이에요?", modelJa: "部屋は何階ですか。" }
+            { partnerKo: "예약하셨어요?", partnerJa: "予約されていますか。", task: "予約していることを伝えてください。", modelKo: "네, 예약했어요.", modelJa: "はい、予約しました。", alternatives: [
+              { ko: "예약이 있어요.", ja: "予約があります。" },
+              { ko: "인터넷으로 예약했어요.", ja: "ネットで予約しました。" }
+            ] },
+            { partnerKo: "며칠 동안 머무르세요?", partnerJa: "何日間泊まりますか。", task: "二泊すると答えてください。", modelKo: "이 박 묵어요.", modelJa: "二泊します。", alternatives: [
+              { ko: "이틀 있을 거예요.", ja: "二日間いる予定です。" },
+              { ko: "토요일까지 있어요.", ja: "土曜日までいます。" }
+            ] },
+            { partnerKo: "아침 식사는 포함되어 있어요.", partnerJa: "朝食は含まれています。", task: "何階か聞いてください。", modelKo: "방은 몇 층이에요?", modelJa: "部屋は何階ですか。", alternatives: [
+              { ko: "몇 층으로 가요?", ja: "何階へ行きますか。" },
+              { ko: "엘리베이터는 어디에 있어요?", ja: "エレベーターはどこにありますか。" }
+            ] }
           ],
           reactions: { successKo: "좋습니다. 체크인 도와드릴게요.", retryKo: "다시 한 번 말씀해 주세요.", hintKo: "호텔에서는 몇 박, 몇 층을 자주 써요." }
         }
@@ -5303,7 +5777,7 @@
           title: `${getChapterDisplayTitle(chapter)} アウトプット`,
           partner: scene.speakers && scene.speakers[1] ? scene.speakers[1] : "相手",
           goal: "この章の基本表現を使い、音声で短く返答する。",
-          required: items.map((item) => item.ko.split(/\s+/)[0]).filter(Boolean).slice(0, 3),
+          required: Array.from(new Set(items.map((item) => String(item.ko).split(/\s+/)[0].replace(/[.,!?。！？]/g, "")).filter(Boolean))).slice(0, 3),
           turns: turns.length ? turns : [{ partnerKo: "안녕하세요.", partnerJa: "こんにちは。", task: "あいさつを返してください。", modelKo: "안녕하세요.", modelJa: "こんにちは。" }],
           reactions: { successKo: "좋아요. 잘 말했어요.", retryKo: "천천히 다시 말해 주세요.", hintKo: "예문을 듣고 다시 따라 말해 보세요." }
         };
@@ -5349,6 +5823,7 @@
         outputReactionText = "";
         outputRecognizedText = "";
         outputRecognizedScore = 0;
+        outputRequiredHits = null;
         outputEvaluationText = "まだ音声認識していません。";
         renderOutputPractice();
         showView("output");
@@ -5366,6 +5841,7 @@
         outputReactionText = mission.reactions.successKo;
         outputRecognizedText = "";
         outputRecognizedScore = 0;
+        outputRequiredHits = null;
         outputEvaluationText = "まだ音声認識していません。";
         saveOutputProgress();
         renderHomePanels();
@@ -5387,19 +5863,83 @@
           .filter((item) => item.length >= 2)));
       };
 
+      const getRequiredExpressionHits = (mission, transcript) => {
+        const normalized = normalizeOutputText(transcript);
+        return (mission.required || []).map((expression) => {
+          const normalizedExpression = normalizeOutputText(String(expression).replace(/\.\.\./g, ""));
+          return {
+            text: expression,
+            hit: Boolean(normalized && normalizedExpression && normalized.includes(normalizedExpression))
+          };
+        });
+      };
+
       const evaluateOutputSpeech = (mission, turn, transcript) => {
         const normalized = normalizeOutputText(transcript);
+        const requiredHits = getRequiredExpressionHits(mission, transcript);
         if (!normalized) {
-          return { score: 0, message: "音声を認識できませんでした。もう一度、少しゆっくり話してください。" };
+          return { score: 0, message: "音声を認識できませんでした。もう一度、少しゆっくり話してください。", requiredHits };
         }
         const matched = getOutputKeywords(mission, turn).filter((keyword) => normalized.includes(keyword));
         const score = Math.min(3, 1 + matched.length);
         const message = score >= 3
-          ? `3点: 必要な表現がよく入っています。認識: ${transcript}`
+          ? "🌟 3点満点！キーワードがしっかり入っています。"
           : score === 2
-            ? `2点: 意味はかなり近いです。もう少し指定表現を入れるとよいです。認識: ${transcript}`
-            : `1点: 音声は取れました。ヒントを見て、指定表現を増やしましょう。認識: ${transcript}`;
-        return { score, message };
+            ? "◎ 2点: 伝わる返答です。下のキーワードをあと1つ入れると満点です。"
+            : "○ 1点: 声は認識できました。下のキーワードを入れて、もう一度話してみましょう。";
+        return { score, message, requiredHits };
+      };
+
+      const updateOutputKeywordChips = (mission) => {
+        const row = outputPracticeShell.querySelector("[data-output-keywords]");
+        if (!row) return;
+        const hits = outputRecognizedText && outputRequiredHits
+          ? outputRequiredHits
+          : getRequiredExpressionHits(mission, "");
+        row.innerHTML = hits
+          .map((item) => `<span class="output-keyword${item.hit ? " hit" : ""}">${item.hit ? "✓" : "・"} ${escapeHtml(item.text)}</span>`)
+          .join("");
+      };
+
+      const renderOutputRecognitionDetails = (mission) => {
+        const transcriptEl = outputPracticeShell.querySelector("[data-output-transcript]");
+        const translationEl = outputPracticeShell.querySelector("[data-output-translation]");
+        const scoreEl = outputPracticeShell.querySelector("[data-output-score]");
+        if (scoreEl) scoreEl.textContent = `${outputRecognizedScore} / 3点`;
+        updateOutputKeywordChips(mission);
+        if (!transcriptEl) return;
+        if (!outputRecognizedText) {
+          transcriptEl.textContent = outputEvaluationText;
+          if (translationEl) translationEl.hidden = true;
+          return;
+        }
+        transcriptEl.innerHTML = `
+          <p class="output-transcript-main">「${escapeHtml(outputRecognizedText)}」</p>
+          <p class="translation-line">読み方: ${escapeHtml(koreanPronunciationKana(outputRecognizedText))}</p>
+          <p class="translation-line">${escapeHtml(outputEvaluationText)}</p>
+        `;
+        if (translationEl) {
+          translationEl.hidden = false;
+          translationEl.innerHTML = `<p class="translation-line">認識した韓国語の日本語・英語訳を取得中…</p>`;
+          const requested = outputRecognizedText;
+          Promise.all([
+            fetchTranslation(requested, "ja", "ko").catch(() => ""),
+            fetchTranslation(requested, "en", "ko").catch(() => "")
+          ]).then(([ja, en]) => {
+            if (outputRecognizedText !== requested) return;
+            const el = outputPracticeShell.querySelector("[data-output-translation]");
+            if (!el) return;
+            if (!ja && !en) {
+              el.innerHTML = `<p class="translation-line">訳を取得できませんでした（通信環境を確認してください）。読み方と下の例文を参考にしてください。</p>`;
+              return;
+            }
+            el.innerHTML = `
+              ${ja ? `<p class="translation-line">🇯🇵 日本語の意味: ${escapeHtml(ja)}</p>` : ""}
+              ${en ? `<p class="translation-line">🇬🇧 English: ${escapeHtml(en)}</p>` : ""}
+              <p class="translation-line">※自動翻訳の目安です。</p>
+            `;
+          });
+        }
       };
 
       const startOutputSpeechRecognition = (mission, turn, button) => {
@@ -5416,7 +5956,6 @@
         button.textContent = "認識中...";
         outputEvaluationText = "聞き取り中です。返答を話してください。";
         const transcriptEl = outputPracticeShell.querySelector("[data-output-transcript]");
-        const scoreEl = outputPracticeShell.querySelector("[data-output-score]");
         if (transcriptEl) transcriptEl.textContent = outputEvaluationText;
         recognition.onresult = (event) => {
           const transcript = Array.from(event.results)
@@ -5426,9 +5965,9 @@
           const evaluation = evaluateOutputSpeech(mission, turn, transcript);
           outputRecognizedText = transcript;
           outputRecognizedScore = evaluation.score;
+          outputRequiredHits = evaluation.requiredHits;
           outputEvaluationText = evaluation.message;
-          if (transcriptEl) transcriptEl.textContent = outputEvaluationText;
-          if (scoreEl) scoreEl.textContent = `${outputRecognizedScore} / 3点`;
+          renderOutputRecognitionDetails(mission);
           setStatus("音声認識で採点しました。", "success");
         };
         recognition.onerror = () => {
@@ -5442,6 +5981,21 @@
         };
         recognition.start();
         markStudyActivity();
+      };
+
+      const getTurnExampleAnswers = (mission, turn) => {
+        const examples = [{ ko: turn.modelKo, ja: turn.modelJa, label: "基本の言い方" }];
+        (turn.alternatives || []).forEach((alt) => {
+          if (alt && alt.ko) examples.push({ ko: alt.ko, ja: alt.ja || "", label: "別の言い方" });
+        });
+        const fillers = [
+          { ko: "네, 알겠어요.", ja: "はい、わかりました。（短くつなぐ言い方）", label: "短く返すとき" },
+          { ko: "다시 한 번 천천히 말해 주세요.", ja: "もう一度ゆっくり言ってください。（聞き返したいとき）", label: "困ったとき" }
+        ];
+        fillers.forEach((filler) => {
+          if (examples.length < 3) examples.push(filler);
+        });
+        return examples.slice(0, 3);
       };
 
       const renderOutputPractice = () => {
@@ -5494,21 +6048,36 @@
                 <div class="output-recognition">
                   <button class="secondary-btn" type="button" data-output-recognize>音声認識で採点</button>
                   <div class="output-transcript" data-output-transcript>${escapeHtml(outputEvaluationText)}</div>
+                  <div class="output-translation" data-output-translation hidden></div>
                   <span class="chip" data-output-score>${outputRecognizedScore} / 3点</span>
+                </div>
+                <div class="output-goal-box">
+                  <strong>満点（3点）のとり方</strong>
+                  <p>下の「使ってほしいキーワード」を<strong>2つ以上</strong>入れて話すと3点満点です。1つなら2点、キーワードなしでも声が認識できれば1点です。</p>
+                  <div class="output-keyword-row" data-output-keywords></div>
+                  <p>認識できたキーワードは緑色の ✓ に変わります。</p>
+                  <p>※採点は「キーワードが入っているか」で判定します。発音の細かい正確さまでは判定しないので、まず伝わる声の大きさ・速さで話してみましょう。</p>
                 </div>
                 <div class="output-actions">
                   <button class="primary-btn" type="button" data-output-success>判定結果で次へ</button>
                   <button class="secondary-btn" type="button" data-output-retry>もう一回言う</button>
-                  <button class="secondary-btn" type="button" data-output-hint>別の言い方を見る</button>
+                  <button class="secondary-btn" type="button" data-output-hint>言い方の例を見る（3つ）</button>
                 </div>
               </div>
             </div>
             <div class="output-reaction" ${outputReactionText ? "" : "hidden"}>${escapeHtml(outputReactionText)}</div>
             <div class="output-turn" data-output-model hidden>
-              <strong>言い方の例</strong>
-              ${renderKoreanWithPronunciation(turn.modelKo, "ko")}
-              <p class="ja">${escapeHtml(turn.modelJa)}</p>
-              <p>使う表現: ${mission.required.map(escapeHtml).join(" / ")}</p>
+              <strong>言い方の例（どれでもOK）</strong>
+              <div class="output-examples">
+                ${getTurnExampleAnswers(mission, turn).map((example, exampleIndex) => `
+                  <div class="output-example">
+                    <span class="example-label">${escapeHtml(example.label)}</span>
+                    ${renderKoreanWithPronunciation(example.ko, "ko")}
+                    <p class="ja">${escapeHtml(example.ja)}</p>
+                    <button class="listen-btn" type="button" data-example-listen="${escapeHtml(example.ko)}">音声を聞く</button>
+                  </div>
+                `).join("")}
+              </div>
             </div>
           </div>
         `;
@@ -5516,6 +6085,13 @@
         const recordRow = outputPracticeShell.querySelector("[data-output-record-row]");
         const recordButton = outputPracticeShell.querySelector("[data-output-record]");
         const playbackButton = outputPracticeShell.querySelector("[data-output-playback]");
+        renderOutputRecognitionDetails(mission);
+        outputPracticeShell.querySelectorAll("[data-example-listen]").forEach((exampleButton) => {
+          exampleButton.addEventListener("click", () => {
+            speakSlow(exampleButton.dataset.exampleListen, outputPracticeShell, "ko");
+            markStudyActivity();
+          });
+        });
         listenButton.addEventListener("click", () => speakSlow(turn.partnerKo, outputPracticeShell, "ko"));
         recordButton.addEventListener("click", () => toggleRecording(recordRow, recordButton, playbackButton));
         playbackButton.addEventListener("click", () => playRecording(playbackButton.dataset.url));
@@ -5532,6 +6108,7 @@
             outputReactionText = mission.reactions.retryKo;
             outputRecognizedText = "";
             outputRecognizedScore = 0;
+            outputRequiredHits = null;
             outputEvaluationText = "もう一度、相手に伝わるように話してみましょう。";
             saveOutputProgress();
             renderOutputPractice();
@@ -5668,7 +6245,7 @@
               card.querySelectorAll(".quiz-option").forEach((label) => {
                 label.classList.remove("correct", "incorrect");
               });
-              card.querySelector(".quiz-result").textContent = "";
+              clearQuizResult(card.querySelector(".quiz-result"));
               updateQuizSummary(chapter, direction);
               saveProgress();
               markStudyActivity();
@@ -5691,13 +6268,7 @@
                 label.classList.add("incorrect");
               }
             });
-            if (record.selected === null) {
-              result.textContent = "未回答";
-            } else if (record.correct) {
-              result.textContent = "正解！";
-            } else {
-              result.textContent = `不正解。正解は ${String.fromCharCode(65 + question.answer)}。`;
-            }
+            applyQuizResult(result, record, question);
           }
 
           container.appendChild(card);
@@ -5756,7 +6327,7 @@
               card.querySelectorAll(".quiz-option").forEach((label) => {
                 label.classList.remove("correct", "incorrect");
               });
-              card.querySelector(".quiz-result").textContent = "";
+              clearQuizResult(card.querySelector(".quiz-result"));
               updateListeningSummary(chapter);
               saveProgress();
               markStudyActivity();
@@ -5779,13 +6350,7 @@
                 label.classList.add("incorrect");
               }
             });
-            if (record.selected === null) {
-              result.textContent = "未回答";
-            } else if (record.correct) {
-              result.textContent = "正解！";
-            } else {
-              result.textContent = `不正解。正解は ${String.fromCharCode(65 + question.answer)}。`;
-            }
+            applyQuizResult(result, record, question);
           }
 
           listeningList.appendChild(card);
@@ -5874,14 +6439,7 @@
             }
           });
 
-          const result = card.querySelector(".quiz-result");
-          if (record.selected === null) {
-            result.textContent = "未回答";
-          } else if (record.correct) {
-            result.textContent = "正解！";
-          } else {
-            result.textContent = `不正解。正解は ${String.fromCharCode(65 + question.answer)}。`;
-          }
+          applyQuizResult(card.querySelector(".quiz-result"), record, question);
         });
 
         summary.textContent = `採点結果: ${correctCount} / ${cards.length}`;
@@ -5933,14 +6491,7 @@
             }
           });
 
-          const result = card.querySelector(".quiz-result");
-          if (record.selected === null) {
-            result.textContent = "未回答";
-          } else if (record.correct) {
-            result.textContent = "正解！";
-          } else {
-            result.textContent = `不正解。正解は ${String.fromCharCode(65 + question.answer)}。`;
-          }
+          applyQuizResult(card.querySelector(".quiz-result"), record, question);
         });
 
         summaryListening.textContent = `採点結果: ${correctCount} / ${cards.length}`;
@@ -5949,29 +6500,79 @@
       };
 
       const expandKoreanGrammarPoint = (point) => {
+        if (/고 싶어요/.test(point)) return "「〜したい」。動詞のあとに 고 싶어요 を付ける。";
+        if (/수 있어요|수 없어요/.test(point)) return "「できる／できない」。動詞 + ㄹ 수 있어요／없어요。";
+        if (/거예요/.test(point)) return "「〜する予定です」。これからのことを話す形。";
+        if (/았|었/.test(point)) return "過去の形。「しました」「でした」を表す。";
+        if (/아\/어도 돼요|도 돼요/.test(point)) return "「〜してもいいです」。許可をもらう・あげる形。";
+        if (/좋아해요|싫어해요/.test(point)) return "「好きです／嫌いです」。○○을/를 좋아해요 の形。";
+        if (/있어요|없어요/.test(point)) return "「あります／ありません」。物や人の存在を伝える。";
+        if (/얼마예요/.test(point)) return "「いくらですか」。値段を聞く決まり文句。";
+        if (/어디/.test(point)) return "「どこ」。場所を聞くときに使う。";
         if (/이에요|예요/.test(point)) return "「Aです」。まず 저는 ○○예요 を丸ごと覚える。";
-        if (/은\/는|은|는/.test(point)) return "話題のしるし。「私は」「これは」でよく使う。";
-        if (/이\/가|이|가/.test(point)) return "「誰が・何が」をはっきり言うしるし。";
+        if (/은\/는/.test(point)) return "話題のしるし。「私は」「これは」でよく使う。";
+        if (/이\/가/.test(point)) return "「誰が・何が」をはっきり言うしるし。";
         if (/주세요/.test(point)) return "お願いの「ください」。物の名前 + 주세요。";
-        if (/에|에서/.test(point)) return "에 は場所/時間、에서 は「そこで何かする」。";
-        if (/로|으로/.test(point)) return "手段や方向。「バスで」「駅へ」の形。";
+        if (/에서/.test(point)) return "에 は場所/時間、에서 は「そこで何かする」。";
+        if (/으로|로\b/.test(point)) return "手段や方向。「バスで」「駅へ」の形。";
+        if (/은|는/.test(point)) return "話題のしるし。「私は」「これは」でよく使う。";
         if (/아요|어요/.test(point)) return "丁寧に言う基本形。音のかたまりで覚える。";
         return "例文をまねして、単語だけ入れ替える。";
       };
+
+      const parseGrammarPoint = (point) => {
+        const text = String(point).trim();
+        const colonMatch = text.match(/^([^:：（(]+)[:：]\s*(.+)$/);
+        if (colonMatch && /[ㄱ-ㆎ가-힣]/.test(colonMatch[2]) && !/[ㄱ-ㆎ가-힣]/.test(colonMatch[1])) {
+          // 「日本語ラベル: 韓国語表現」は韓国語側を文型ブロックにする
+          const blocks = colonMatch[2].split(/\s*\+\s*/).map((block) => block.trim()).filter(Boolean);
+          return { formulaText: colonMatch[2].trim(), meaningText: colonMatch[1].trim(), blocks };
+        }
+        const parenMatch = text.match(/^(.*?)[（(]([^（）()]*)[）)]\s*$/);
+        const formulaText = (parenMatch ? parenMatch[1] : text).replace(/[:：].*$/, "").trim();
+        const meaningText = parenMatch ? parenMatch[2].trim() : "";
+        const blocks = formulaText.split(/\s*\+\s*/).map((block) => block.trim()).filter(Boolean);
+        return { formulaText, meaningText, blocks };
+      };
+
+      const extractKoreanMorphemes = (formulaText) =>
+        (String(formulaText).match(/[ㄱ-ㆎ가-힣]+/g) || [])
+          .flatMap((part) => part.split("/"))
+          .map((part) => part.trim())
+          .filter((part) => part.length >= 1);
 
       const renderGrammarDiagrams = (chapter) => {
         grammarDiagrams.innerHTML = "";
         const examples = [...getCoreBasics(chapter), ...chapter.dialogues].filter((item) => item && item.ko);
         getCoreGrammar(chapter).forEach((point, index) => {
           const example = examples[index] || examples[0];
+          const { meaningText, blocks } = parseGrammarPoint(point);
+          const morphemes = extractKoreanMorphemes(blocks.join(" "));
+          const tokens = example
+            ? String(example.ko).replace(/[.?!。！？]/g, "").split(/\s+/).filter(Boolean)
+            : [];
           const card = document.createElement("article");
-          card.className = "vocab-item";
+          card.className = "grammar-diagram";
+          const formulaMarkup = blocks
+            .map((block, blockIndex) => {
+              const chip = `<span class="block${blockIndex % 2 ? " alt" : ""}">${escapeHtml(block)}</span>`;
+              return blockIndex < blocks.length - 1 ? `${chip}<span class="equals">＋</span>` : chip;
+            })
+            .join("");
           card.innerHTML = `
             <span class="entry-badge">文法${index + 1}</span>
-            <h4>${escapeHtml(point)}</h4>
-            <p class="ja">${escapeHtml(expandKoreanGrammarPoint(point))}</p>
-            ${example ? renderKoreanWithPronunciation(example.ko, "ko") : ""}
-            ${example ? `<p class="ja">${escapeHtml(example.ja)}</p><button class="listen-btn" type="button" data-grammar-listen="${escapeHtml(example.ko)}">例文音声</button>` : ""}
+            <div class="grammar-formula">
+              ${formulaMarkup}
+              <span class="equals">→</span>
+              <span class="meaning">${escapeHtml(meaningText || expandKoreanGrammarPoint(point))}</span>
+            </div>
+            <p class="grammar-note">${escapeHtml(expandKoreanGrammarPoint(point))}</p>
+            ${tokens.length ? `
+              <div class="grammar-pattern">
+                ${tokens.map((token) => `<span class="${morphemes.some((morpheme) => token.includes(morpheme)) ? "hit" : ""}">${escapeHtml(token)}</span>`).join("")}
+              </div>
+            ` : ""}
+            ${example ? `<p class="grammar-note">${escapeHtml(example.ja)}（色つきの部分が今回の文法です）</p><button class="listen-btn" type="button" data-grammar-listen="${escapeHtml(example.ko)}">例文音声</button>` : ""}
           `;
           const button = card.querySelector("[data-grammar-listen]");
           if (button) {
@@ -6045,9 +6646,19 @@
           actions.className = "card-actions";
           actions.innerHTML = `
             <button type="button" class="flip-card">めくる ↻</button>
-            <button type="button" class="mark-good">正解</button>
-            <button type="button" class="mark-bad">不正解</button>
+            <button type="button" class="mark-good">○ 正解</button>
+            <button type="button" class="mark-bad">× 不正解</button>
           `;
+
+          const markGoodButton = actions.querySelector(".mark-good");
+          const markBadButton = actions.querySelector(".mark-bad");
+          const reflectCardMark = () => {
+            const record = state.cards[cardId];
+            wrapper.classList.toggle("correct", record.correct === true);
+            wrapper.classList.toggle("incorrect", record.correct === false);
+            markGoodButton.classList.toggle("selected", record.correct === true);
+            markBadButton.classList.toggle("selected", record.correct === false);
+          };
 
           flashcard.addEventListener("click", () => {
             speakSentence(item.ko, wrapper);
@@ -6060,34 +6671,26 @@
             markStudyActivity();
           });
 
-          actions.querySelector(".mark-good").addEventListener("click", (event) => {
+          markGoodButton.addEventListener("click", (event) => {
             event.stopPropagation();
             const wasUngraded = state.cards[cardId].correct === null;
             state.cards[cardId].correct = true;
             if (wasUngraded) addTodayAnswers(1, 1);
-            wrapper.classList.add("correct");
-            wrapper.classList.remove("incorrect");
+            reflectCardMark();
             markStudyActivity();
             updateAllStats();
           });
-          actions.querySelector(".mark-bad").addEventListener("click", (event) => {
+          markBadButton.addEventListener("click", (event) => {
             event.stopPropagation();
             const wasUngraded = state.cards[cardId].correct === null;
             state.cards[cardId].correct = false;
             if (wasUngraded) addTodayAnswers(1, 0);
-            wrapper.classList.add("incorrect");
-            wrapper.classList.remove("correct");
+            reflectCardMark();
             markStudyActivity();
             updateAllStats();
           });
 
-          const record = state.cards[cardId];
-          if (record.correct === true) {
-            wrapper.classList.add("correct");
-          }
-          if (record.correct === false) {
-            wrapper.classList.add("incorrect");
-          }
+          reflectCardMark();
 
           wrapper.appendChild(flashcard);
           wrapper.appendChild(actions);
@@ -6214,6 +6817,7 @@
         const index = chapters.findIndex((chapter) => chapter.id === chapterId);
         if (index < 0) return;
         currentChapterIndex = index;
+        reviewAutoSession = { chapterId, actions: 0 };
         saveProgress();
         flashcardMode = "audio";
         if (flashcardDisplayMode) flashcardDisplayMode.value = "audio";
@@ -6227,6 +6831,7 @@
       const renderReviewRecommendations = () => {
         if (!reviewRecommendList) return;
         const recommendations = getReviewRecommendations();
+        updateReviewReminderBadges(recommendations.length);
         reviewRecommendList.innerHTML = "";
         if (!recommendations.length) {
           const empty = document.createElement("div");
@@ -6256,12 +6861,12 @@
         });
       };
 
-      const markChapterReviewComplete = (chapter) => {
+      const markChapterReviewComplete = (chapter, { auto = false } = {}) => {
         if (!chapter || isIntroChapter(chapter) || isListeningChapter(chapter) || isColumnChapter(chapter)) return;
         const state = ensureProgress(chapter);
         const todayKey = getTodayKey();
         if (state.review.lastReviewed === todayKey) {
-          setStatus("この章の今日の復習はすでに記録済みです。", "info");
+          if (!auto) setStatus("この章の今日の復習はすでに記録済みです。", "info");
           return;
         }
         const currentCount = Number(state.review.count) || 0;
@@ -6269,11 +6874,50 @@
         state.review.count = nextCount;
         state.review.lastReviewed = todayKey;
         state.review.nextReviewDate = addDaysToDateKey(todayKey, getReviewIntervalDays(nextCount - 1));
+        if (reviewAutoSession && reviewAutoSession.chapterId === chapter.id) reviewAutoSession = null;
         markStudyActivity();
         saveProgress();
         renderReviewRecommendations();
         updateChapterStats(chapter);
-        setStatus(`復習${nextCount}回目を記録しました。次は${formatDateLabel(state.review.nextReviewDate)}です。`, "success");
+        setStatus(
+          auto
+            ? `しっかり練習できたので、復習${nextCount}回目を自動で記録しました。次は${formatDateLabel(state.review.nextReviewDate)}です。`
+            : `復習${nextCount}回目を記録しました。次は${formatDateLabel(state.review.nextReviewDate)}です。`,
+          "success"
+        );
+      };
+
+      const updateReviewReminderBadges = (pendingCount) => {
+        const navButton = document.getElementById("nav-home");
+        if (navButton) {
+          let badge = navButton.querySelector(".nav-badge");
+          if (pendingCount > 0) {
+            if (!badge) {
+              badge = document.createElement("span");
+              badge.className = "nav-badge";
+              navButton.appendChild(badge);
+            }
+            badge.textContent = `復習${pendingCount}`;
+          } else if (badge) {
+            badge.remove();
+          }
+        }
+        const alertButton = document.getElementById("review-alert");
+        const alertText = document.getElementById("review-alert-text");
+        if (!alertButton || !alertText) return;
+        if (!alertButton.dataset.wired) {
+          alertButton.dataset.wired = "true";
+          alertButton.addEventListener("click", () => {
+            const recommendations = getReviewRecommendations();
+            if (recommendations.length) {
+              startReviewChapter(recommendations[0].chapter.id);
+            } else {
+              showView("home");
+            }
+          });
+        }
+        alertButton.hidden = pendingCount === 0 || !signedInStudentId;
+        alertText.textContent = `今日の復習が${pendingCount}章あります。タップで開始`;
       };
 
       const getStoredAreaTrends = (progressData) => {
@@ -6368,6 +7012,7 @@
         }, { answered: 0, correct: 0, completed: 0 });
         const totalStudyTime = Array.from(history.values()).reduce((sum, record) => sum + (record.timeMs || 0), 0);
         renderReviewRecommendations();
+        updateSaveStatusCard();
         document.getElementById("today-study-time").textContent = formatMinutes(today.timeMs || 0);
         document.getElementById("current-streak").textContent = `${streak}日`;
         document.getElementById("total-study-time").textContent = formatMinutes(totalStudyTime);
@@ -6520,17 +7165,28 @@
             activeDays,
             lastStudyDate: formatDateLabel(lastStudyDate),
             currentChapter: resolveStoredChapterTitle(state.current_chapter_id),
+            lastLoginAt: state.last_login_at
+              ? new Date(state.last_login_at).toLocaleString("ja-JP", { month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit" })
+              : "--",
             strong: trends.strong,
             weak: trends.weak
           };
         });
+      };
+      const fetchAdminUserStates = async () => {
+        // last_login_at 列が未追加の環境では列なしで再取得する
+        const withLastLogin = await supabaseAuthClient
+          .from("user_app_state")
+          .select("user_id,current_chapter_id,progress,reminder,last_login_at");
+        if (!withLastLogin.error) return withLastLogin;
+        return supabaseAuthClient.from("user_app_state").select("user_id,current_chapter_id,progress,reminder");
       };
       const loadRemoteAdminSnapshots = async () => {
         if (!isAdminSession || !signedInAuthUserId || !supabaseAuthClient) return null;
         try {
           const [profilesResult, statesResult, recordsResult] = await Promise.all([
             supabaseAuthClient.from("profiles").select("id,email,student_id,registration_number,registered_order,role,status,created_at").order("registered_order", { ascending: true, nullsFirst: false }),
-            supabaseAuthClient.from("user_app_state").select("user_id,current_chapter_id,progress,reminder"),
+            fetchAdminUserStates(),
             supabaseAuthClient.from("daily_learning_records").select("user_id,record_date,time_ms,answered,correct,chapters_completed")
           ]);
           if (profilesResult.error) throw profilesResult.error;
@@ -6610,6 +7266,7 @@
               <div class="admin-stat"><strong>連続学習</strong><span>${snapshot.streak}日</span></div>
               <div class="admin-stat"><strong>学習日数</strong><span>${snapshot.activeDays}日</span></div>
               <div class="admin-stat"><strong>最終学習日</strong><span>${escapeHtml(snapshot.lastStudyDate)}</span></div>
+              <div class="admin-stat"><strong>最終ログイン</strong><span>${escapeHtml(snapshot.lastLoginAt || "--")}</span></div>
               <div class="admin-stat"><strong>リマインド</strong><span>${escapeHtml(snapshot.reminder)}</span></div>
             </div>
             <div class="admin-record-footer">
@@ -6944,6 +7601,7 @@
             markStudyActivity();
           });
           card.querySelectorAll("[data-state]").forEach((button) => {
+            button.classList.toggle("selected", button.dataset.state === status);
             button.addEventListener("click", () => {
               setVocabEntryState(entry, button.dataset.state);
               markStudyActivity();
@@ -6989,6 +7647,7 @@
           });
         });
         vocabDeckShell.querySelectorAll("[data-state]").forEach((button) => {
+          button.classList.toggle("selected", button.dataset.state === getVocabEntryState(entry));
           button.addEventListener("click", () => {
             setVocabEntryState(entry, button.dataset.state);
             vocabDeckIndex = (vocabDeckIndex + 1) % entries.length;
@@ -7012,6 +7671,8 @@
         const signature = `${filterValue}|${statusValue}|${entries.map(getBookCardId).join(",")}`;
         if (vocabQuizState && vocabQuizState.signature === signature) return;
         vocabQuizState = { signature, koja: createVocabQuizSet(entries, "koja"), jako: createVocabQuizSet(entries, "jako") };
+        vocabQuizIndex.koja = 0;
+        vocabQuizIndex.jako = 0;
       };
       const renderVocabQuizGroup = (container, direction) => {
         const questions = vocabQuizState ? vocabQuizState[direction] : [];
@@ -7021,64 +7682,95 @@
           summary.textContent = "この条件の問題はありません";
           return;
         }
-        if (!summary.textContent.startsWith("採点結果")) summary.textContent = "未採点";
-        questions.forEach((question, index) => {
-          const card = document.createElement("div");
-          card.className = "quiz-card";
-          const name = `${direction}-${question.id}`;
-          card.innerHTML = `
-            <p class="quiz-prompt"><button class="quiz-prompt-btn" type="button" data-prompt-audio="${escapeHtml(question.entry.ko)}">Q${index + 1}. ${direction === "koja" ? getEntryQuestionMarkup(question.entry) : escapeHtml(question.prompt)}</button></p>
-            <div class="quiz-options">
-              ${question.options.map((option, optIndex) => `
-                <label class="quiz-option">
-                  <input type="radio" name="${name}" value="${optIndex}" ${question.selected === optIndex ? "checked" : ""} />
-                  ${renderChoiceMarkup(option)}
-                </label>
-              `).join("")}
-            </div>
-            <p class="quiz-result" aria-live="polite"></p>
+        const total = questions.length;
+        const gradedCount = questions.filter((question) => question.correct !== null).length;
+        const correctCount = questions.filter((question) => question.correct).length;
+        if (gradedCount >= total) {
+          summary.textContent = `結果: ${correctCount} / ${total} 正解`;
+          const done = document.createElement("div");
+          done.className = "quiz-card";
+          done.innerHTML = `
+            <p class="quiz-prompt">全${total}問が終わりました！</p>
+            <p class="quiz-result ${correctCount === total ? "ok" : ""}">${correctCount} / ${total} 正解でした。</p>
+            <button class="check-btn" type="button" data-vocab-quiz-restart>もう一度挑戦</button>
           `;
-          card.querySelector("[data-prompt-audio]").addEventListener("click", () => {
-            speakSentence(question.entry.ko, card, "ko");
+          done.querySelector("[data-vocab-quiz-restart]").addEventListener("click", () => {
+            questions.forEach((question) => {
+              question.selected = null;
+              question.correct = null;
+            });
+            vocabQuizIndex[direction] = 0;
+            renderVocabQuizGroup(container, direction);
             markStudyActivity();
           });
-          attachOptionAudioHandlers(card);
-          card.querySelectorAll("input").forEach((input) => {
-            input.addEventListener("change", () => {
-              question.selected = Number(input.value);
-              question.correct = null;
-              markStudyActivity();
-            });
-          });
-          container.appendChild(card);
+          container.appendChild(done);
+          return;
+        }
+        let currentIndex = Math.min(vocabQuizIndex[direction] || 0, total - 1);
+        if (questions[currentIndex].correct !== null) {
+          const nextPending = questions.findIndex((question) => question.correct === null);
+          if (nextPending !== -1) currentIndex = nextPending;
+          vocabQuizIndex[direction] = currentIndex;
+        }
+        summary.textContent = `第${currentIndex + 1}問 / 全${total}問（ここまで ${correctCount} 問正解）`;
+        const question = questions[currentIndex];
+        const card = document.createElement("div");
+        card.className = "quiz-card";
+        const name = `${direction}-${question.id}`;
+        card.innerHTML = `
+          <p class="vocab-quiz-progress">1問答えると、自動で次の問題に進みます。</p>
+          <p class="quiz-prompt"><button class="quiz-prompt-btn" type="button" data-prompt-audio="${escapeHtml(question.entry.ko)}">Q${currentIndex + 1}. ${direction === "koja" ? getEntryQuestionMarkup(question.entry) : escapeHtml(question.prompt)}</button></p>
+          <div class="quiz-options">
+            ${question.options.map((option, optIndex) => `
+              <label class="quiz-option">
+                <input type="radio" name="${name}" value="${optIndex}" />
+                ${renderChoiceMarkup(option)}
+              </label>
+            `).join("")}
+          </div>
+          <p class="quiz-result" aria-live="polite"></p>
+        `;
+        card.querySelector("[data-prompt-audio]").addEventListener("click", () => {
+          speakSentence(question.entry.ko, card, "ko");
+          markStudyActivity();
         });
+        attachOptionAudioHandlers(card);
+        card.querySelectorAll("input").forEach((input) => {
+          input.addEventListener("change", () => {
+            if (question.correct !== null) return;
+            question.selected = Number(input.value);
+            question.correct = question.selected === question.answer;
+            addTodayAnswers(1, question.correct ? 1 : 0);
+            card.querySelectorAll("input").forEach((otherInput) => {
+              otherInput.disabled = true;
+            });
+            card.querySelectorAll(".quiz-option").forEach((label) => {
+              const optionIndex = Number(label.querySelector("input").value);
+              label.classList.toggle("correct", optionIndex === question.answer);
+              label.classList.toggle("incorrect", question.selected === optionIndex && question.correct === false);
+            });
+            applyQuizResult(card.querySelector(".quiz-result"), question, question);
+            markStudyActivity();
+            window.setTimeout(() => {
+              vocabQuizIndex[direction] = currentIndex + 1;
+              renderVocabQuizGroup(container, direction);
+              renderLearningLog();
+              renderAdminPage();
+            }, 1100);
+          });
+        });
+        container.appendChild(card);
       };
-      const gradeVocabQuiz = (direction) => {
+      const resetVocabQuiz = (direction) => {
         if (!vocabQuizState) return;
         const container = direction === "koja" ? vocabQuizKoJa : vocabQuizJaKo;
-        const summary = direction === "koja" ? vocabQuizSummaryKoJa : vocabQuizSummaryJaKo;
-        const questions = vocabQuizState[direction];
-        let correct = 0;
-        let answered = 0;
-        container.querySelectorAll(".quiz-card").forEach((card, index) => {
-          const question = questions[index];
-          const selected = Array.from(card.querySelectorAll("input")).find((input) => input.checked);
-          question.selected = selected ? Number(selected.value) : null;
-          question.correct = question.selected === null ? null : question.selected === question.answer;
-          if (question.correct !== null) answered += 1;
-          if (question.correct) correct += 1;
-          card.querySelectorAll(".quiz-option").forEach((label) => {
-            const optionIndex = Number(label.querySelector("input").value);
-            label.classList.toggle("correct", optionIndex === question.answer);
-            label.classList.toggle("incorrect", question.selected === optionIndex && question.correct === false);
-          });
-          card.querySelector(".quiz-result").textContent = question.selected === null ? "未回答" : question.correct ? "正解！" : `不正解。正解は ${String.fromCharCode(65 + question.answer)}。`;
+        vocabQuizState[direction].forEach((question) => {
+          question.selected = null;
+          question.correct = null;
         });
-        summary.textContent = `採点結果: ${correct} / ${questions.length}`;
-        addTodayAnswers(answered, correct);
+        vocabQuizIndex[direction] = 0;
+        renderVocabQuizGroup(container, direction);
         markStudyActivity();
-        renderLearningLog();
-        renderAdminPage();
       };
       const stopVocabGame = () => {
         if (vocabGameState && vocabGameState.timer) window.clearInterval(vocabGameState.timer);
@@ -7423,6 +8115,7 @@
         outputReactionText = "";
         outputRecognizedText = "";
         outputRecognizedScore = 0;
+        outputRequiredHits = null;
         outputEvaluationText = "まだ音声認識していません。";
         outputPanel.hidden = listeningOnly || columnOnly;
         if (!listeningOnly && !columnOnly) renderOutputPractice();
@@ -7575,8 +8268,8 @@
       vocabModeCardsButton.addEventListener("click", () => setVocabMode("cards"));
       vocabModeDeckButton.addEventListener("click", () => setVocabMode("deck"));
       vocabModeGameButton.addEventListener("click", () => setVocabMode("game"));
-      vocabQuizCheckKoJa.addEventListener("click", () => gradeVocabQuiz("koja"));
-      vocabQuizCheckJaKo.addEventListener("click", () => gradeVocabQuiz("jako"));
+      vocabQuizCheckKoJa.addEventListener("click", () => resetVocabQuiz("koja"));
+      vocabQuizCheckJaKo.addEventListener("click", () => resetVocabQuiz("jako"));
 
       retryWrongButton.addEventListener("click", () => {
         const chapter = chapters[currentChapterIndex];
