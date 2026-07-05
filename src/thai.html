@@ -2956,6 +2956,37 @@
         font-size: 0.92rem;
       }
 
+      .voice-warning {
+        margin: 0;
+        padding: 12px 14px;
+        border-radius: 14px;
+        border: 2px solid rgba(208, 59, 44, 0.5);
+        background: #fdeae7;
+        color: #9e2e23;
+        font-weight: 700;
+        font-size: 0.9rem;
+      }
+
+      .voice-warning[hidden] {
+        display: none;
+      }
+
+      #home-start-text {
+        font-size: 1.1rem;
+        padding: 16px 26px;
+        box-shadow: 0 12px 26px rgba(255, 122, 41, 0.3);
+      }
+
+      #save-status-card summary {
+        cursor: pointer;
+        font-weight: 700;
+        font-size: 0.95rem;
+      }
+
+      #save-status-card details > *:not(summary) {
+        margin-top: 10px;
+      }
+
       .vocab-quiz-progress {
         color: var(--muted);
         font-weight: 700;
@@ -3140,6 +3171,7 @@
                 <span class="chip">学習記録同期</span>
               </div>
               <p class="auth-note">管理者から届いたQRコードで開き、登録番号とメールアドレスでログインしてください。2回目以降はこの端末のログイン状態を使えます。</p>
+              <p class="auth-note">推奨ブラウザ: Chrome（パソコン・Android）/ Safari（iPhone）。「話す」練習の音声認識はChrome系ブラウザのみ対応です。</p>
             </section>
             <section class="auth-form">
               <div>
@@ -3217,6 +3249,7 @@
             <p class="eyebrow">MY PAGE</p>
             <h2>今日の学習をここから始める</h2>
             <p>連続学習日数、学習時間、正答率、得意・苦手の傾向を先に確認してから、続きのテキストや単語帳に移動できます。</p>
+            <p id="voice-support-notice" class="voice-warning" hidden></p>
           </div>
           <div class="home-actions">
             <button id="home-start-text" class="primary-btn" type="button">学習を始める</button>
@@ -3233,7 +3266,8 @@
                 <p>毎日の進み具合を最初に確認できます。</p>
               </div>
               <div class="log-card" id="save-status-card" style="margin-bottom: 14px">
-                <h4>データ保存の状態</h4>
+                <details>
+                <summary>💾 データ保存の状態（タップで開く）</summary>
                 <div class="save-status-grid">
                   <article class="log-card">
                     <h4>最終保存</h4>
@@ -3250,6 +3284,7 @@
                 </div>
                 <p class="admin-note">記録はこの端末とサーバーの両方に自動保存されます。手元にも残したい場合は、ファイルにも保存できます。</p>
                 <button id="save-status-export" class="secondary-btn" type="button">学習記録をファイルに保存（CSV）</button>
+                </details>
               </div>
               <div class="log-card" style="margin-bottom: 14px">
                 <h4>今日のおすすめ復習</h4>
@@ -7606,7 +7641,24 @@
         }
       };
 
+      const updateVoiceSupportNotice = () => {
+        const notice = document.getElementById("voice-support-notice");
+        if (!notice) return;
+        if (!("speechSynthesis" in window)) {
+          notice.hidden = false;
+          notice.textContent = "⚠️ このブラウザは音声再生に対応していません。Chromeなど別のブラウザでお試しください。";
+          return;
+        }
+        const voices = window.speechSynthesis.getVoices();
+        if (!voices.length) return; // 読み込み前は判定しない
+        const hasThaiVoice = voices.some((voice) => String(voice.lang || "").toLowerCase().startsWith("th"));
+        notice.hidden = hasThaiVoice;
+        if (!hasThaiVoice) {
+          notice.textContent = "⚠️ この端末にはタイ語の音声が入っていないため、読み上げが再生されません。スマホでの利用がおすすめです。パソコンの場合はWindowsの「設定 → 時刻と言語 → 言語と地域」からタイ語の音声を追加してください。";
+        }
+      };
       const pickVoice = () => {
+        updateVoiceSupportNotice();
         if (!("speechSynthesis" in window)) return;
         const voices = window.speechSynthesis.getVoices();
         preferredVoice =
@@ -10342,7 +10394,7 @@
           const button = document.createElement("button");
           button.type = "button";
           button.className = "lesson-step-btn";
-          button.textContent = step.label;
+          button.textContent = `${index + 1}. ${step.label}`;
           button.addEventListener("click", () => setLessonStep(index, true));
           lessonStepTabs.appendChild(button);
         });
@@ -10712,6 +10764,8 @@
       primeSpeech();
       if ("speechSynthesis" in window) {
         window.speechSynthesis.addEventListener("voiceschanged", pickVoice);
+        // voiceschangedが発火しないブラウザ向けの再チェック
+        window.setTimeout(pickVoice, 1500);
       }
       ["pointerdown", "touchstart", "keydown"].forEach((eventName) => {
         window.addEventListener(
