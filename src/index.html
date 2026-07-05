@@ -2441,6 +2441,8 @@
                 <p id="save-status-resume">--</p>
               </article>
             </div>
+            <p class="support-note">記録はこの端末とサーバーの両方に自動保存されます。手元にも残したい場合は、ファイルにも保存できます。</p>
+            <button id="save-status-export" class="secondary-btn" type="button">学習記録をファイルに保存（CSV）</button>
           </div>
           <div class="stats-card" style="margin-bottom: 14px">
             <h4>今日のおすすめ復習</h4>
@@ -2919,6 +2921,7 @@
           </div>
           <div class="support-actions">
             <button id="admin-refresh" class="secondary-btn" type="button">一覧を更新</button>
+            <button id="admin-export" class="secondary-btn" type="button">全記録をCSVダウンロード</button>
           </div>
         </div>
 
@@ -4733,6 +4736,82 @@
         }
         const chapter = chapters[currentChapterIndex];
         resumeEl.textContent = chapter ? chapter.title : "--";
+      };
+      const downloadCsvFile = (filename, rows) => {
+        const csv = rows.map((row) => row.map((value) => {
+          const text = String(value ?? "");
+          return /[",\n]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
+        }).join(",")).join("\r\n");
+        // BOM付きにしてExcelでも文字化けしないようにする
+        const blob = new Blob(["\u{FEFF}" + csv], { type: "text/csv;charset=utf-8" });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = filename;
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+      };
+      const exportMyRecordsCsv = () => {
+        const rows = [["日付", "学習時間(分)", "解答数", "正解数", "正答率", "完了章"]];
+        Array.from(history.entries())
+          .sort((a, b) => a[0].localeCompare(b[0]))
+          .forEach(([date, record]) => {
+            const answered = Number(record.answered) || 0;
+            const correct = Number(record.correct) || 0;
+            rows.push([
+              date,
+              Math.round((Number(record.timeMs) || 0) / 60000),
+              answered,
+              correct,
+              answered ? `${Math.round((correct / answered) * 100)}%` : "--",
+              Number(record.chaptersCompleted) || 0
+            ]);
+          });
+        downloadCsvFile(`lingopilot-korean-records-${signedInStudentId || "user"}-${getTodayKey()}.csv`, rows);
+        setStatus("学習記録をCSVファイルに保存しました。", "success");
+      };
+      const exportAllUserRecordsCsv = async () => {
+        if (!isAdminSession || !supabaseAuthClient) return;
+        setStatus("全ユーザーの学習記録を取得しています…", "info");
+        try {
+          const [profilesResult, recordsResult] = await Promise.all([
+            supabaseAuthClient.from("profiles").select("id,email,registration_number,student_id"),
+            supabaseAuthClient.from("daily_learning_records").select("user_id,record_date,time_ms,answered,correct,chapters_completed")
+          ]);
+          if (profilesResult.error) throw profilesResult.error;
+          if (recordsResult.error) throw recordsResult.error;
+          const profileMap = new Map((profilesResult.data || []).map((profile) => [profile.id, profile]));
+          const sorted = (recordsResult.data || []).slice().sort((a, b) => {
+            const pa = profileMap.get(a.user_id) || {};
+            const pb = profileMap.get(b.user_id) || {};
+            const ka = pa.registration_number || pa.student_id || a.user_id;
+            const kb = pb.registration_number || pb.student_id || b.user_id;
+            return String(ka).localeCompare(String(kb)) || String(a.record_date).localeCompare(String(b.record_date));
+          });
+          const rows = [["登録番号", "メールアドレス", "日付", "学習時間(分)", "解答数", "正解数", "正答率", "完了章"]];
+          sorted.forEach((record) => {
+            const profile = profileMap.get(record.user_id) || {};
+            const answered = Number(record.answered) || 0;
+            const correct = Number(record.correct) || 0;
+            rows.push([
+              profile.registration_number || profile.student_id || record.user_id,
+              profile.email || "",
+              record.record_date,
+              Math.round((Number(record.time_ms) || 0) / 60000),
+              answered,
+              correct,
+              answered ? `${Math.round((correct / answered) * 100)}%` : "--",
+              Number(record.chapters_completed) || 0
+            ]);
+          });
+          downloadCsvFile(`lingopilot-korean-all-records-${getTodayKey()}.csv`, rows);
+          setStatus(`全ユーザーの学習記録（${rows.length - 1}行）をCSVに保存しました。`, "success");
+        } catch (error) {
+          console.warn("admin export failed", error);
+          setStatus("記録の取得に失敗しました。通信環境を確認してください。", "warn");
+        }
       };
       const isStudyViewMode = (mode = viewMode) => mode === "main" || mode === "support" || mode === "vocab" || mode === "output";
       const pauseStudyTimer = () => {
@@ -8410,6 +8489,11 @@
 
       reminderSaveButton.addEventListener("click", saveReminderSettings);
       quickQuestionSaveButton.addEventListener("click", saveQuickQuestion);
+
+      const saveStatusExportButton = document.getElementById("save-status-export");
+      if (saveStatusExportButton) saveStatusExportButton.addEventListener("click", exportMyRecordsCsv);
+      const adminExportButton = document.getElementById("admin-export");
+      if (adminExportButton) adminExportButton.addEventListener("click", exportAllUserRecordsCsv);
 
       logoutButton.addEventListener("click", () => {
         logout();
