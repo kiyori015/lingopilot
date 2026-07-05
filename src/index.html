@@ -4418,13 +4418,14 @@
             }
           }
           if (Array.isArray(dailyRows) && dailyRows.length) {
-            history.clear();
+            // 端末側にしか残っていない記録を消さないよう、日別に大きい方を採用してマージする
             dailyRows.forEach((row) => {
+              const local = history.get(row.record_date) || {};
               history.set(row.record_date, {
-                timeMs: Number(row.time_ms) || 0,
-                answered: Number(row.answered) || 0,
-                correct: Number(row.correct) || 0,
-                chaptersCompleted: Number(row.chapters_completed) || 0
+                timeMs: Math.max(Number(local.timeMs) || 0, Number(row.time_ms) || 0),
+                answered: Math.max(Number(local.answered) || 0, Number(row.answered) || 0),
+                correct: Math.max(Number(local.correct) || 0, Number(row.correct) || 0),
+                chaptersCompleted: Math.max(Number(local.chaptersCompleted) || 0, Number(row.chapters_completed) || 0)
               });
             });
             saveHistory();
@@ -4457,10 +4458,14 @@
           renderQuickQuestion();
           renderVocabBook();
           renderOutputMissions();
+          // 端末にだけ残っていた記録をマージ結果としてサーバーへ送り返す
+          scheduleRemoteSync();
           return true;
         } catch (error) {
-          console.warn("Supabase learning sync is not available yet.", error);
-          remoteSyncEnabled = false;
+          // 一度の読込失敗で同期を止めない。保存のたびに再送を試み、記録が残るようにする。
+          console.warn("Supabase learning sync failed at login. Will retry on next save.", error);
+          lastRemoteSyncFailedAt = Date.now();
+          updateSaveStatusCard();
           return false;
         }
       };
@@ -4958,6 +4963,9 @@
       const logout = async () => {
         recordSessionTime();
         clearStudyIdleTimer();
+        // サインアウトすると送信できなくなるため、先に未送信の学習記録を送り切る
+        window.clearTimeout(remoteSyncTimer);
+        await syncCurrentUserToSupabase();
         if (supabaseAuthClient) {
           await supabaseAuthClient.auth.signOut();
         }
@@ -8454,9 +8462,23 @@
         window.speechSynthesis.addEventListener("voiceschanged", pickVoice);
       }
 
+      const flushLearningRecords = () => {
+        window.clearTimeout(remoteSyncTimer);
+        syncCurrentUserToSupabase();
+      };
+
+      // 学習中は1分ごとに経過時間を確定してサーバーへ送る（ブラウザが突然閉じても記録が残るように）
+      window.setInterval(() => {
+        if (!signedInStudentId || !studyTimerStartedAt) return;
+        pauseStudyTimer();
+        startStudyTimer();
+        flushLearningRecords();
+      }, 60000);
+
       window.addEventListener("visibilitychange", () => {
         if (document.hidden) {
           recordSessionTime();
+          flushLearningRecords();
         } else {
           sessionStartTime = Date.now();
           if (isStudyViewMode()) {
@@ -8468,6 +8490,7 @@
 
       window.addEventListener("beforeunload", () => {
         recordSessionTime();
+        flushLearningRecords();
         clearAuthSession();
       });
 

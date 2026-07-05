@@ -4552,13 +4552,14 @@
             }
           }
           if (Array.isArray(dailyRows) && dailyRows.length) {
-            history.clear();
+            // 端末側にしか残っていない記録を消さないよう、日別に大きい方を採用してマージする
             dailyRows.forEach((row) => {
+              const local = history.get(row.record_date) || {};
               history.set(row.record_date, {
-                timeMs: Number(row.time_ms) || 0,
-                answered: Number(row.answered) || 0,
-                correct: Number(row.correct) || 0,
-                chaptersCompleted: Number(row.chapters_completed) || 0
+                timeMs: Math.max(Number(local.timeMs) || 0, Number(row.time_ms) || 0),
+                answered: Math.max(Number(local.answered) || 0, Number(row.answered) || 0),
+                correct: Math.max(Number(local.correct) || 0, Number(row.correct) || 0),
+                chaptersCompleted: Math.max(Number(local.chaptersCompleted) || 0, Number(row.chapters_completed) || 0)
               });
             });
             saveHistory();
@@ -4594,10 +4595,14 @@
           renderVocabBook();
           renderOutputMissions();
           if (activeViewBeforeSync !== "text") showView(activeViewBeforeSync);
+          // 端末にだけ残っていた記録をマージ結果としてサーバーへ送り返す
+          scheduleRemoteSync();
           return true;
         } catch (error) {
-          console.warn("Supabase Thai learning sync is not available yet.", error);
-          remoteSyncEnabled = false;
+          // 一度の読込失敗で同期を止めない。保存のたびに再送を試み、記録が残るようにする。
+          console.warn("Supabase Thai learning sync failed at login. Will retry on next save.", error);
+          lastRemoteSyncFailedAt = Date.now();
+          updateSaveStatusCard();
           return false;
         }
       };
@@ -4766,6 +4771,9 @@
         isAdminSession = false;
         pauseStudyTimer();
         clearStudyIdleTimer();
+        // サインアウトすると送信できなくなるため、先に未送信の学習記録を送り切る
+        window.clearTimeout(remoteSyncTimer);
+        await syncCurrentUserToSupabase();
         if (supabaseAuthClient) {
           await supabaseAuthClient.auth.signOut();
         }
@@ -5303,6 +5311,163 @@
         };
       };
 
+      let adminRemoteRequestId = 0;
+      const fetchThaiAdminUserStates = async () => {
+        // last_login_at 列が未追加の環境では列なしで再取得する
+        const withLastLogin = await supabaseAuthClient
+          .from("thai_user_app_state")
+          .select("user_id,current_chapter_id,progress,reminder,last_login_at");
+        if (!withLastLogin.error) return withLastLogin;
+        return supabaseAuthClient.from("thai_user_app_state").select("user_id,current_chapter_id,progress,reminder");
+      };
+      const computeStreakFromHistoryData = (historyData) => {
+        let streak = 0;
+        const today = new Date();
+        for (let offset = 0; offset < 31; offset += 1) {
+          const date = new Date(today);
+          date.setDate(today.getDate() - offset);
+          const record = historyData[getDateKey(date)];
+          if (record && ((Number(record.timeMs) || 0) > 0 || (Number(record.answered) || 0) > 0)) {
+            streak += 1;
+          } else {
+            break;
+          }
+        }
+        return streak;
+      };
+      const buildRemoteAdminSnapshots = (profiles = [], states = [], records = []) => {
+        const stateMap = new Map(states.map((state) => [state.user_id, state]));
+        const recordsByUser = new Map();
+        records.forEach((row) => {
+          if (!recordsByUser.has(row.user_id)) recordsByUser.set(row.user_id, []);
+          recordsByUser.get(row.user_id).push(row);
+        });
+        return profiles.map((profile) => {
+          const state = stateMap.get(profile.id) || {};
+          const historyData = {};
+          (recordsByUser.get(profile.id) || []).forEach((row) => {
+            historyData[row.record_date] = {
+              timeMs: Number(row.time_ms) || 0,
+              answered: Number(row.answered) || 0,
+              correct: Number(row.correct) || 0,
+              chaptersCompleted: Number(row.chapters_completed) || 0
+            };
+          });
+          const remoteProgress = state.progress && typeof state.progress === "object" ? state.progress : {};
+          const progressData = {
+            currentChapterId: state.current_chapter_id,
+            progress: remoteProgress.chapterProgress && typeof remoteProgress.chapterProgress === "object" ? remoteProgress.chapterProgress : {},
+            branches: Array.isArray(remoteProgress.branches) ? remoteProgress.branches : []
+          };
+          const historyEntries = Object.entries(historyData);
+          const totals = historyEntries.reduce(
+            (acc, [, record]) => {
+              acc.timeMs += record.timeMs;
+              acc.answered += record.answered;
+              acc.correct += record.correct;
+              acc.chapterCompleted += record.chaptersCompleted;
+              return acc;
+            },
+            { timeMs: 0, answered: 0, correct: 0, chapterCompleted: 0 }
+          );
+          const todayRecord = historyData[getTodayKey()] || { timeMs: 0 };
+          const activeDays = historyEntries.filter(([, record]) => record.timeMs > 0 || record.answered > 0).length;
+          const lastStudyDate = historyEntries
+            .filter(([, record]) => record.timeMs > 0 || record.answered > 0)
+            .map(([date]) => date)
+            .sort()
+            .pop();
+          const trends = getStoredAreaTrends(progressData);
+          const reminder = state.reminder || {};
+          return {
+            studentId: profile.registration_number || profile.student_id || String(profile.email || "").split("@")[0] || profile.id,
+            email: profile.email || "",
+            reminder: reminder.email && reminder.time ? `${reminder.time} / ${reminder.email}` : "未設定",
+            role: profile.role === "admin" ? "admin" : "student",
+            todayTime: formatMinutes(Number(todayRecord.timeMs) || 0),
+            totalTime: formatMinutes(totals.timeMs),
+            totalAnswered: totals.answered,
+            accuracy: totals.answered ? `${Math.round((totals.correct / totals.answered) * 100)}%` : "--%",
+            completed: totals.chapterCompleted,
+            streak: computeStreakFromHistoryData(historyData),
+            activeDays,
+            lastStudyDate: lastStudyDate ? getDateLabel(lastStudyDate) : "未学習",
+            lastLoginAt: state.last_login_at
+              ? new Date(state.last_login_at).toLocaleString("ja-JP", { month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit" })
+              : "--",
+            currentChapter: resolveStoredChapterTitle(state.current_chapter_id, progressData.branches),
+            strong: trends.strong,
+            weak: trends.weak
+          };
+        });
+      };
+      const loadRemoteAdminSnapshots = async () => {
+        if (!isAdminSession || !signedInAuthUserId || !supabaseAuthClient) return null;
+        try {
+          const [profilesResult, statesResult, recordsResult] = await Promise.all([
+            supabaseAuthClient.from("profiles").select("id,email,student_id,registration_number,registered_order,role,status,created_at").order("registered_order", { ascending: true, nullsFirst: false }),
+            fetchThaiAdminUserStates(),
+            supabaseAuthClient.from("thai_daily_learning_records").select("user_id,record_date,time_ms,answered,correct,chapters_completed")
+          ]);
+          if (profilesResult.error) throw profilesResult.error;
+          if (statesResult.error) throw statesResult.error;
+          if (recordsResult.error) throw recordsResult.error;
+          return buildRemoteAdminSnapshots(
+            (profilesResult.data || []).filter((profile) => profile.status !== "inactive"),
+            statesResult.data || [],
+            recordsResult.data || []
+          );
+        } catch (error) {
+          console.warn("Supabase Thai admin snapshots are not available yet.", error);
+          return null;
+        }
+      };
+      const renderRemoteAdminSnapshots = (snapshots) => {
+        if (!Array.isArray(snapshots) || !snapshots.length) return;
+        adminUserList.innerHTML = "";
+        adminRecordList.innerHTML = "";
+        snapshots.forEach((snapshot) => {
+          const userCard = document.createElement("article");
+          userCard.className = "admin-user-item";
+          userCard.innerHTML = `
+            <div class="admin-user-meta">
+              <h4>${escapeHtml(snapshot.studentId)}</h4>
+              <p>${snapshot.role === "admin" ? "管理者" : "一般ユーザー"}${snapshot.email ? ` / ${escapeHtml(snapshot.email)}` : ""}</p>
+            </div>
+            <div class="admin-inline"><span class="chip">Supabase</span></div>
+          `;
+          adminUserList.appendChild(userCard);
+
+          const recordCard = document.createElement("article");
+          recordCard.className = "admin-record-card";
+          recordCard.innerHTML = `
+            <div class="admin-record-head">
+              <h4>${escapeHtml(snapshot.studentId)}</h4>
+              <p>${escapeHtml(snapshot.email || "メール未登録")}</p>
+              <p>${snapshot.role === "admin" ? "管理者" : "一般ユーザー"}</p>
+            </div>
+            <div class="admin-record-grid">
+              <div class="admin-stat"><strong>今日の学習時間</strong><span>${escapeHtml(snapshot.todayTime)}</span></div>
+              <div class="admin-stat"><strong>累計学習時間</strong><span>${escapeHtml(snapshot.totalTime)}</span></div>
+              <div class="admin-stat"><strong>累計解答数</strong><span>${snapshot.totalAnswered}問</span></div>
+              <div class="admin-stat"><strong>累計正答率</strong><span>${escapeHtml(snapshot.accuracy)}</span></div>
+              <div class="admin-stat"><strong>完了課</strong><span>${snapshot.completed}課</span></div>
+              <div class="admin-stat"><strong>連続学習</strong><span>${snapshot.streak}日</span></div>
+              <div class="admin-stat"><strong>学習日数</strong><span>${snapshot.activeDays}日</span></div>
+              <div class="admin-stat"><strong>最終学習日</strong><span>${escapeHtml(snapshot.lastStudyDate)}</span></div>
+              <div class="admin-stat"><strong>最終ログイン</strong><span>${escapeHtml(snapshot.lastLoginAt || "--")}</span></div>
+              <div class="admin-stat"><strong>リマインド</strong><span>${escapeHtml(snapshot.reminder)}</span></div>
+            </div>
+            <div class="admin-record-footer">
+              <p>続きの位置: ${escapeHtml(snapshot.currentChapter)}</p>
+              <p>得意分野: ${escapeHtml(snapshot.strong)}</p>
+              <p>苦手分野: ${escapeHtml(snapshot.weak)}</p>
+            </div>
+          `;
+          adminRecordList.appendChild(recordCard);
+        });
+      };
+
       const renderAdminPage = () => {
         if (!isAdminSession || !isOfficialUser()) {
           adminView.classList.remove("active");
@@ -5367,6 +5532,12 @@
             </div>
           `;
           adminRecordList.appendChild(recordCard);
+        });
+        const requestId = ++adminRemoteRequestId;
+        loadRemoteAdminSnapshots().then((snapshots) => {
+          if (requestId === adminRemoteRequestId && snapshots) {
+            renderRemoteAdminSnapshots(snapshots);
+          }
         });
       };
 
@@ -10470,9 +10641,23 @@
         );
       });
 
+      const flushLearningRecords = () => {
+        window.clearTimeout(remoteSyncTimer);
+        syncCurrentUserToSupabase();
+      };
+
+      // 学習中は1分ごとに経過時間を確定してサーバーへ送る（ブラウザが突然閉じても記録が残るように）
+      window.setInterval(() => {
+        if (!signedInStudentId || !studyTimerStartedAt) return;
+        pauseStudyTimer();
+        startStudyTimer();
+        flushLearningRecords();
+      }, 60000);
+
       window.addEventListener("visibilitychange", () => {
         if (document.hidden) {
           recordSessionTime();
+          flushLearningRecords();
         } else {
           sessionStartTime = Date.now();
           if (isStudyViewMode()) {
@@ -10483,6 +10668,7 @@
       });
       window.addEventListener("beforeunload", () => {
         recordSessionTime();
+        flushLearningRecords();
         clearAuthSession();
       });
 
