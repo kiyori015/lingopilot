@@ -43,6 +43,13 @@ $repoRoot = Split-Path -Parent $PSScriptRoot
 Import-DotEnvFile -Path (Join-Path $repoRoot ".env")
 Import-DotEnvFile -Path (Join-Path $repoRoot ".env.local")
 
+$supabaseHome = Join-Path $repoRoot "temp\supabase-home"
+New-Item -ItemType Directory -Force -Path $supabaseHome | Out-Null
+$resolvedHome = (Resolve-Path $supabaseHome).Path
+$env:USERPROFILE = $resolvedHome
+$env:HOME = $resolvedHome
+$env:SUPABASE_DISABLE_TELEMETRY = "1"
+
 if (-not $env:SUPABASE_ACCESS_TOKEN) {
   throw "SUPABASE_ACCESS_TOKEN is required. Create one in Supabase Dashboard > Account > Access Tokens."
 }

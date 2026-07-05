@@ -96,3 +96,19 @@ Then open:
 
 - `http://127.0.0.1:4173/src/index.html`
 - `http://127.0.0.1:4173/src/thai.html`
+
+## 2026-06-21 PowerShell 7 Update
+
+- Confirmed the original shell was Windows PowerShell `5.1.26100.8457`.
+- Installed PowerShell `7.6.2` with `winget install --id Microsoft.PowerShell --source winget`.
+- Confirmed `pwsh` is available and returns `7.6.2`.
+- Added `scripts/invoke-supabase-cli.ps1` to force Supabase CLI runs through `pwsh`, load `.env` and `.env.local`, and isolate CLI state under `temp/supabase-home`.
+- Updated `scripts/deploy-supabase-production.ps1` to use the same temporary Supabase home and disable telemetry so Windows file-lock errors are less likely.
+
+Recommended usage from now on:
+
+```powershell
+pwsh
+./scripts/invoke-supabase-cli.ps1 projects list
+./scripts/deploy-supabase-production.ps1
+```
