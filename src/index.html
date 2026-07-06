@@ -2254,6 +2254,13 @@
         margin: 0 0 10px;
       }
 
+      .quiz-instruction {
+        margin: 0 0 6px;
+        font-size: 0.82rem;
+        font-weight: 700;
+        color: var(--muted);
+      }
+
       @media (max-width: 980px) {
         .layout {
           grid-template-columns: 1fr;
@@ -2443,7 +2450,7 @@
           <div>
             <p class="eyebrow">HOME</p>
             <h2>音から先に入る韓国語学習</h2>
-            <p>学習はここから始めます。学習中だけ時間を計測し、2分操作がなければ自動でこのホームへ戻ります。</p>
+            <p>学習はここから始めます。学習中だけ時間を計測します（2分操作がないと計測だけ自動で一時停止し、操作すると再開します）。</p>
             <p id="voice-support-notice" class="voice-warning" hidden></p>
           </div>
           <div class="home-actions">
@@ -2878,6 +2885,7 @@
               <div class="result-actions">
                 <button id="grade-all" class="secondary-btn" type="button">章の採点</button>
                 <button id="review-complete" class="secondary-btn" type="button">今日の復習完了</button>
+                <button id="restart-chapter" class="secondary-btn" type="button">もう一度挑戦（新しい問題）</button>
                 <button id="support-open" class="secondary-btn" type="button" hidden>補講へ</button>
                 <button id="next-chapter" class="primary-btn" type="button">次章へ</button>
               </div>
@@ -3005,8 +3013,8 @@
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script>
-      const QUIZ_COUNT_PER_DIRECTION = 14;
-      const LISTENING_COUNT = 12;
+      const QUIZ_COUNT_PER_DIRECTION = 10;
+      const LISTENING_COUNT = 8;
       const STUDY_IDLE_MS = 2 * 60 * 1000;
       const CORE_PHRASE_LIMIT = 5;
       const CORE_GRAMMAR_LIMIT = 3;
@@ -4872,13 +4880,13 @@
         if (!isStudyViewMode()) return;
         studyIdleTimer = window.setTimeout(() => {
           if (!isStudyViewMode()) return;
+          // 画面はそのまま。学習時間の計測だけ止め、次の操作で自動再開する。
           pauseStudyTimer();
           clearStudyIdleTimer();
           if ("speechSynthesis" in window) {
             window.speechSynthesis.cancel();
           }
-          showView("home");
-          setStatus("2分操作がなかったため、ホームに戻りました。", "info");
+          setStatus("2分操作がなかったので、学習時間の計測を一時停止しました。操作すると自動で再開します。", "info");
         }, STUDY_IDLE_MS);
       };
       const markStudyActivity = () => {
@@ -5192,6 +5200,32 @@
         return array;
       };
 
+      const hashString = (value) => {
+        let hash = 0;
+        const text = String(value);
+        for (let i = 0; i < text.length; i += 1) {
+          hash = (Math.imul(hash, 31) + text.charCodeAt(i)) >>> 0;
+        }
+        return hash;
+      };
+
+      const createSeededRng = (seedInput) => {
+        let state = hashString(String(seedInput)) || 1;
+        return () => {
+          state = (Math.imul(state, 1664525) + 1013904223) >>> 0;
+          return state / 4294967296;
+        };
+      };
+
+      const shuffleWithRng = (items, rng) => {
+        const array = [...items];
+        for (let i = array.length - 1; i > 0; i -= 1) {
+          const j = Math.floor(rng() * (i + 1));
+          [array[i], array[j]] = [array[j], array[i]];
+        }
+        return array;
+      };
+
       const buildPairsFromChapter = (chapter) => {
         const pairs = [
           ...getCoreBasics(chapter).map((item) => ({ ...item, kind: "sentence" })),
@@ -5248,7 +5282,8 @@
         return getOptionShape(text);
       };
 
-      const buildOptions = (correct, pool, fallbackPool = []) => {
+      const buildOptions = (correct, pool, fallbackPool = [], rng = null) => {
+        const shuffleFn = rng ? (items) => shuffleWithRng(items, rng) : shuffle;
         const options = [correct];
         const correctShape = getOptionShape(correct);
         const correctCategory = getOptionCategory(correct);
@@ -5259,11 +5294,11 @@
         if (uniquePool.length < 3) {
           uniquePool = [...new Set([...pool, ...fallbackPool])].filter((item) => item !== correct);
         }
-        for (const option of shuffle(uniquePool)) {
+        for (const option of shuffleFn(uniquePool)) {
           if (options.length >= 4) break;
           options.push(option);
         }
-        return shuffle(options);
+        return shuffleFn(options);
       };
 
       const getQuestionId = (chapterId, direction, index) => `c${chapterId}-${direction}-${index}`;
@@ -5274,13 +5309,29 @@
         ...getCoreItems(chapter.dialogues || [], 3).map((item) => ({ ...item, source: "会話表現" }))
       ].filter((item, index, array) => item.ko && item.ja && array.findIndex((other) => other.ko === item.ko && other.ja === item.ja) === index);
 
-      const ensureQuizSets = (chapter) => {
-        if (chapter.quizSets) return;
+      const QUIZ_INSTRUCTION_TEMPLATES = {
+        krjp: ["日本語の意味はどれですか？", "意味の合うものを選びましょう。", "この韓国語はどんな意味でしょう？"],
+        jpkr: ["韓国語で言うとどれですか？", "合う韓国語を選びましょう。", "この意味になる韓国語はどれでしょう？"],
+        listening: ["音声を聞いて、意味の合うものを選んでください。", "聞こえた文の意味はどれですか？", "音声の内容に合うものを選びましょう。"]
+      };
+
+      const buildChapterQuizSets = (chapter, seedToken = 1, priorityKos = null) => {
         const pairs = buildPairs(chapter);
         const globalPairs = getGlobalKoreanPairs();
+        // 前回間違えた表現を先頭に寄せ、優先して出題する
+        const orderPairs = (rng) => {
+          const shuffled = shuffleWithRng(pairs, rng);
+          if (!priorityKos || !priorityKos.size) return shuffled;
+          return [
+            ...shuffled.filter((pair) => priorityKos.has(pair.ko)),
+            ...shuffled.filter((pair) => !priorityKos.has(pair.ko))
+          ];
+        };
 
         const buildQuestions = (direction) => {
-          const prompts = shuffle(pairs).slice(0, Math.min(QUIZ_COUNT_PER_DIRECTION, pairs.length));
+          const rng = createSeededRng(`${chapter.id}-${direction}-${seedToken}`);
+          const templates = QUIZ_INSTRUCTION_TEMPLATES[direction];
+          const prompts = orderPairs(rng).slice(0, Math.min(QUIZ_COUNT_PER_DIRECTION, pairs.length));
           return prompts.map((pair, index) => {
             const prompt = direction === "krjp" ? pair.ko : pair.ja;
             const answerValue = direction === "krjp" ? pair.ja : pair.ko;
@@ -5288,10 +5339,12 @@
             const globalSameKindPairs = globalPairs.filter((item) => item.kind === pair.kind);
             const localPool = sameKindPairs.map((item) => direction === "krjp" ? item.ja : item.ko);
             const fallbackPool = globalSameKindPairs.map((item) => direction === "krjp" ? item.ja : item.ko);
-            const options = buildOptions(answerValue, localPool, fallbackPool);
+            const options = buildOptions(answerValue, localPool, fallbackPool, rng);
             return {
               id: getQuestionId(chapter.id, direction, index),
               prompt,
+              instruction: templates[Math.floor(rng() * templates.length)],
+              ko: pair.ko,
               options,
               answer: options.indexOf(answerValue)
             };
@@ -5299,15 +5352,17 @@
         };
 
         const buildListening = () => {
-          const prompts = shuffle(pairs).slice(0, Math.min(LISTENING_COUNT, pairs.length));
+          const rng = createSeededRng(`${chapter.id}-listening-${seedToken}`);
+          const templates = QUIZ_INSTRUCTION_TEMPLATES.listening;
+          const prompts = orderPairs(rng).slice(0, Math.min(LISTENING_COUNT, pairs.length));
           return prompts.map((pair, index) => {
             const sameKindPairs = pairs.filter((item) => item.kind === pair.kind);
             const globalSameKindPairs = globalPairs.filter((item) => item.kind === pair.kind);
-            const options = buildOptions(pair.ja, sameKindPairs.map((item) => item.ja), globalSameKindPairs.map((item) => item.ja));
+            const options = buildOptions(pair.ja, sameKindPairs.map((item) => item.ja), globalSameKindPairs.map((item) => item.ja), rng);
             return {
               id: getQuestionId(chapter.id, "listen", index),
               ko: pair.ko,
-              prompt: "音声を聞いて選んでください。",
+              prompt: templates[Math.floor(rng() * templates.length)],
               options,
               answer: options.indexOf(pair.ja)
             };
@@ -5318,29 +5373,42 @@
         const listeningQuestions = includeListening ? buildListening() : [];
 
         if (isListeningChapter(chapter)) {
-          chapter.quizSets = {
-            krjp: [],
-            jpkr: [],
-            listening: listeningQuestions
-          };
-          return;
+          return { krjp: [], jpkr: [], listening: listeningQuestions };
         }
-
-        chapter.quizSets = {
+        return {
           krjp: buildQuestions("krjp"),
           jpkr: buildQuestions("jpkr"),
           listening: listeningQuestions
         };
       };
 
+      const ensureQuizSets = (chapter, state = null) => {
+        const seedToken = state && state.quizSeed ? Number(state.quizSeed) : 1;
+        const priorityList = state && Array.isArray(state.quizPriorityKos) ? state.quizPriorityKos : [];
+        const cacheKey = `${seedToken}|${priorityList.join(",")}`;
+        if (chapter.quizSets && chapter.quizSetsKey === cacheKey) return;
+        // stateなし呼び出し（統計集計など）では、生成済みセットを壊さない
+        if (chapter.quizSets && !state) return;
+        chapter.quizSets = buildChapterQuizSets(chapter, seedToken, priorityList.length ? new Set(priorityList) : null);
+        chapter.quizSetsKey = cacheKey;
+      };
+
+      const pruneOrphanedRecords = (records, questions) => {
+        const validIds = new Set(questions.map((question) => question.id));
+        Object.keys(records).forEach((key) => {
+          if (!validIds.has(key)) delete records[key];
+        });
+      };
+
       const ensureProgress = (chapter) => {
-        ensureQuizSets(chapter);
         if (!progress.has(chapter.id)) {
           progress.set(chapter.id, {
             quiz: { krjp: {}, jpkr: {} },
             listening: {},
             cards: {},
             vocabBook: {},
+            quizSeed: 1,
+            quizPriorityKos: [],
             review: { count: 0, lastReviewed: "", nextReviewDate: "" }
           });
         }
@@ -5351,7 +5419,13 @@
         if (!state.listening) state.listening = {};
         if (!state.cards) state.cards = {};
         if (!state.vocabBook) state.vocabBook = {};
+        if (!state.quizSeed) state.quizSeed = 1;
+        if (!Array.isArray(state.quizPriorityKos)) state.quizPriorityKos = [];
         if (!state.review) state.review = { count: 0, lastReviewed: "", nextReviewDate: "" };
+        ensureQuizSets(chapter, state);
+        pruneOrphanedRecords(state.quiz.krjp, chapter.quizSets.krjp);
+        pruneOrphanedRecords(state.quiz.jpkr, chapter.quizSets.jpkr);
+        pruneOrphanedRecords(state.listening, chapter.quizSets.listening);
         chapter.quizSets.krjp.forEach((question) => {
           if (!state.quiz.krjp[question.id]) {
             state.quiz.krjp[question.id] = { selected: null, correct: null };
@@ -6362,6 +6436,7 @@
             .join("");
 
           card.innerHTML = `
+            ${question.instruction ? `<p class="quiz-instruction">${escapeHtml(question.instruction)}</p>` : ""}
             <p class="quiz-prompt"><button class="quiz-prompt-btn" type="button" data-prompt-audio="${escapeHtml(question.ko || question.prompt)}">Q${index + 1}. ${containsKorean(question.prompt) ? renderKoreanWithPronunciation(question.prompt, "ko") : escapeHtml(question.prompt)}</button></p>
             <div class="quiz-options">${options}</div>
             <p class="quiz-result" aria-live="polite"></p>
@@ -7498,6 +7573,8 @@
 
       const updateChapterStats = (chapter) => {
         const stats = computeChapterStats(chapter);
+        const restartButton = document.getElementById("restart-chapter");
+        if (restartButton) restartButton.hidden = isIntroChapter(chapter) || isColumnChapter(chapter);
         if (isIntroChapter(chapter)) {
           reviewCompleteButton.hidden = true;
           gradeAllButton.hidden = true;
@@ -8276,9 +8353,48 @@
         renderAdminPage();
       };
 
+      const restartChapterQuiz = (chapter) => {
+        if (!chapter || isIntroChapter(chapter) || isColumnChapter(chapter)) return;
+        const state = ensureProgress(chapter);
+        const wrongKos = new Set();
+        const collectWrong = (questions = [], records = {}) => {
+          questions.forEach((question) => {
+            const record = records[question.id];
+            if (record && record.correct === false && question.ko) wrongKos.add(question.ko);
+          });
+        };
+        collectWrong(chapter.quizSets.krjp, state.quiz.krjp);
+        collectWrong(chapter.quizSets.jpkr, state.quiz.jpkr);
+        collectWrong(chapter.quizSets.listening, state.listening);
+        getChapterFlashcardItems(chapter).forEach((item, index) => {
+          const record = state.cards[getCardId(chapter.id, index)];
+          if (record && record.correct === false) wrongKos.add(item.ko);
+        });
+        state.quizSeed = (Number(state.quizSeed) || 1) + 1;
+        state.quizPriorityKos = [...wrongKos];
+        state.quiz = { krjp: {}, jpkr: {} };
+        state.listening = {};
+        state.cards = {};
+        ensureProgress(chapter);
+        markStudyActivity();
+        saveProgress();
+        renderChapter("main");
+        setStatus(
+          wrongKos.size
+            ? `前回間違えた${wrongKos.size}個の表現を多めに入れて、新しい問題を作りました。`
+            : "新しい問題セットを作りました。同じ章をもう一度練習できます。",
+          "success"
+        );
+      };
+
       document.querySelectorAll(".check-btn").forEach((button) => {
         button.addEventListener("click", () => checkQuiz(button.dataset.check));
       });
+
+      const restartChapterButton = document.getElementById("restart-chapter");
+      if (restartChapterButton) {
+        restartChapterButton.addEventListener("click", () => restartChapterQuiz(chapters[currentChapterIndex]));
+      }
 
       listeningCheckButton.addEventListener("click", () => {
         checkListening();
