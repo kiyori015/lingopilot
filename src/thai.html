@@ -3000,6 +3000,23 @@
         color: var(--muted);
       }
 
+      .card-nav {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+      }
+
+      .card-nav .lesson-step-counter {
+        font-size: 0.85rem;
+      }
+
+      #flashcard-list .card-wrapper {
+        max-width: 480px;
+        margin: 0 auto;
+        width: 100%;
+      }
+
       @media (max-width: 980px) {
         .app-header,
         .hero-card {
@@ -3055,6 +3072,40 @@
         }
         .lesson-step-tabs {
           position: static;
+          flex-wrap: nowrap;
+          overflow-x: auto;
+          -webkit-overflow-scrolling: touch;
+          scrollbar-width: none;
+        }
+
+        .lesson-step-btn {
+          flex: 0 0 auto;
+          white-space: nowrap;
+        }
+
+        .app-header .subtitle {
+          display: none;
+        }
+
+        .header-actions .chip {
+          display: none;
+        }
+
+        .header-card {
+          padding: 12px;
+          gap: 8px;
+        }
+
+        .content-head .status-pill {
+          display: none;
+        }
+
+        .content-head {
+          padding: 14px 16px;
+        }
+
+        .panel {
+          padding: 14px 14px 16px;
         }
         body {
           padding: 20px 16px 40px;
@@ -3702,7 +3753,7 @@
                   <h3>リスニング問題</h3>
                   <p>5課ごとに10問の音声問題</p>
                 </div>
-              <button id="listening-check" class="check-btn" type="button">答え合わせ</button>
+              <button id="listening-check" class="check-btn" type="button" hidden>答え合わせ</button>
               </div>
               <p id="summary-listening" class="quiz-summary">未採点</p>
               <div id="listening-list" class="quiz-list"></div>
@@ -3717,7 +3768,7 @@
                 <div class="quiz-group">
                   <div class="quiz-head">
                     <h4>タイ語 → 日本語</h4>
-                    <button class="check-btn" type="button" data-check="krjp">答え合わせ</button>
+                    <button class="check-btn" type="button" data-check="krjp" hidden>答え合わせ</button>
                   </div>
                   <p class="quiz-summary" id="summary-krjp">未採点</p>
                   <div id="quiz-krjp" class="quiz-list"></div>
@@ -3725,7 +3776,7 @@
                 <div class="quiz-group">
                   <div class="quiz-head">
                     <h4>日本語 → タイ語</h4>
-                    <button class="check-btn" type="button" data-check="jpkr">答え合わせ</button>
+                    <button class="check-btn" type="button" data-check="jpkr" hidden>答え合わせ</button>
                   </div>
                   <p class="quiz-summary" id="summary-jpkr">未採点</p>
                   <div id="quiz-jpkr" class="quiz-list"></div>
@@ -8634,58 +8685,90 @@
         `;
       };
 
+      const chapterQuizPosition = { krjp: 0, jpkr: 0, listening: 0 };
+
       const renderQuizGroup = (container, questions, direction, state, chapter) => {
         container.innerHTML = "";
-        questions.forEach((question, index) => {
-          const card = document.createElement("div");
-          card.className = "quiz-card";
-          const name = `${question.id}-${index}`;
-          const options = question.options
-            .map(
-              (option, optIndex) => `
-                <label class="quiz-option">
-                  <input type="radio" name="${name}" value="${optIndex}" />
-                  ${renderChoiceMarkup(option)}
-                </label>
-              `
-            )
-            .join("");
-
-          card.innerHTML = `
-            ${getQuizPromptMarkup(question, index, { allowAudio: question.prompt === question.ko })}
-            <div class="quiz-options">${options}</div>
-            <p class="quiz-result" aria-live="polite"></p>
+        const summary = direction === "krjp" ? summaryKrJp : summaryJpKr;
+        if (!questions.length) {
+          summary.textContent = "未出題";
+          return;
+        }
+        const records = state.quiz[direction];
+        const total = questions.length;
+        const correctCount = questions.filter((question) => records[question.id] && records[question.id].correct === true).length;
+        const gradedCount = questions.filter((question) => records[question.id] && records[question.id].correct !== null).length;
+        if (gradedCount >= total) {
+          summary.textContent = `結果: ${correctCount} / ${total} 正解`;
+          const done = document.createElement("div");
+          done.className = "quiz-card";
+          done.innerHTML = `
+            <p class="quiz-prompt">全${total}問が終わりました！</p>
+            <p class="quiz-result ${correctCount === total ? "ok" : ""}">${correctCount} / ${total} 正解でした。</p>
+            <p class="quiz-instruction">「結果」ステップの「もう一度挑戦（新しい問題）」で、新しい問題に再挑戦できます。</p>
           `;
+          container.appendChild(done);
+          return;
+        }
+        let currentIndex = Math.min(chapterQuizPosition[direction] || 0, total - 1);
+        const currentRecord = records[questions[currentIndex].id];
+        if (!currentRecord || currentRecord.correct !== null) {
+          const nextPending = questions.findIndex((question) => records[question.id] && records[question.id].correct === null);
+          if (nextPending !== -1) currentIndex = nextPending;
+          chapterQuizPosition[direction] = currentIndex;
+        }
+        summary.textContent = `第${currentIndex + 1}問 / 全${total}問（ここまで ${correctCount} 問正解）`;
+        const question = questions[currentIndex];
+        const record = records[question.id];
+        const card = document.createElement("div");
+        card.className = "quiz-card";
+        const name = `${question.id}-${currentIndex}`;
+        const options = question.options
+          .map(
+            (option, optIndex) => `
+              <label class="quiz-option">
+                <input type="radio" name="${name}" value="${optIndex}" />
+                ${renderChoiceMarkup(option)}
+              </label>
+            `
+          )
+          .join("");
 
-          const promptButton = card.querySelector("[data-audio-prompt]");
-          if (promptButton) {
-            promptButton.addEventListener("click", () => {
-              speakText(question.ko, card);
-              markStudyActivity();
-            });
-          }
-          attachOptionAudioHandlers(card);
+        card.innerHTML = `
+          <p class="vocab-quiz-progress">1問答えると、自動で次の問題に進みます。</p>
+          ${getQuizPromptMarkup(question, currentIndex, { allowAudio: question.prompt === question.ko })}
+          <div class="quiz-options">${options}</div>
+          <p class="quiz-result" aria-live="polite"></p>
+        `;
 
-          const record = state.quiz[direction][question.id];
-          const inputs = card.querySelectorAll("input");
-          inputs.forEach((input) => {
-            input.addEventListener("change", () => {
-              record.selected = Number(input.value);
-              record.correct = null;
-              renderQuizResultState(card, question, record);
-              updateQuizSummary(chapter, direction);
-              saveProgress();
-              markStudyActivity();
-            });
+        const promptButton = card.querySelector("[data-audio-prompt]");
+        if (promptButton) {
+          promptButton.addEventListener("click", () => {
+            speakText(question.ko, card);
+            markStudyActivity();
           });
-
-          if (record.selected !== null) {
-            const selectedInput = card.querySelector(`input[value="${record.selected}"]`);
-            if (selectedInput) selectedInput.checked = true;
-          }
-          renderQuizResultState(card, question, record);
-          container.appendChild(card);
+        }
+        attachOptionAudioHandlers(card);
+        card.querySelectorAll("input").forEach((input) => {
+          input.addEventListener("change", () => {
+            if (record.correct !== null) return;
+            record.selected = Number(input.value);
+            record.correct = record.selected === question.answer;
+            addTodayAnswers(1, record.correct ? 1 : 0);
+            card.querySelectorAll("input").forEach((otherInput) => {
+              otherInput.disabled = true;
+            });
+            renderQuizResultState(card, question, record);
+            saveProgress();
+            markStudyActivity();
+            window.setTimeout(() => {
+              chapterQuizPosition[direction] = currentIndex + 1;
+              renderQuizGroup(container, questions, direction, state, chapter);
+              updateAllStats();
+            }, 1100);
+          });
         });
+        container.appendChild(card);
       };
 
       const renderListeningGroup = (chapter, state) => {
@@ -8698,66 +8781,82 @@
 
         listeningPanel.hidden = false;
         listeningList.innerHTML = "";
-
-        questions.forEach((question, index) => {
-          const card = document.createElement("div");
-          card.className = "quiz-card";
-          const name = `${question.id}-${index}`;
-          const options = question.options
-            .map(
-              (option, optIndex) => `
-                <label class="quiz-option">
-                  <input type="radio" name="${name}" value="${optIndex}" />
-                  ${renderChoiceMarkup(option)}
-                </label>
-              `
-            )
-            .join("");
-
-          card.innerHTML = `
-            <div class="quiz-head">
-              <p class="quiz-prompt">Q${index + 1}. ${question.prompt}</p>
-              <button class="listen-btn" type="button">再生</button>
-            </div>
-            <div class="quiz-options">${options}</div>
-            <p class="quiz-result" aria-live="polite"></p>
+        const records = state.listening;
+        const total = questions.length;
+        const correctCount = questions.filter((question) => records[question.id] && records[question.id].correct === true).length;
+        const gradedCount = questions.filter((question) => records[question.id] && records[question.id].correct !== null).length;
+        if (gradedCount >= total) {
+          summaryListening.textContent = `結果: ${correctCount} / ${total} 正解`;
+          const done = document.createElement("div");
+          done.className = "quiz-card";
+          done.innerHTML = `
+            <p class="quiz-prompt">全${total}問が終わりました！</p>
+            <p class="quiz-result ${correctCount === total ? "ok" : ""}">${correctCount} / ${total} 正解でした。</p>
+            <p class="quiz-instruction">「結果」ステップの「もう一度挑戦（新しい問題）」で、新しい問題に再挑戦できます。</p>
           `;
-
-          card.querySelector(".listen-btn").addEventListener("click", () => {
-            speakText(question.ko, card);
-            markStudyActivity();
-          });
-          attachOptionAudioHandlers(card);
-
-          const record = state.listening[question.id];
-          const inputs = card.querySelectorAll("input");
-          inputs.forEach((input) => {
-            input.addEventListener("change", () => {
-              record.selected = Number(input.value);
-              record.correct = null;
-              renderQuizResultState(card, question, record);
-              updateListeningSummary(chapter);
-              saveProgress();
-              markStudyActivity();
-            });
-          });
-
-          if (record.selected !== null) {
-            const selectedInput = card.querySelector(`input[value="${record.selected}"]`);
-            if (selectedInput) selectedInput.checked = true;
-          }
-          renderQuizResultState(card, question, record);
-          listeningList.appendChild(card);
-        });
-
-        updateListeningSummary(chapter);
-        const firstPending = questions.find((question) => {
-          const record = state.listening[question.id];
-          return record && record.correct === null;
-        }) || questions[0];
-        if (firstPending) {
-          queueAutoPlay(firstPending.ko, listeningList, "th");
+          listeningList.appendChild(done);
+          return;
         }
+        let currentIndex = Math.min(chapterQuizPosition.listening || 0, total - 1);
+        const currentRecord = records[questions[currentIndex].id];
+        if (!currentRecord || currentRecord.correct !== null) {
+          const nextPending = questions.findIndex((question) => records[question.id] && records[question.id].correct === null);
+          if (nextPending !== -1) currentIndex = nextPending;
+          chapterQuizPosition.listening = currentIndex;
+        }
+        summaryListening.textContent = `第${currentIndex + 1}問 / 全${total}問（ここまで ${correctCount} 問正解）`;
+        const question = questions[currentIndex];
+        const record = records[question.id];
+        const card = document.createElement("div");
+        card.className = "quiz-card";
+        const name = `${question.id}-${currentIndex}`;
+        const options = question.options
+          .map(
+            (option, optIndex) => `
+              <label class="quiz-option">
+                <input type="radio" name="${name}" value="${optIndex}" />
+                ${renderChoiceMarkup(option)}
+              </label>
+            `
+          )
+          .join("");
+
+        card.innerHTML = `
+          <p class="vocab-quiz-progress">1問答えると、自動で次の問題に進みます。</p>
+          <div class="quiz-head">
+            <p class="quiz-prompt">Q${currentIndex + 1}. ${escapeHtml(question.prompt)}</p>
+            <button class="listen-btn" type="button">再生</button>
+          </div>
+          <div class="quiz-options">${options}</div>
+          <p class="quiz-result" aria-live="polite"></p>
+        `;
+
+        card.querySelector(".listen-btn").addEventListener("click", () => {
+          speakText(question.ko, card);
+          markStudyActivity();
+        });
+        attachOptionAudioHandlers(card);
+        card.querySelectorAll("input").forEach((input) => {
+          input.addEventListener("change", () => {
+            if (record.correct !== null) return;
+            record.selected = Number(input.value);
+            record.correct = record.selected === question.answer;
+            addTodayAnswers(1, record.correct ? 1 : 0);
+            card.querySelectorAll("input").forEach((otherInput) => {
+              otherInput.disabled = true;
+            });
+            renderQuizResultState(card, question, record);
+            saveProgress();
+            markStudyActivity();
+            window.setTimeout(() => {
+              chapterQuizPosition.listening = currentIndex + 1;
+              renderListeningGroup(chapter, state);
+              updateAllStats();
+            }, 1100);
+          });
+        });
+        listeningList.appendChild(card);
+        queueAutoPlay(question.ko, listeningList, "th");
       };
 
       const getSceneLessonNumber = (chapter) => {
@@ -9465,87 +9564,117 @@
         updateAllStats();
       };
 
+      let flashcardIndex = 0;
+
       const renderFlashcards = (chapter, state) => {
         flashcardList.innerHTML = "";
         const cardItems = getChapterFlashcardItems(chapter);
-        cardItems.forEach((item, index) => {
-          const cardId = getCardId(chapter.id, index);
-          const wrapper = document.createElement("div");
-          wrapper.className = "card-wrapper";
-          wrapper.dataset.cardId = cardId;
+        if (!cardItems.length) return;
+        const total = cardItems.length;
+        const markedCount = cardItems.filter((_, index) => {
+          const record = state.cards[getCardId(chapter.id, index)];
+          return record && record.correct !== null;
+        }).length;
+        if (flashcardIndex >= total || flashcardIndex < 0) flashcardIndex = 0;
+        // 現在位置が採点済みなら、次の未採点カードへ移動する（全て採点済みなら現在位置のまま閲覧できる）
+        const recordAt = (index) => state.cards[getCardId(chapter.id, index)];
+        if (markedCount < total && recordAt(flashcardIndex) && recordAt(flashcardIndex).correct !== null) {
+          const pending = cardItems.findIndex((_, index) => !recordAt(index) || recordAt(index).correct === null);
+          if (pending !== -1) flashcardIndex = pending;
+        }
+        const item = cardItems[flashcardIndex];
+        const cardId = getCardId(chapter.id, flashcardIndex);
 
-          const flashcard = document.createElement("div");
-          flashcard.className = "flashcard";
-          flashcard.innerHTML = `
-            <div class="card-inner">
-              <div class="card-face card-front">
-                <span class="card-label">${escapeHtml(item.source)} / Question</span>
-                ${renderThaiWithPronunciation(item.ko, "card-term")}
-              </div>
-              <div class="card-face card-back">
-                <span class="card-label">Answer</span>
-                <p class="card-term">${item.ja}</p>
-              </div>
+        const wrapper = document.createElement("div");
+        wrapper.className = "card-wrapper";
+        wrapper.dataset.cardId = cardId;
+
+        const flashcard = document.createElement("div");
+        flashcard.className = "flashcard";
+        flashcard.innerHTML = `
+          <div class="card-inner">
+            <div class="card-face card-front">
+              <span class="card-label">${escapeHtml(item.source)} / Question</span>
+              ${renderThaiWithPronunciation(item.ko, "card-term")}
             </div>
-          `;
+            <div class="card-face card-back">
+              <span class="card-label">Answer</span>
+              <p class="card-term">${item.ja}</p>
+            </div>
+          </div>
+        `;
 
-          const actions = document.createElement("div");
-          actions.className = "card-actions";
-          actions.innerHTML = `
-            <button type="button" class="flip-card">めくる ↻</button>
-            <button type="button" class="mark-good">○ 正解</button>
-            <button type="button" class="mark-bad">× 不正解</button>
-          `;
+        const actions = document.createElement("div");
+        actions.className = "card-actions";
+        actions.innerHTML = `
+          <button type="button" class="flip-card">めくる ↻</button>
+          <button type="button" class="mark-good">○ 正解</button>
+          <button type="button" class="mark-bad">× 不正解</button>
+        `;
 
-          const markGoodButton = actions.querySelector(".mark-good");
-          const markBadButton = actions.querySelector(".mark-bad");
-          const reflectCardMark = () => {
-            const record = state.cards[cardId];
-            wrapper.classList.toggle("correct", record.correct === true);
-            wrapper.classList.toggle("incorrect", record.correct === false);
-            markGoodButton.classList.toggle("selected", record.correct === true);
-            markBadButton.classList.toggle("selected", record.correct === false);
-          };
+        const nav = document.createElement("div");
+        nav.className = "card-nav";
+        nav.innerHTML = `
+          <button type="button" class="secondary-btn" data-card-nav="prev">前へ</button>
+          <span class="lesson-step-counter">${flashcardIndex + 1} / ${total}（採点済み ${markedCount}）</span>
+          <button type="button" class="secondary-btn" data-card-nav="next">次へ</button>
+        `;
 
-          flashcard.addEventListener("click", () => {
-            speakText(item.ko, wrapper);
-            markStudyActivity();
-          });
-
-          actions.querySelector(".flip-card").addEventListener("click", (event) => {
-            event.stopPropagation();
-            wrapper.classList.toggle("flipped");
-            markStudyActivity();
-          });
-
-          markGoodButton.addEventListener("click", (event) => {
-            event.stopPropagation();
-            if (state.cards[cardId].correct === null) {
-              addTodayAnswers(1, 1);
-            }
-            state.cards[cardId].correct = true;
-            reflectCardMark();
-            markStudyActivity();
-            updateAllStats();
-          });
-
-          markBadButton.addEventListener("click", (event) => {
-            event.stopPropagation();
-            if (state.cards[cardId].correct === null) {
-              addTodayAnswers(1, 0);
-            }
-            state.cards[cardId].correct = false;
-            reflectCardMark();
-            markStudyActivity();
-            updateAllStats();
-          });
-
+        const markGoodButton = actions.querySelector(".mark-good");
+        const markBadButton = actions.querySelector(".mark-bad");
+        const reflectCardMark = () => {
+          const record = state.cards[cardId];
+          wrapper.classList.toggle("correct", record.correct === true);
+          wrapper.classList.toggle("incorrect", record.correct === false);
+          markGoodButton.classList.toggle("selected", record.correct === true);
+          markBadButton.classList.toggle("selected", record.correct === false);
+        };
+        const markCard = (isCorrect) => {
+          if (state.cards[cardId].correct === null) {
+            addTodayAnswers(1, isCorrect ? 1 : 0);
+          }
+          state.cards[cardId].correct = isCorrect;
           reflectCardMark();
+          markStudyActivity();
+          updateAllStats();
+          window.setTimeout(() => {
+            flashcardIndex += 1;
+            renderFlashcards(chapter, state);
+          }, 650);
+        };
 
-          wrapper.appendChild(flashcard);
-          wrapper.appendChild(actions);
-          flashcardList.appendChild(wrapper);
+        flashcard.addEventListener("click", () => {
+          speakText(item.ko, wrapper);
+          markStudyActivity();
         });
+        actions.querySelector(".flip-card").addEventListener("click", (event) => {
+          event.stopPropagation();
+          wrapper.classList.toggle("flipped");
+          markStudyActivity();
+        });
+        markGoodButton.addEventListener("click", (event) => {
+          event.stopPropagation();
+          markCard(true);
+        });
+        markBadButton.addEventListener("click", (event) => {
+          event.stopPropagation();
+          markCard(false);
+        });
+        nav.querySelectorAll("[data-card-nav]").forEach((button) => {
+          button.addEventListener("click", () => {
+            flashcardIndex = button.dataset.cardNav === "prev"
+              ? (flashcardIndex - 1 + total) % total
+              : (flashcardIndex + 1) % total;
+            renderFlashcards(chapter, state);
+            markStudyActivity();
+          });
+        });
+
+        reflectCardMark();
+        wrapper.appendChild(flashcard);
+        wrapper.appendChild(actions);
+        wrapper.appendChild(nav);
+        flashcardList.appendChild(wrapper);
       };
 
       const computeChapterStats = (chapter) => {
@@ -9625,7 +9754,7 @@
           return;
         }
 
-        gradeAllButton.hidden = false;
+        gradeAllButton.hidden = true; // 1問ずつ即時採点になったため、一括採点は使わない
         const percent = stats.answered ? Math.round(stats.accuracy * 100) : 0;
         chapterScore.textContent = `正答率: ${stats.answered ? `${percent}%` : "--%"}`;
         chapterProgressDetail.textContent = `回答済み: ${stats.answered} / ${stats.total}`;
@@ -10426,6 +10555,10 @@
         Array.from(lessonStepTabs.children).forEach((button, buttonIndex) => {
           button.classList.toggle("active", buttonIndex === lessonStepIndex);
         });
+        const activeTab = lessonStepTabs.children[lessonStepIndex];
+        if (activeTab && lessonStepTabs.scrollWidth > lessonStepTabs.clientWidth) {
+          activeTab.scrollIntoView({ block: "nearest", inline: "center", behavior: "smooth" });
+        }
         lessonStepPrevButton.disabled = lessonStepIndex === 0;
         lessonStepNextButton.disabled = lessonStepIndex === activeLessonSteps.length - 1;
         lessonStepCounter.textContent = `${lessonStepIndex + 1} / ${activeLessonSteps.length}`;
@@ -10467,6 +10600,10 @@
         const chapter = chapters[currentChapterIndex];
         const introOnly = isIntroChapter(chapter);
         const isColumn = isColumnChapter(chapter);
+        flashcardIndex = 0;
+        chapterQuizPosition.krjp = 0;
+        chapterQuizPosition.jpkr = 0;
+        chapterQuizPosition.listening = 0;
 
         chapterTitle.textContent = chapter.title;
         chapterSubtitle.textContent = chapter.subtitle;
@@ -10531,8 +10668,6 @@
           outputEvaluationText = "まだ音声認識していません。";
           outputPanel.hidden = false;
           renderOutputPractice();
-          updateQuizSummary(chapter, "krjp");
-          updateQuizSummary(chapter, "jpkr");
         } else {
           flashcardList.innerHTML = "";
           quizKrJp.innerHTML = "";
