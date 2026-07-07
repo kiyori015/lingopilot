@@ -9772,7 +9772,25 @@
           chapterRatingNote.textContent = "単語メインの補講で語彙から立て直しましょう。";
         } else {
           chapterRating.classList.add("pending");
-          chapterRatingNote.textContent = "すべての問題を採点すると判定します。";
+          // 何が残っているかを具体的に示す（採点済みの項目は表示しない）
+          const state = ensureProgress(chapter);
+          const countPending = (questions = [], records = {}) =>
+            questions.filter((question) => !records[question.id] || records[question.id].correct === null).length;
+          const pendingItems = [];
+          const pendingKrJp = countPending(state.exerciseSets.krjp, state.quiz.krjp);
+          const pendingJpKr = countPending(state.exerciseSets.jpkr, state.quiz.jpkr);
+          const pendingListening = countPending(state.exerciseSets.listening, state.listening);
+          const pendingCards = getChapterFlashcardItems(chapter).filter((_, index) => {
+            const record = state.cards[getCardId(chapter.id, index)];
+            return !record || record.correct === null;
+          }).length;
+          if (pendingKrJp) pendingItems.push(`タイ→日 あと${pendingKrJp}問`);
+          if (pendingJpKr) pendingItems.push(`日→タイ あと${pendingJpKr}問`);
+          if (pendingListening) pendingItems.push(`聞き取り あと${pendingListening}問`);
+          if (pendingCards) pendingItems.push(`単語カード あと${pendingCards}枚`);
+          chapterRatingNote.textContent = pendingItems.length
+            ? `のこり: ${pendingItems.join("・")}。すべて終わると判定が出ます。`
+            : "すべての問題を採点すると判定します。";
         }
 
         nextChapterButton.disabled = !(stats.rating === "○" && stats.answered === stats.total) || currentChapterIndex >= chapters.length - 1;
