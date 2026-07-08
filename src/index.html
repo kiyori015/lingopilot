@@ -9,7 +9,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&family=Space+Grotesk:wght@400;500;600&family=Spectral:wght@600;700&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;800&family=Noto+Sans+KR:wght@400;500;700&display=swap"
       rel="stylesheet"
     />
     <style>
@@ -36,7 +36,7 @@
       body {
         margin: 0;
         min-height: 100vh;
-        font-family: "Space Grotesk", "Noto Sans KR", "Hiragino Sans", sans-serif;
+        font-family: "Noto Sans JP", "Noto Sans KR", "Hiragino Sans", sans-serif;
         background:
           radial-gradient(1200px 800px at -10% 10%, rgba(0, 127, 127, 0.15), transparent 60%),
           radial-gradient(900px 700px at 100% 0%, rgba(244, 163, 82, 0.2), transparent 55%),
@@ -90,7 +90,8 @@
       }
 
       .app-header h1 {
-        font-family: "Spectral", "Noto Sans KR", serif;
+        font-family: "Noto Sans JP", "Noto Sans KR", sans-serif;
+        font-weight: 800;
         font-size: clamp(2.2rem, 3vw, 3rem);
         margin: 0 0 8px;
         letter-spacing: 0.02em;
@@ -225,6 +226,10 @@
       .chapter-list {
         display: grid;
         gap: 10px;
+        max-height: calc(100vh - 180px);
+        overflow-y: auto;
+        padding-right: 2px;
+        scrollbar-width: thin;
       }
 
       .chapter-btn {
@@ -239,6 +244,7 @@
         cursor: pointer;
         text-align: left;
         transition: border 0.2s ease, transform 0.2s ease, background 0.2s ease;
+        min-width: 0;
       }
 
       .chapter-btn:hover {
@@ -259,6 +265,12 @@
 
       .chapter-name {
         font-size: 0.92rem;
+        line-height: 1.35;
+        min-width: 0;
+        overflow: hidden;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
       }
 
       .chapter-status {
@@ -268,6 +280,7 @@
         border-radius: 999px;
         background: rgba(31, 28, 26, 0.08);
         color: var(--muted);
+        white-space: nowrap;
       }
 
       .chapter-status.good {
@@ -671,7 +684,7 @@
       }
 
       .sentence .ko {
-        font-family: "Noto Sans KR", "Space Grotesk", sans-serif;
+        font-family: "Noto Sans KR", "Noto Sans JP", sans-serif;
         font-size: 1.05rem;
         margin: 0;
       }
@@ -774,7 +787,7 @@
       .vocab-item .ko {
         margin: 0 0 6px;
         font-weight: 600;
-        font-family: "Noto Sans KR", "Space Grotesk", sans-serif;
+        font-family: "Noto Sans KR", "Noto Sans JP", sans-serif;
       }
 
       .vocab-item .ja {
@@ -857,11 +870,12 @@
         margin: 0;
         font-size: 1.1rem;
         font-weight: 600;
-        font-family: "Noto Sans KR", "Space Grotesk", sans-serif;
+        font-family: "Noto Sans KR", "Noto Sans JP", sans-serif;
       }
 
       .card-actions {
-        display: flex;
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
         gap: 8px;
         justify-content: center;
         opacity: 1;
@@ -876,16 +890,22 @@
 
       .card-actions button {
         border: none;
-        border-radius: 999px;
-        padding: 6px 12px;
-        font-size: 0.8rem;
+        border-radius: 14px;
+        padding: 10px 8px;
+        font-size: 0.82rem;
         cursor: pointer;
-        font-weight: 600;
+        font-weight: 800;
+        min-height: 44px;
       }
 
       .card-actions .mark-good {
         background: rgba(0, 127, 127, 0.18);
         color: var(--accent-strong);
+      }
+
+      .card-actions .mark-review {
+        background: rgba(244, 163, 82, 0.22);
+        color: #8a5316;
       }
 
       .card-actions .mark-bad {
@@ -906,6 +926,15 @@
         background: linear-gradient(140deg, #eaf7ef, #d9f0e2);
       }
 
+      .card-wrapper.review .card-inner {
+        border: 2px solid #c07f1a;
+        box-shadow: 0 0 0 3px rgba(192, 127, 26, 0.16);
+      }
+
+      .card-wrapper.review .card-face {
+        background: linear-gradient(140deg, #fdf4e3, #f9ead0);
+      }
+
       .card-wrapper.incorrect .card-inner {
         border: 2px solid #d03b2c;
         box-shadow: 0 0 0 3px rgba(208, 59, 44, 0.16);
@@ -916,6 +945,7 @@
       }
 
       .card-wrapper.correct::after,
+      .card-wrapper.review::after,
       .card-wrapper.incorrect::after {
         position: absolute;
         top: -10px;
@@ -930,17 +960,27 @@
       }
 
       .card-wrapper.correct::after {
-        content: "○ 正解";
+        content: "○ 覚えた";
         background: #1a8f4d;
       }
 
+      .card-wrapper.review::after {
+        content: "△ 不安";
+        background: #c07f1a;
+      }
+
       .card-wrapper.incorrect::after {
-        content: "× 不正解";
+        content: "× 覚えていない";
         background: #d03b2c;
       }
 
       .card-actions .mark-good.selected {
         background: #1a8f4d;
+        color: #fff;
+      }
+
+      .card-actions .mark-review.selected {
+        background: #c07f1a;
         color: #fff;
       }
 
@@ -1110,7 +1150,7 @@
         display: grid;
         grid-template-columns: auto 1fr;
         gap: 10px;
-        align-items: start;
+        align-items: center;
         background: rgba(31, 28, 26, 0.03);
         padding: 8px 10px;
         border-radius: 12px;
@@ -1289,10 +1329,19 @@
 
       .calendar-day .day-num {
         font-weight: 700;
+        width: 28px;
+        height: 28px;
+        border-radius: 999px;
+        display: inline-grid;
+        place-items: center;
+        background: rgba(255, 255, 255, 0.72);
+        font-size: 0.95rem;
       }
 
       .calendar-day .day-meta {
         color: var(--muted);
+        font-size: 0.72rem;
+        line-height: 1.25;
       }
 
       .calendar-day.active {
@@ -1459,6 +1508,31 @@
         cursor: pointer;
       }
 
+      .deck-actions {
+        display: grid;
+        gap: 10px;
+      }
+
+      .deck-toolbar,
+      .deck-evaluation,
+      .card-nav {
+        display: grid;
+        gap: 8px;
+      }
+
+      .deck-toolbar {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+      }
+
+      .deck-evaluation {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+
+      .deck-toolbar button,
+      .deck-evaluation button {
+        min-height: 44px;
+      }
+
       .game-options {
         display: grid;
         gap: 10px;
@@ -1580,7 +1654,8 @@
       .hero-card h2 {
         margin: 0;
         font-size: clamp(2rem, 3vw, 2.6rem);
-        font-family: "Spectral", "Noto Sans KR", serif;
+        font-family: "Noto Sans JP", "Noto Sans KR", sans-serif;
+        font-weight: 800;
       }
 
       .hero-card p {
@@ -2261,15 +2336,77 @@
         color: var(--muted);
       }
 
+      /* ボタン・入力のフォントと高さを統一 */
+      button,
+      input,
+      select,
+      textarea {
+        font-family: inherit;
+      }
+
+      .primary-btn,
+      .secondary-btn,
+      .check-btn,
+      .nav-btn,
+      .lesson-step-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 42px;
+        line-height: 1.2;
+        text-align: center;
+      }
+
+      .record-btn,
+      .playback-btn,
+      .listen-btn,
+      .plain-btn,
+      .quiz-option-audio,
+      .inline-audio-btn,
+      .card-actions button,
+      .vocab-card-actions button,
+      .deck-actions button,
+      .game-actions button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 34px;
+        line-height: 1.2;
+      }
+
+      .quiz-option-body {
+        align-items: center;
+      }
+
       .card-nav {
-        display: flex;
+        display: grid;
+        grid-template-columns: 1fr auto 1fr;
         align-items: center;
         justify-content: space-between;
         gap: 8px;
       }
 
       .card-nav .lesson-step-counter {
-        font-size: 0.85rem;
+        font-size: 0.78rem;
+        font-weight: 800;
+        color: var(--accent-strong);
+        background: rgba(0, 127, 127, 0.08);
+        border-radius: 999px;
+        padding: 8px 10px;
+        text-align: center;
+        white-space: nowrap;
+      }
+
+      .card-nav .secondary-btn,
+      .card-audio-row .secondary-btn {
+        width: 100%;
+        min-height: 42px;
+      }
+
+      .card-audio-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
       }
 
       #flashcard-list .card-wrapper {
@@ -2285,6 +2422,47 @@
 
         .chapters {
           position: static;
+          padding: 14px;
+          gap: 12px;
+        }
+
+        .chapter-list {
+          display: flex;
+          overflow-x: auto;
+          overflow-y: hidden;
+          max-height: none;
+          gap: 8px;
+          padding: 2px 2px 8px;
+          scroll-snap-type: x proximity;
+          -webkit-overflow-scrolling: touch;
+        }
+
+        .chapter-btn {
+          flex: 0 0 138px;
+          grid-template-columns: 1fr;
+          gap: 6px;
+          padding: 10px;
+          border-radius: 14px;
+          scroll-snap-align: center;
+        }
+
+        .chapter-btn.active {
+          box-shadow: 0 8px 18px rgba(0, 127, 127, 0.16);
+        }
+
+        .chapter-num {
+          font-size: 0.82rem;
+        }
+
+        .chapter-name {
+          font-size: 0.82rem;
+          -webkit-line-clamp: 2;
+        }
+
+        .chapter-status {
+          width: fit-content;
+          font-size: 0.72rem;
+          padding: 3px 7px;
         }
 
         .auth-card,
@@ -2351,6 +2529,37 @@
 
         .panel {
           padding: 14px 14px 16px;
+        }
+
+        .calendar-grid {
+          gap: 5px;
+        }
+
+        .calendar-day,
+        .calendar-empty {
+          min-height: 54px;
+          padding: 6px;
+          border-radius: 12px;
+        }
+
+        .calendar-day .day-num {
+          width: 24px;
+          height: 24px;
+          font-size: 0.82rem;
+        }
+
+        .calendar-day .day-meta {
+          font-size: 0.66rem;
+        }
+
+        .deck-toolbar,
+        .deck-evaluation,
+        .card-actions {
+          grid-template-columns: 1fr 1fr;
+        }
+
+        .deck-evaluation {
+          grid-template-columns: 1fr;
         }
 
         .sentence {
@@ -2506,7 +2715,7 @@
           </div>
           <div class="home-actions">
             <button id="home-start-study" class="primary-btn" type="button">続きから始める</button>
-            <button id="home-start-audio" class="secondary-btn" type="button">音だけカードから始める</button>
+            <button id="home-start-audio" class="secondary-btn" type="button">音だけモードで始める</button>
             <button id="home-open-vocab" class="secondary-btn" type="button">単語帳を開く</button>
             <button id="home-open-output" class="secondary-btn" type="button">会話ミッション</button>
           </div>
@@ -2615,7 +2824,7 @@
           <div>
             <p class="eyebrow">VOCAB BOOK</p>
             <h2>音から覚える韓国語単語帳</h2>
-            <p>覚えた・不安・覚えてないで単語を分け、音だけカードや四択で反復できます。</p>
+            <p>覚えた・不安・覚えていないで単語を分け、音だけカードや四択で反復できます。</p>
           </div>
           <div class="home-actions">
             <button id="vocab-back-home" class="secondary-btn" type="button">ホームへ戻る</button>
@@ -2641,7 +2850,7 @@
                 <option value="all">すべて</option>
                 <option value="known">覚えた</option>
                 <option value="unsure">不安</option>
-                <option value="unknown">覚えてない</option>
+                <option value="unknown">覚えていない</option>
               </select>
             </label>
             <label>
@@ -2757,7 +2966,7 @@
               </div>
               <div class="status-pill">
                 <span class="pulse"></span>
-                <span>例文をクリックで音声</span>
+                <span>例文をタップで音声</span>
               </div>
             </div>
 
@@ -2810,7 +3019,7 @@
             <section id="audio-focus-panel" class="panel">
               <div class="panel-title">
                 <div>
-                  <h3>音でわかる練習</h3>
+                  <h3>音で覚える練習</h3>
                   <p>文字を見る前に、音を聞いて意味を思い浮かべます。</p>
                 </div>
                 <div class="audio-focus-actions">
@@ -4742,7 +4951,7 @@
       const renderChoiceMarkup = (text) => `
         <span class="quiz-option-body">
           <span class="quiz-option-text">${containsKorean(text) ? renderKoreanWithPronunciation(text, "ko") : `<span>${escapeHtml(text)}</span>`}</span>
-          <button class="quiz-option-audio" type="button" data-option-audio="${escapeHtml(text)}">ゆっくり音声</button>
+          ${containsKorean(text) ? `<button class="quiz-option-audio" type="button" data-option-audio="${escapeHtml(text)}">韓国語を聞く</button>` : ""}
         </span>
       `;
       const applyQuizResult = (resultEl, record, question) => {
@@ -6032,7 +6241,7 @@
         const turns = items.map((item, index) => ({
           partnerKo: sceneItems[index] ? sceneItems[index].ko : item.ko,
           partnerJa: sceneItems[index] ? sceneItems[index].ja : item.ja,
-          task: `${item.ja} を韓国語で返答してください。`,
+          task: `「${item.ja}」を韓国語で言ってみましょう。`,
           modelKo: item.ko,
           modelJa: item.ja
         }));
@@ -6270,7 +6479,7 @@
         if (isFinished) {
           outputPracticeShell.innerHTML = `
             <div class="output-practice-card">
-              <p class="eyebrow">MISSION COMPLETE</p>
+              <p class="eyebrow">ミッション完了</p>
               <h3>${escapeHtml(mission.title)}</h3>
               <p>この場面の会話ミッションは完了です。録音を聞き直し、もう一度やる場合は「最初から練習」を押してください。</p>
               <div class="output-score-row">
@@ -6287,7 +6496,7 @@
         outputPracticeShell.innerHTML = `
           <div class="output-practice-card">
             <div>
-              <p class="eyebrow">TURN ${outputTurnIndex + 1} / ${mission.turns.length}</p>
+              <p class="eyebrow">やりとり ${outputTurnIndex + 1} / ${mission.turns.length}</p>
               <h3>${escapeHtml(mission.title)}</h3>
               <p>${escapeHtml(mission.partner)}の音声を聞いて、文字を見すぎずに返答を録音します。</p>
             </div>
@@ -6323,7 +6532,7 @@
                   <p>※採点は「キーワードが入っているか」で判定します。発音の細かい正確さまでは判定しないので、まず伝わる声の大きさ・速さで話してみましょう。</p>
                 </div>
                 <div class="output-actions">
-                  <button class="primary-btn" type="button" data-output-success>判定結果で次へ</button>
+                  <button class="primary-btn" type="button" data-output-success>この結果で次へ</button>
                   <button class="secondary-btn" type="button" data-output-retry>もう一回言う</button>
                   <button class="secondary-btn" type="button" data-output-hint>言い方の例を見る（3つ）</button>
                 </div>
@@ -6928,7 +7137,7 @@
         flashcard.innerHTML = `
           <div class="card-inner">
             <div class="card-face card-front">
-              <span class="card-label">${escapeHtml(item.source)} / Question</span>
+              <span class="card-label">${escapeHtml(item.source)}・問題</span>
               ${
                 flashcardMode === "audio"
                   ? `<span class="foreign-line"><span class="card-term">音だけで聞く</span><span class="pronunciation">まず音声</span></span>`
@@ -6936,7 +7145,7 @@
               }
             </div>
             <div class="card-face card-back">
-              <span class="card-label">Answer</span>
+              <span class="card-label">答え</span>
               <p class="card-term">${item.ja}</p>
             </div>
           </div>
@@ -6945,31 +7154,44 @@
         const actions = document.createElement("div");
         actions.className = "card-actions";
         actions.innerHTML = `
-          <button type="button" class="flip-card">めくる ↻</button>
-          <button type="button" class="mark-good">○ 正解</button>
-          <button type="button" class="mark-bad">× 不正解</button>
+          <button type="button" class="mark-good">○ 覚えた</button>
+          <button type="button" class="mark-review">△ 不安</button>
+          <button type="button" class="mark-bad">× 覚えていない</button>
         `;
 
         const nav = document.createElement("div");
         nav.className = "card-nav";
         nav.innerHTML = `
-          <button type="button" class="secondary-btn" data-card-nav="prev">前へ</button>
-          <span class="lesson-step-counter">${flashcardIndex + 1} / ${total}（採点済み ${markedCount}）</span>
-          <button type="button" class="secondary-btn" data-card-nav="next">次へ</button>
+          <button type="button" class="secondary-btn" data-card-nav="prev">← 前</button>
+          <span class="lesson-step-counter">カード ${flashcardIndex + 1} / ${total}<br />済 ${markedCount}</span>
+          <button type="button" class="secondary-btn" data-card-nav="next">次 →</button>
+        `;
+
+        const audioRow = document.createElement("div");
+        audioRow.className = "card-audio-row";
+        audioRow.innerHTML = `
+          <button type="button" class="secondary-btn" data-card-play>🔊 韓国語を聞く</button>
+          <button type="button" class="secondary-btn flip-card">答えを見る</button>
         `;
 
         const markGoodButton = actions.querySelector(".mark-good");
+        const markReviewButton = actions.querySelector(".mark-review");
         const markBadButton = actions.querySelector(".mark-bad");
         const reflectCardMark = () => {
           const record = state.cards[cardId];
+          const confidence = record.confidence || (record.correct === false ? "unknown" : "");
           wrapper.classList.toggle("correct", record.correct === true);
-          wrapper.classList.toggle("incorrect", record.correct === false);
+          wrapper.classList.toggle("review", record.correct === false && confidence === "unsure");
+          wrapper.classList.toggle("incorrect", record.correct === false && confidence !== "unsure");
           markGoodButton.classList.toggle("selected", record.correct === true);
-          markBadButton.classList.toggle("selected", record.correct === false);
+          markReviewButton.classList.toggle("selected", record.correct === false && confidence === "unsure");
+          markBadButton.classList.toggle("selected", record.correct === false && confidence !== "unsure");
         };
-        const markCard = (isCorrect) => {
+        const markCard = (confidence) => {
+          const isCorrect = confidence === "known";
           const wasUngraded = state.cards[cardId].correct === null;
           state.cards[cardId].correct = isCorrect;
+          state.cards[cardId].confidence = confidence;
           if (wasUngraded) addTodayAnswers(1, isCorrect ? 1 : 0);
           reflectCardMark();
           markStudyActivity();
@@ -6984,18 +7206,28 @@
           speakSentence(item.ko, wrapper);
           markStudyActivity();
         });
-        actions.querySelector(".flip-card").addEventListener("click", (event) => {
+        audioRow.querySelector("[data-card-play]").addEventListener("click", (event) => {
+          event.stopPropagation();
+          speakSlow(item.ko, wrapper, "ko");
+          markStudyActivity();
+        });
+        audioRow.querySelector(".flip-card").addEventListener("click", (event) => {
           event.stopPropagation();
           wrapper.classList.toggle("flipped");
+          event.currentTarget.textContent = wrapper.classList.contains("flipped") ? "問題に戻る" : "答えを見る";
           markStudyActivity();
         });
         markGoodButton.addEventListener("click", (event) => {
           event.stopPropagation();
-          markCard(true);
+          markCard("known");
+        });
+        markReviewButton.addEventListener("click", (event) => {
+          event.stopPropagation();
+          markCard("unsure");
         });
         markBadButton.addEventListener("click", (event) => {
           event.stopPropagation();
-          markCard(false);
+          markCard("unknown");
         });
         nav.querySelectorAll("[data-card-nav]").forEach((button) => {
           button.addEventListener("click", () => {
@@ -7009,8 +7241,9 @@
 
         reflectCardMark();
         wrapper.appendChild(flashcard);
-        wrapper.appendChild(actions);
         wrapper.appendChild(nav);
+        wrapper.appendChild(audioRow);
+        wrapper.appendChild(actions);
         flashcardList.appendChild(wrapper);
         if (flashcardMode === "audio") {
           queueAutoPlay(item.ko, flashcardList, "ko");
@@ -7838,7 +8071,7 @@
         }
       };
 
-      const VOCAB_STATUS_LABELS = { all: "すべて", known: "覚えた", unsure: "不安", unknown: "覚えてない" };
+      const VOCAB_STATUS_LABELS = { all: "すべて", known: "覚えた", unsure: "不安", unknown: "覚えていない" };
       const VOCAB_MODE_LABELS = { cards: "一覧", deck: "カード", game: "時間ゲーム" };
       const createEmptyVocabGameState = () => ({ active: false, score: 0, total: 0, timeLeft: 30, timer: null, results: [], question: null });
       const getBookCardId = (entry) => `book-${entry.chapterId}-${entry.kind}-${entry.index}`;
@@ -7916,10 +8149,10 @@
             <button class="quiz-prompt-btn" type="button" data-speak-entry>${getEntryQuestionMarkup(entry)}</button>
             <p class="ja" data-vocab-answer hidden>${escapeHtml(entry.ja)}</p>
             <div class="vocab-card-actions">
-              <button type="button" data-reveal-answer>めくる ↻</button>
+              <button type="button" data-reveal-answer>答えを見る</button>
               <button type="button" data-state="known">覚えた</button>
               <button type="button" data-state="unsure">不安</button>
-              <button type="button" data-state="unknown">覚えてない</button>
+              <button type="button" data-state="unknown">覚えていない</button>
             </div>
           `;
           card.querySelector("[data-speak-entry]").addEventListener("click", () => {
@@ -7956,16 +8189,20 @@
         }
         const entry = entries[vocabDeckIndex] || entries[0];
         vocabDeckShell.innerHTML = `
-          <p class="quiz-summary">${vocabDeckIndex + 1} / ${entries.length}</p>
+          <p class="quiz-summary">カード ${vocabDeckIndex + 1} / ${entries.length}</p>
           <div class="deck-card" role="button" tabindex="0">${vocabDeckFlipped ? `<p class="card-term">${escapeHtml(entry.ja)}</p>` : getEntryQuestionMarkup(entry)}</div>
           <div class="deck-actions">
-            <button type="button" data-deck="prev">前へ</button>
-            <button type="button" data-deck="play">音声</button>
-            <button type="button" data-deck="flip">めくる ↻</button>
-            <button type="button" data-deck="next">次へ</button>
-            <button type="button" data-state="known">覚えた</button>
-            <button type="button" data-state="unsure">不安</button>
-            <button type="button" data-state="unknown">覚えてない</button>
+            <div class="deck-toolbar">
+              <button type="button" data-deck="prev">← 前</button>
+              <button type="button" data-deck="play">🔊 聞く</button>
+              <button type="button" data-deck="flip">${vocabDeckFlipped ? "問題に戻る" : "答えを見る"}</button>
+              <button type="button" data-deck="next">次 →</button>
+            </div>
+            <div class="deck-evaluation">
+              <button type="button" data-state="known">○ 覚えた</button>
+              <button type="button" data-state="unsure">△ 不安</button>
+              <button type="button" data-state="unknown">× 覚えていない</button>
+            </div>
           </div>
         `;
         vocabDeckShell.querySelector(".deck-card").addEventListener("click", () => {
@@ -8279,6 +8516,10 @@
           });
           chapterList.appendChild(button);
         });
+        const activeButton = chapterList.querySelector(".chapter-btn.active");
+        if (activeButton && window.matchMedia("(max-width: 980px)").matches) {
+          activeButton.scrollIntoView({ block: "nearest", inline: "center" });
+        }
       };
 
       const updateQuizSummary = (chapter, direction) => {
