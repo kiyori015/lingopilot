@@ -2263,6 +2263,26 @@
         color: #15803d;
       }
 
+      button.output-keyword {
+        cursor: pointer;
+        font-family: inherit;
+      }
+
+      .output-reaction[data-output-reaction] {
+        cursor: pointer;
+      }
+
+      .output-steps {
+        margin: 8px 0 0;
+        padding: 0;
+        list-style: none;
+        display: grid;
+        gap: 4px;
+        color: var(--muted);
+        font-size: 0.9rem;
+        font-weight: 600;
+      }
+
       .output-examples {
         display: grid;
         gap: 8px;
@@ -3154,7 +3174,7 @@
             <section id="output-panel" class="panel">
               <div class="panel-title">
                 <h3>アウトプット練習</h3>
-                <p>この章の表現を使って、音声で返答します。</p>
+                <p>この章の会話の続きを、あなたの声で言ってみる練習です。</p>
               </div>
               <div id="output-practice-shell"></div>
             </section>
@@ -6233,24 +6253,38 @@
       const getChapterOutputMission = (chapter) => {
         const scene = getSceneTheme(chapter);
         const sceneItems = getSceneDialogueItems(chapter);
-        const source = [...chapter.dialogues, ...chapter.basics, ...chapter.vocab]
-          .filter((item) => item && item.ko && item.ja)
-          .slice(0, 3);
-        const fallback = sceneItems.slice(0, 3);
-        const items = source.length ? source : fallback;
-        const turns = items.map((item, index) => ({
-          partnerKo: sceneItems[index] ? sceneItems[index].ko : item.ko,
-          partnerJa: sceneItems[index] ? sceneItems[index].ja : item.ja,
-          task: `「${item.ja}」を韓国語で言ってみましょう。`,
-          modelKo: item.ko,
-          modelJa: item.ja
-        }));
+        // 章の会話文は元々つながった1つの会話。
+        // 「相手が1つ前のセリフを言う → あなたが次のセリフを言う」の形にして、一連の流れで練習する。
+        const dialogueItems = (chapter.dialogues || []).filter((item) => item && item.ko && item.ja);
+        const turns = [];
+        for (let i = 0; i + 1 < dialogueItems.length && turns.length < 3; i += 1) {
+          turns.push({
+            partnerKo: dialogueItems[i].ko,
+            partnerJa: dialogueItems[i].ja,
+            task: `会話の続きです。「${dialogueItems[i + 1].ja}」と韓国語で返しましょう。`,
+            modelKo: dialogueItems[i + 1].ko,
+            modelJa: dialogueItems[i + 1].ja
+          });
+        }
+        // 会話文が少ない章は、場面音声+基本例文で補う
+        if (!turns.length) {
+          const fallbackItems = [...chapter.basics, ...sceneItems].filter((item) => item && item.ko && item.ja).slice(0, 3);
+          fallbackItems.forEach((item, index) => {
+            turns.push({
+              partnerKo: sceneItems[index] ? sceneItems[index].ko : item.ko,
+              partnerJa: sceneItems[index] ? sceneItems[index].ja : item.ja,
+              task: `「${item.ja}」を韓国語で言ってみましょう。`,
+              modelKo: item.ko,
+              modelJa: item.ja
+            });
+          });
+        }
         return {
           id: `chapter-${chapter.id}`,
           title: `${getChapterDisplayTitle(chapter)} アウトプット`,
           partner: scene.speakers && scene.speakers[1] ? scene.speakers[1] : "相手",
-          goal: "この章の基本表現を使い、音声で短く返答する。",
-          required: Array.from(new Set(items.map((item) => String(item.ko).split(/\s+/)[0].replace(/[.,!?。！？]/g, "")).filter(Boolean))).slice(0, 3),
+          goal: "この章の会話の続きを、自分の声で言ってみる。",
+          required: Array.from(new Set(turns.map((turn) => String(turn.modelKo).split(/\s+/)[0].replace(/[.,!?。！？]/g, "")).filter(Boolean))).slice(0, 3),
           turns: turns.length ? turns : [{ partnerKo: "안녕하세요.", partnerJa: "こんにちは。", task: "あいさつを返してください。", modelKo: "안녕하세요.", modelJa: "こんにちは。" }],
           reactions: { successKo: "좋아요. 잘 말했어요.", retryKo: "천천히 다시 말해 주세요.", hintKo: "예문을 듣고 다시 따라 말해 보세요." }
         };
@@ -6370,8 +6404,17 @@
           ? outputRequiredHits
           : getRequiredExpressionHits(mission, "");
         row.innerHTML = hits
-          .map((item) => `<span class="output-keyword${item.hit ? " hit" : ""}">${item.hit ? "✓" : "・"} ${escapeHtml(item.text)}</span>`)
+          .map((item) => `<button type="button" class="output-keyword${item.hit ? " hit" : ""}" data-speak-keyword="${escapeHtml(String(item.text).replace(/\.\.\./g, ""))}">${item.hit ? "✓" : "🔊"} ${escapeHtml(item.text)}</button>`)
           .join("");
+        if (!row.dataset.audioWired) {
+          row.dataset.audioWired = "true";
+          row.addEventListener("click", (event) => {
+            const button = event.target.closest("[data-speak-keyword]");
+            if (!button) return;
+            speakSlow(button.dataset.speakKeyword, row, "ko");
+            markStudyActivity();
+          });
+        }
       };
 
       const renderOutputRecognitionDetails = (mission) => {
@@ -6450,20 +6493,20 @@
         };
         recognition.onend = () => {
           button.disabled = false;
-          button.textContent = "音声認識で採点";
+          button.textContent = "🎤 話して採点";
         };
         recognition.start();
         markStudyActivity();
       };
 
       const getTurnExampleAnswers = (mission, turn) => {
-        const examples = [{ ko: turn.modelKo, ja: turn.modelJa, label: "基本の言い方" }];
+        const examples = [{ ko: turn.modelKo, ja: turn.modelJa, label: "この場面の答え方" }];
         (turn.alternatives || []).forEach((alt) => {
           if (alt && alt.ko) examples.push({ ko: alt.ko, ja: alt.ja || "", label: "別の言い方" });
         });
         const fillers = [
-          { ko: "네, 알겠어요.", ja: "はい、わかりました。（短くつなぐ言い方）", label: "短く返すとき" },
-          { ko: "다시 한 번 천천히 말해 주세요.", ja: "もう一度ゆっくり言ってください。（聞き返したいとき）", label: "困ったとき" }
+          { ko: "네, 알겠어요.", ja: "はい、わかりました。（短くつなぐ言い方）", label: "（おまけ）短くつなぐ一言" },
+          { ko: "다시 한 번 천천히 말해 주세요.", ja: "もう一度ゆっくり言ってください。（聞き返したいとき）", label: "（おまけ）聞き返したいとき" }
         ];
         fillers.forEach((filler) => {
           if (examples.length < 3) examples.push(filler);
@@ -6498,7 +6541,11 @@
             <div>
               <p class="eyebrow">やりとり ${outputTurnIndex + 1} / ${mission.turns.length}</p>
               <h3>${escapeHtml(mission.title)}</h3>
-              <p>${escapeHtml(mission.partner)}の音声を聞いて、文字を見すぎずに返答を録音します。</p>
+              <ol class="output-steps">
+                <li>1. 「相手の音声」を聞く</li>
+                <li>2. 「🎤 話して採点」を押して、韓国語で返事を言う</li>
+                <li>3. キーワードが緑になれば得点。「この結果で次へ」で進む</li>
+              </ol>
             </div>
             <div class="output-video" aria-label="会話シーンの簡易アニメーション">
               <div class="output-video-person"></div>
@@ -6512,35 +6559,35 @@
                 <button class="listen-btn" type="button" data-output-listen>相手の音声</button>
               </div>
               <div class="output-turn user" data-output-record-row>
-                <strong>あなたの返答</strong>
+                <strong>あなたの番</strong>
                 <p>${escapeHtml(turn.task)}</p>
-                <div class="output-recorder">
-                  <button class="record-btn" type="button" data-output-record>録音</button>
-                  <button class="playback-btn" type="button" data-output-playback hidden>録音を再生</button>
-                </div>
                 <div class="output-recognition">
-                  <button class="secondary-btn" type="button" data-output-recognize>音声認識で採点</button>
+                  <button class="primary-btn" type="button" data-output-recognize>🎤 話して採点</button>
                   <div class="output-transcript" data-output-transcript>${escapeHtml(outputEvaluationText)}</div>
                   <div class="output-translation" data-output-translation hidden></div>
                   <span class="chip" data-output-score>${outputRecognizedScore} / 3点</span>
                 </div>
                 <div class="output-goal-box">
                   <strong>満点（3点）のとり方</strong>
-                  <p>下の「使ってほしいキーワード」を<strong>2つ以上</strong>入れて話すと3点満点です。1つなら2点、キーワードなしでも声が認識できれば1点です。</p>
+                  <p>下のキーワードを<strong>2つ以上</strong>入れて話すと3点満点です。1つなら2点、キーワードなしでも声が認識できれば1点です。</p>
                   <div class="output-keyword-row" data-output-keywords></div>
-                  <p>認識できたキーワードは緑色の ✓ に変わります。</p>
+                  <p>🔊 キーワードをタップすると音声が聞けます。話して認識できたものは緑の ✓ に変わります。</p>
                   <p>※採点は「キーワードが入っているか」で判定します。発音の細かい正確さまでは判定しないので、まず伝わる声の大きさ・速さで話してみましょう。</p>
                 </div>
                 <div class="output-actions">
                   <button class="primary-btn" type="button" data-output-success>この結果で次へ</button>
                   <button class="secondary-btn" type="button" data-output-retry>もう一回言う</button>
-                  <button class="secondary-btn" type="button" data-output-hint>言い方の例を見る（3つ）</button>
+                  <button class="secondary-btn" type="button" data-output-hint>言い方の例を見る</button>
+                </div>
+                <div class="output-recorder">
+                  <button class="record-btn" type="button" data-output-record>自分の声を録音して聞き比べ</button>
+                  <button class="playback-btn" type="button" data-output-playback hidden>録音を再生</button>
                 </div>
               </div>
             </div>
-            <div class="output-reaction" ${outputReactionText ? "" : "hidden"}>${escapeHtml(outputReactionText)}</div>
+            <div class="output-reaction" data-output-reaction role="button" tabindex="0" title="タップで音声" ${outputReactionText ? "" : "hidden"}>🔊 ${escapeHtml(outputReactionText)}</div>
             <div class="output-turn" data-output-model hidden>
-              <strong>言い方の例（どれでもOK）</strong>
+              <strong>言い方の例</strong>
               <div class="output-examples">
                 ${getTurnExampleAnswers(mission, turn).map((example, exampleIndex) => `
                   <div class="output-example">
@@ -6568,6 +6615,15 @@
         listenButton.addEventListener("click", () => speakSlow(turn.partnerKo, outputPracticeShell, "ko"));
         recordButton.addEventListener("click", () => toggleRecording(recordRow, recordButton, playbackButton));
         playbackButton.addEventListener("click", () => playRecording(playbackButton.dataset.url));
+        const reactionButton = outputPracticeShell.querySelector("[data-output-reaction]");
+        if (reactionButton) {
+          reactionButton.addEventListener("click", () => {
+            if (outputReactionText) {
+              speakSlow(outputReactionText, outputPracticeShell, "ko");
+              markStudyActivity();
+            }
+          });
+        }
         outputPracticeShell.querySelector("[data-output-recognize]").addEventListener("click", (event) => {
           startOutputSpeechRecognition(mission, turn, event.currentTarget);
         });
