@@ -2279,6 +2279,149 @@
         font-family: inherit;
       }
 
+      /* タップで音声が鳴る文字の目印（点線の下線） */
+      .grammar-diagram .foreign-line > .ko,
+      .output-turn.partner .foreign-line > .ko,
+      .output-example .foreign-line > .ko,
+      .audio-focus-card .foreign-line > .ko,
+      .scene-transcript-line .foreign-line > .ko {
+        border-bottom: 2px dotted rgba(0, 127, 127, 0.5);
+        padding-bottom: 2px;
+        width: fit-content;
+        cursor: pointer;
+      }
+
+      .grammar-formula .block,
+      .grammar-pattern span,
+      .foreign-line {
+        cursor: pointer;
+      }
+
+      /* 単語帳: 学習方法の選択画面 */
+      .vocab-launcher {
+        display: grid;
+        gap: 12px;
+      }
+
+      .vocab-launcher-note {
+        margin: 0;
+        color: var(--muted);
+        font-weight: 700;
+        font-size: 0.9rem;
+      }
+
+      .vocab-launcher-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 10px;
+      }
+
+      .vocab-launch-btn {
+        display: grid;
+        gap: 6px;
+        padding: 18px 14px;
+        border-radius: 18px;
+        border: 2px solid rgba(0, 127, 127, 0.25);
+        background: #fff;
+        cursor: pointer;
+        text-align: center;
+        font-family: inherit;
+      }
+
+      .vocab-launch-btn:hover {
+        border-color: var(--accent);
+        transform: translateY(-1px);
+      }
+
+      .vocab-launch-btn strong {
+        font-size: 1.05rem;
+      }
+
+      .vocab-launch-btn span {
+        color: var(--muted);
+        font-size: 0.85rem;
+      }
+
+      .vocab-launcher-sub {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+
+      /* デッキ/カード上部の進捗バー */
+      .deck-topbar {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+
+      .deck-count {
+        font-weight: 800;
+      }
+
+      .deck-progress {
+        flex: 1 1 100px;
+        min-width: 70px;
+        height: 8px;
+        border-radius: 999px;
+        background: rgba(31, 28, 26, 0.1);
+        overflow: hidden;
+      }
+
+      .deck-progress-fill {
+        height: 100%;
+        border-radius: 999px;
+        background: var(--accent);
+        transition: width 0.3s ease;
+      }
+
+      .deck-chip {
+        border-radius: 999px;
+        padding: 4px 10px;
+        font-size: 0.78rem;
+        font-weight: 700;
+        background: rgba(31, 28, 26, 0.06);
+        color: var(--muted);
+      }
+
+      .deck-chip.known {
+        background: #e7f6ed;
+        color: #15803d;
+      }
+
+      .deck-chip.unsure,
+      .deck-chip.review {
+        background: #fdf4e3;
+        color: #9a6b00;
+      }
+
+      .deck-chip.unknown {
+        background: #fdeae7;
+        color: #b91c1c;
+      }
+
+      .study-deck .deck-topbar {
+        grid-column: 1 / -1;
+      }
+
+      @media (max-width: 720px) {
+        .vocab-launcher-grid {
+          grid-template-columns: 1fr;
+        }
+
+        #vocab-view .hero-card > div > p:not(.eyebrow),
+        #vocab-view .eyebrow,
+        #vocab-view .chapter-subtitle {
+          display: none;
+        }
+
+        #vocab-view .hero-card,
+        #vocab-view .panel {
+          padding: 14px;
+        }
+      }
+
       .output-reaction[data-output-reaction] {
         cursor: pointer;
       }
@@ -2953,34 +3096,29 @@
               </select>
             </label>
           </div>
-          <div class="mode-switch" aria-label="単語帳モード">
-            <button id="vocab-mode-cards" class="secondary-btn" type="button">一覧</button>
-            <button id="vocab-mode-deck" class="secondary-btn" type="button">カード</button>
-            <button id="vocab-mode-game" class="secondary-btn" type="button">時間ゲーム</button>
+          <div id="vocab-launcher" class="vocab-launcher">
+            <p class="vocab-launcher-note">学習のしかたを選んでください（対象: <span id="vocab-launcher-count">--</span>件）</p>
+            <div class="vocab-launcher-grid">
+              <button class="vocab-launch-btn" type="button" data-vocab-launch="deck">
+                <strong>単語カード</strong>
+                <span>1枚ずつめくって覚える</span>
+              </button>
+              <button class="vocab-launch-btn" type="button" data-vocab-launch="koja">
+                <strong>四択クイズ</strong>
+                <span>韓国語 → 日本語</span>
+              </button>
+              <button class="vocab-launch-btn" type="button" data-vocab-launch="jako">
+                <strong>四択クイズ</strong>
+                <span>日本語 → 韓国語</span>
+              </button>
+            </div>
+            <div class="vocab-launcher-sub">
+              <button class="secondary-btn" type="button" data-vocab-launch="cards">一覧で見る</button>
+              <button class="secondary-btn" type="button" data-vocab-launch="game">時間ゲーム</button>
+            </div>
           </div>
-          <div class="learning-summary vocab-summary">
-            <article class="log-card">
-              <h4>表示中</h4>
-              <p id="vocab-visible-count">0件</p>
-            </article>
-            <article class="log-card">
-              <h4>範囲</h4>
-              <p id="vocab-current-filter">全チャプター</p>
-            </article>
-            <article class="log-card">
-              <h4>総単語</h4>
-              <p id="vocab-total-count">0件</p>
-            </article>
-            <article class="log-card">
-              <h4>モード</h4>
-              <p id="vocab-mode-label">一覧</p>
-            </article>
-            <article class="log-card">
-              <h4>状態</h4>
-              <p id="vocab-status-label">すべて</p>
-            </article>
-          </div>
-          <div id="vocab-grid-panel">
+          <button id="vocab-back-menu" class="secondary-btn" type="button" hidden>← 学習のしかたを選び直す</button>
+          <div id="vocab-grid-panel" hidden>
             <div id="vocab-page-list" class="vocab-page-list"></div>
           </div>
           <div id="vocab-deck-panel" hidden>
@@ -2990,7 +3128,7 @@
             <div id="vocab-game-shell" class="game-shell"></div>
           </div>
           <div class="quiz-wrap">
-            <div class="quiz-group">
+            <div class="quiz-group" id="vocab-quiz-group-koja" hidden>
               <div class="quiz-head">
                 <h4>韓国語 → 日本語（1問ずつ出題）</h4>
                 <button id="vocab-quiz-check-koja" class="check-btn" type="button">最初からやり直す</button>
@@ -2998,7 +3136,7 @@
               <p id="vocab-quiz-summary-koja" class="quiz-summary">未採点</p>
               <div id="vocab-quiz-koja" class="quiz-list"></div>
             </div>
-            <div class="quiz-group">
+            <div class="quiz-group" id="vocab-quiz-group-jako" hidden>
               <div class="quiz-head">
                 <h4>日本語 → 韓国語（1問ずつ出題）</h4>
                 <button id="vocab-quiz-check-jako" class="check-btn" type="button">最初からやり直す</button>
@@ -3050,7 +3188,7 @@
 
         <section class="content">
           <div class="study-mobile-bar">
-            <button id="study-bar-home" class="secondary-btn" type="button" aria-label="ホームへ戻る" title="ホームへ戻る">🏠</button>
+            <button id="study-bar-home" class="secondary-btn" type="button" aria-label="ホームへ戻る" title="ホームへ戻る">ホーム</button>
             <span id="study-bar-title" class="study-bar-title">--</span>
             <button id="study-bar-prev" class="secondary-btn" type="button" aria-label="前の章へ" title="前の章へ">◀</button>
             <button id="study-bar-next" class="secondary-btn" type="button" aria-label="次の章へ" title="次の章へ">▶</button>
@@ -3121,8 +3259,8 @@
                   <p>文字を見る前に、音を聞いて意味を思い浮かべます。</p>
                 </div>
                 <div class="audio-focus-actions">
-                  <button id="audio-focus-play-all" class="primary-btn" type="button">🔊 5フレーズを聞く</button>
-                  <button id="audio-focus-repeat" class="secondary-btn" type="button">🔁 3回リピート</button>
+                  <button id="audio-focus-play-all" class="primary-btn" type="button">5フレーズを聞く</button>
+                  <button id="audio-focus-repeat" class="secondary-btn" type="button">3回リピート</button>
                 </div>
               </div>
               <div id="audio-focus-list" class="audio-focus-grid"></div>
@@ -4405,6 +4543,7 @@
       let activeLessonSteps = [];
       let lastLessonChapterKey = "";
       let vocabStudyMode = "deck";
+      let vocabScreen = "menu"; // 単語帳の画面: menu / deck / koja / jako / cards / game
       let vocabVisualMode = "text";
       let vocabDeckIndex = 0;
       let vocabDeckFlipped = false;
@@ -5049,7 +5188,6 @@
       const renderChoiceMarkup = (text) => `
         <span class="quiz-option-body">
           <span class="quiz-option-text">${containsKorean(text) ? renderKoreanWithPronunciation(text, "ko") : `<span>${escapeHtml(text)}</span>`}</span>
-          ${containsKorean(text) ? `<button class="quiz-option-audio" type="button" data-option-audio="${escapeHtml(text)}" title="音声を聞く" aria-label="音声を聞く">🔊</button>` : ""}
         </span>
       `;
       const applyQuizResult = (resultEl, record, question) => {
@@ -5488,6 +5626,7 @@
         const wasStudyMode = isStudyViewMode(viewMode);
         viewMode = mode;
         updateNavState(mode);
+        if (mode === "vocab") vocabScreen = "menu";
         // 学習中はヘッダー等を隠してスクロールを減らす（CSS側で参照）
         document.body.classList.toggle("study-mode", mode === "main" || mode === "support");
         homeView.classList.toggle("active", mode === "home");
@@ -6155,9 +6294,9 @@
             <p class="meaning-line">${escapeHtml(item.ja)}</p>
             <div class="ko-text">${renderKoreanWithPronunciation(item.ko, "ko")}</div>
             <div class="audio-focus-actions">
-              <button class="listen-btn" type="button" data-audio-focus-play>🔊 聞く</button>
-              <button class="secondary-btn" type="button" data-audio-focus-text>👀 文字</button>
-              <button class="record-btn" type="button" data-audio-focus-record>🎙 録音</button>
+              <button class="listen-btn" type="button" data-audio-focus-play>聞く</button>
+              <button class="secondary-btn" type="button" data-audio-focus-text>文字を見る</button>
+              <button class="record-btn" type="button" data-audio-focus-record>録音</button>
               <button class="record-btn" type="button" data-audio-focus-playback disabled>▶ 再生</button>
             </div>
           `;
@@ -6168,7 +6307,7 @@
           playButton.addEventListener("click", () => speakSlow(item.ko, card, "ko"));
           textButton.addEventListener("click", () => {
             card.classList.toggle("show-text");
-            textButton.textContent = card.classList.contains("show-text") ? "👀 隠す" : "👀 文字";
+            textButton.textContent = card.classList.contains("show-text") ? "文字を隠す" : "文字を見る";
             markStudyActivity();
           });
           if (recordingSupported) {
@@ -6214,7 +6353,7 @@
             const url = URL.createObjectURL(blob);
             playbackBtn.dataset.url = url;
             playbackBtn.hidden = false;
-            recordBtn.textContent = "🎙 録音";
+            recordBtn.textContent = "録音";
             row.classList.remove("recording");
             activeRecorder = null;
             activeRow = null;
@@ -6225,7 +6364,7 @@
           activeRecorder = recorder;
           activeRow = row;
           row.classList.add("recording");
-          recordBtn.textContent = "⏹ 停止";
+          recordBtn.textContent = "停止";
           setStatus("録音中...", "info");
         } catch (error) {
           setStatus("マイクの許可が必要です。", "warn");
@@ -6485,7 +6624,7 @@
           ? outputRequiredHits
           : getRequiredExpressionHits(mission, "");
         row.innerHTML = hits
-          .map((item) => `<button type="button" class="output-keyword${item.hit ? " hit" : ""}" data-speak-keyword="${escapeHtml(String(item.text).replace(/\.\.\./g, ""))}">${item.hit ? "✓" : "🔊"} ${escapeHtml(item.text)}</button>`)
+          .map((item) => `<button type="button" class="output-keyword${item.hit ? " hit" : ""}" data-speak-keyword="${escapeHtml(String(item.text).replace(/\.\.\./g, ""))}">${item.hit ? "✓ " : ""}${escapeHtml(item.text)}</button>`)
           .join("");
         if (!row.dataset.audioWired) {
           row.dataset.audioWired = "true";
@@ -6574,7 +6713,7 @@
         };
         recognition.onend = () => {
           button.disabled = false;
-          button.textContent = "🎤 話して採点";
+          button.textContent = "話して採点";
         };
         recognition.start();
         markStudyActivity();
@@ -6624,7 +6763,7 @@
               <h3>${escapeHtml(mission.title)}</h3>
               <ol class="output-steps">
                 <li>1. 「相手の音声」を聞く</li>
-                <li>2. 「🎤 話して採点」を押して、韓国語で返事を言う</li>
+                <li>2. 「話して採点」を押して、韓国語で返事を言う</li>
                 <li>3. キーワードが緑になれば得点。「この結果で次へ」で進む</li>
               </ol>
             </div>
@@ -6637,22 +6776,22 @@
                 <strong>${escapeHtml(mission.partner)}</strong>
                 ${renderKoreanWithPronunciation(turn.partnerKo, "ko")}
                 <p class="ja">${escapeHtml(turn.partnerJa)}</p>
-                <button class="listen-btn" type="button" data-output-listen>🔊 相手の音声</button>
+                <button class="listen-btn" type="button" data-output-listen>相手の音声</button>
               </div>
               <div class="output-turn user" data-output-record-row>
                 <strong>あなたの番</strong>
                 <p>${escapeHtml(turn.task)}</p>
                 <div class="output-recognition">
-                  <button class="primary-btn" type="button" data-output-recognize>🎤 話して採点</button>
+                  <button class="primary-btn" type="button" data-output-recognize>話して採点</button>
                   <div class="output-transcript" data-output-transcript>${escapeHtml(outputEvaluationText)}</div>
                   <div class="output-translation" data-output-translation hidden></div>
                   <span class="chip" data-output-score>${outputRecognizedScore} / 3点</span>
                 </div>
                 <details class="output-goal-box">
-                  <summary>💡 満点（3点）のとり方・キーワード</summary>
+                  <summary>満点（3点）のとり方・キーワード</summary>
                   <p>下のキーワードを<strong>2つ以上</strong>入れて話すと3点満点です。1つなら2点、キーワードなしでも声が認識できれば1点です。</p>
                   <div class="output-keyword-row" data-output-keywords></div>
-                  <p>🔊 キーワードをタップすると音声が聞けます。話して認識できたものは緑の ✓ に変わります。</p>
+                  <p>キーワードをタップすると音声が聞けます。話して認識できたものは緑の ✓ に変わります。</p>
                   <p>※採点は「キーワードが入っているか」で判定します。発音の細かい正確さまでは判定しないので、まず伝わる声の大きさ・速さで話してみましょう。</p>
                 </details>
                 <div class="output-actions">
@@ -6661,12 +6800,12 @@
                   <button class="secondary-btn" type="button" data-output-hint>言い方の例を見る</button>
                 </div>
                 <div class="output-recorder">
-                  <button class="record-btn" type="button" data-output-record>🎙 録音して聞き比べ</button>
+                  <button class="record-btn" type="button" data-output-record>録音して聞き比べ</button>
                   <button class="playback-btn" type="button" data-output-playback hidden>▶ 録音を聞く</button>
                 </div>
               </div>
             </div>
-            <div class="output-reaction" data-output-reaction role="button" tabindex="0" title="タップで音声" ${outputReactionText ? "" : "hidden"}>🔊 ${escapeHtml(outputReactionText)}</div>
+            <div class="output-reaction" data-output-reaction role="button" tabindex="0" title="タップで音声" ${outputReactionText ? "" : "hidden"}>${escapeHtml(outputReactionText)}</div>
             <div class="output-turn" data-output-model hidden>
               <strong>言い方の例</strong>
               <div class="output-examples">
@@ -6675,7 +6814,7 @@
                     <span class="example-label">${escapeHtml(example.label)}</span>
                     ${renderKoreanWithPronunciation(example.ko, "ko")}
                     <p class="ja">${escapeHtml(example.ja)}</p>
-                    <button class="listen-btn" type="button" data-example-listen="${escapeHtml(example.ko)}">🔊 聞く</button>
+                    
                   </div>
                 `).join("")}
               </div>
@@ -6759,9 +6898,9 @@
             <p class="ja">${item.ja}</p>
           </div>
           <div class="sentence-actions">
-            <button class="playback-btn" type="button" data-slow-listen>🐢 ゆっくり</button>
+            <button class="playback-btn" type="button" data-slow-listen>ゆっくり</button>
             <button class="playback-btn" type="button" data-playback hidden>▶ 録音</button>
-            <button class="record-btn" type="button" data-record>🎙 録音</button>
+            <button class="record-btn" type="button" data-record>録音</button>
           </div>
         `;
 
@@ -6892,6 +7031,8 @@
               label.classList.toggle("incorrect", record.selected === optionIndex && record.correct === false);
             });
             applyQuizResult(card.querySelector(".quiz-result"), record, question);
+            const selectedText = question.options[record.selected];
+            if (containsKorean(selectedText)) speakSentence(selectedText, card, "ko");
             saveProgress();
             markStudyActivity();
             window.setTimeout(() => {
@@ -6957,7 +7098,7 @@
           <p class="vocab-quiz-progress">1問答えると、自動で次の問題に進みます。</p>
           <div class="quiz-head">
             <p class="quiz-prompt">Q${currentIndex + 1}. ${escapeHtml(question.prompt)}</p>
-            <button class="listen-btn" type="button">🔊 再生</button>
+            <button class="listen-btn" type="button">▶ 再生</button>
           </div>
           <div class="quiz-options">${options}</div>
           <p class="quiz-result" aria-live="polite"></p>
@@ -6983,6 +7124,8 @@
               label.classList.toggle("incorrect", record.selected === optionIndex && record.correct === false);
             });
             applyQuizResult(card.querySelector(".quiz-result"), record, question);
+            const selectedText = question.options[record.selected];
+            if (containsKorean(selectedText)) speakSentence(selectedText, card, "ko");
             saveProgress();
             markStudyActivity();
             window.setTimeout(() => {
@@ -7202,7 +7345,7 @@
                 ${tokens.map((token) => `<span class="${morphemes.some((morpheme) => token.includes(morpheme)) ? "hit" : ""}">${escapeHtml(token)}</span>`).join("")}
               </div>
             ` : ""}
-            ${example ? `<p class="grammar-note">${escapeHtml(example.ja)}（色つきの部分が今回の文法です）</p><button class="listen-btn" type="button" data-grammar-listen="${escapeHtml(example.ko)}">🔊 例文</button>` : ""}
+            ${example ? `<p class="grammar-note">${escapeHtml(example.ja)}（韓国語をタップすると音声が鳴ります）</p>` : ""}
           `;
           const button = card.querySelector("[data-grammar-listen]");
           if (button) {
@@ -7300,14 +7443,14 @@
         nav.className = "card-nav";
         nav.innerHTML = `
           <button type="button" class="secondary-btn" data-card-nav="prev">← 前</button>
-          <span class="lesson-step-counter">カード ${flashcardIndex + 1} / ${total}<br />済 ${markedCount}</span>
+          <span class="lesson-step-counter">${flashcardIndex + 1} / ${total}</span>
           <button type="button" class="secondary-btn" data-card-nav="next">次 →</button>
         `;
 
         const audioRow = document.createElement("div");
         audioRow.className = "card-audio-row";
         audioRow.innerHTML = `
-          <button type="button" class="secondary-btn" data-card-play>🔊 韓国語を聞く</button>
+          <button type="button" class="secondary-btn" data-card-play>ゆっくり聞く</button>
           <button type="button" class="secondary-btn flip-card">答えを見る</button>
         `;
 
@@ -7377,8 +7520,12 @@
         });
 
         reflectCardMark();
-        wrapper.appendChild(flashcard);
+        const cardProgress = document.createElement("div");
+        cardProgress.className = "deck-progress card-progress";
+        cardProgress.innerHTML = `<div class="deck-progress-fill" style="width:${Math.round((markedCount / total) * 100)}%"></div>`;
         wrapper.appendChild(nav);
+        wrapper.appendChild(cardProgress);
+        wrapper.appendChild(flashcard);
         wrapper.appendChild(audioRow);
         wrapper.appendChild(actions);
         flashcardList.appendChild(wrapper);
@@ -8325,13 +8472,19 @@
           return;
         }
         const entry = entries[vocabDeckIndex] || entries[0];
+        const deckState = getVocabEntryState(entry);
         vocabDeckShell.innerHTML = `
-          <p class="quiz-summary">カード ${vocabDeckIndex + 1} / ${entries.length}</p>
+          <div class="deck-topbar">
+            <span class="deck-count">${vocabDeckIndex + 1} / ${entries.length}</span>
+            <div class="deck-progress"><div class="deck-progress-fill" style="width:${Math.round(((vocabDeckIndex + 1) / entries.length) * 100)}%"></div></div>
+            <span class="deck-chip">第${entry.chapterId}章</span>
+            <span class="deck-chip ${deckState || ""}">${VOCAB_STATUS_LABELS[deckState] || "未記録"}</span>
+          </div>
           <div class="deck-card" role="button" tabindex="0">${vocabDeckFlipped ? `<p class="card-term">${escapeHtml(entry.ja)}</p>` : getEntryQuestionMarkup(entry)}</div>
           <div class="deck-actions">
             <div class="deck-toolbar">
               <button type="button" data-deck="prev">← 前</button>
-              <button type="button" data-deck="play">🔊 聞く</button>
+              <button type="button" data-deck="play">聞く</button>
               <button type="button" data-deck="flip">${vocabDeckFlipped ? "問題に戻る" : "答えを見る"}</button>
               <button type="button" data-deck="next">次 →</button>
             </div>
@@ -8460,6 +8613,8 @@
               label.classList.toggle("incorrect", question.selected === optionIndex && question.correct === false);
             });
             applyQuizResult(card.querySelector(".quiz-result"), question, question);
+            const selectedText = question.options[question.selected];
+            if (containsKorean(selectedText)) speakSentence(selectedText, card, "ko");
             markStudyActivity();
             window.setTimeout(() => {
               vocabQuizIndex[direction] = currentIndex + 1;
@@ -8574,17 +8729,26 @@
         const totalEntries = getVisibleVocabEntries("all");
         if (vocabDeckIndex >= visibleEntries.length) vocabDeckIndex = 0;
         ensureVocabQuizState(visibleEntries, selectedValue, statusValue);
-        updateVocabModeButtons();
         renderVocabGrid(visibleEntries);
         renderVocabDeck(visibleEntries);
         renderVocabGame(visibleEntries);
         renderVocabQuizGroup(vocabQuizKoJa, "koja");
         renderVocabQuizGroup(vocabQuizJaKo, "jako");
-        vocabVisibleCount.textContent = `${visibleEntries.length}件`;
-        vocabCurrentFilter.textContent = getVocabFilterLabel(selectedValue);
-        vocabTotalCount.textContent = `${totalEntries.length}件`;
-        vocabModeLabel.textContent = VOCAB_MODE_LABELS[vocabStudyMode];
-        vocabStatusLabel.textContent = VOCAB_STATUS_LABELS[statusValue] || VOCAB_STATUS_LABELS.all;
+        // 選択画面（メニュー）→ 各学習画面の表示切り替え
+        const launcher = document.getElementById("vocab-launcher");
+        const backMenuButton = document.getElementById("vocab-back-menu");
+        const isMenu = vocabScreen === "menu";
+        if (launcher) launcher.hidden = !isMenu;
+        if (backMenuButton) backMenuButton.hidden = isMenu;
+        const launcherCount = document.getElementById("vocab-launcher-count");
+        if (launcherCount) launcherCount.textContent = `${visibleEntries.length}`;
+        vocabGridPanel.hidden = vocabScreen !== "cards";
+        vocabDeckPanel.hidden = vocabScreen !== "deck";
+        vocabGamePanel.hidden = vocabScreen !== "game";
+        const quizGroupKoJa = document.getElementById("vocab-quiz-group-koja");
+        const quizGroupJaKo = document.getElementById("vocab-quiz-group-jako");
+        if (quizGroupKoJa) quizGroupKoJa.hidden = vocabScreen !== "koja";
+        if (quizGroupJaKo) quizGroupJaKo.hidden = vocabScreen !== "jako";
       };
 
       const updateOverallStats = () => {
@@ -9045,9 +9209,25 @@
         markStudyActivity();
       });
 
-      vocabModeCardsButton.addEventListener("click", () => setVocabMode("cards"));
-      vocabModeDeckButton.addEventListener("click", () => setVocabMode("deck"));
-      vocabModeGameButton.addEventListener("click", () => setVocabMode("game"));
+      const setVocabScreen = (screen) => {
+        vocabScreen = screen;
+        if (screen === "deck" || screen === "cards" || screen === "game") {
+          if (vocabStudyMode === "game" && screen !== "game") stopVocabGame();
+          vocabStudyMode = screen;
+          vocabDeckFlipped = false;
+          if (screen === "game") vocabGameState = createEmptyVocabGameState();
+        } else if (vocabStudyMode === "game") {
+          stopVocabGame();
+          vocabStudyMode = "deck";
+        }
+        renderVocabBook();
+        markStudyActivity();
+      };
+      document.querySelectorAll("[data-vocab-launch]").forEach((button) => {
+        button.addEventListener("click", () => setVocabScreen(button.dataset.vocabLaunch));
+      });
+      const vocabBackMenuButton = document.getElementById("vocab-back-menu");
+      if (vocabBackMenuButton) vocabBackMenuButton.addEventListener("click", () => setVocabScreen("menu"));
       vocabQuizCheckKoJa.addEventListener("click", () => resetVocabQuiz("koja"));
       vocabQuizCheckJaKo.addEventListener("click", () => resetVocabQuiz("jako"));
 
@@ -9240,6 +9420,18 @@
         // voiceschangedが発火しないブラウザ向けの再チェック
         window.setTimeout(pickVoice, 1500);
       }
+
+      // 韓国語の文字をタップすると音声が鳴る（Duolingo風）。ボタンや行単位の再生とは二重にしない
+      document.addEventListener("click", (event) => {
+        if (event.target.closest("button, a, input, select, textarea, audio, label, summary")) return;
+        const speakable = event.target.closest(".grammar-formula .block, .grammar-pattern span, .foreign-line");
+        if (!speakable) return;
+        if (speakable.closest(".sentence, .vocab-item, .flashcard, .deck-card, .study-card, .output-reaction")) return;
+        const text = (speakable.textContent || "").trim();
+        if (!containsKorean(text)) return;
+        speakSentence(text, speakable, "ko");
+        markStudyActivity();
+      });
 
       const flushLearningRecords = () => {
         window.clearTimeout(remoteSyncTimer);
