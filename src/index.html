@@ -324,6 +324,7 @@
         display: flex;
         flex-direction: column;
         gap: 22px;
+        min-width: 0;
       }
 
       .content-head {
@@ -2239,6 +2240,16 @@
         font-size: 0.9rem;
       }
 
+      .output-goal-box summary {
+        cursor: pointer;
+        font-weight: 800;
+        font-size: 0.92rem;
+      }
+
+      .output-goal-box[open] summary {
+        margin-bottom: 8px;
+      }
+
       .output-keyword-row {
         display: flex;
         flex-wrap: wrap;
@@ -2281,6 +2292,23 @@
         color: var(--muted);
         font-size: 0.9rem;
         font-weight: 600;
+      }
+
+      .study-mobile-bar {
+        display: none;
+      }
+
+      /* パソコンでも学習中はヘッダーを1行に圧縮してスクロールを減らす */
+      @media (min-width: 721px) {
+        body.study-mode .app-header .subtitle,
+        body.study-mode .header-card {
+          display: none;
+        }
+
+        body.study-mode .app-header h1 {
+          font-size: 1.6rem;
+          margin-bottom: 0;
+        }
       }
 
       .output-examples {
@@ -2549,6 +2577,50 @@
 
         .panel {
           padding: 14px 14px 16px;
+        }
+
+        .output-video {
+          display: none;
+        }
+
+        /* 学習中はヘッダー・チャプター一覧・章見出しを隠し、学習バーだけにする */
+        body.study-mode .app-header,
+        body.study-mode .chapters,
+        body.study-mode .content-head {
+          display: none;
+        }
+
+        .study-mobile-bar {
+          position: sticky;
+          top: 8px;
+          z-index: 6;
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          padding: 8px 10px;
+          border-radius: 14px;
+          background: rgba(255, 255, 255, 0.94);
+          backdrop-filter: blur(8px);
+          border: 1px solid var(--border);
+          box-shadow: 0 8px 18px rgba(31, 28, 26, 0.1);
+        }
+
+        .study-mobile-bar .secondary-btn {
+          display: inline-flex;
+          width: auto;
+          min-height: 38px;
+          padding: 6px 12px;
+          flex: 0 0 auto;
+        }
+
+        .study-bar-title {
+          flex: 1;
+          min-width: 0;
+          font-weight: 800;
+          font-size: 0.95rem;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
         }
 
         .calendar-grid {
@@ -2977,6 +3049,12 @@
         </aside>
 
         <section class="content">
+          <div class="study-mobile-bar">
+            <button id="study-bar-home" class="secondary-btn" type="button" aria-label="ホームへ戻る" title="ホームへ戻る">🏠</button>
+            <span id="study-bar-title" class="study-bar-title">--</span>
+            <button id="study-bar-prev" class="secondary-btn" type="button" aria-label="前の章へ" title="前の章へ">◀</button>
+            <button id="study-bar-next" class="secondary-btn" type="button" aria-label="次の章へ" title="次の章へ">▶</button>
+          </div>
           <div id="chapter-view" class="view active">
             <div class="content-head">
               <div>
@@ -3043,8 +3121,8 @@
                   <p>文字を見る前に、音を聞いて意味を思い浮かべます。</p>
                 </div>
                 <div class="audio-focus-actions">
-                  <button id="audio-focus-play-all" class="primary-btn" type="button">5フレーズを聞く</button>
-                  <button id="audio-focus-repeat" class="secondary-btn" type="button">3回リピート</button>
+                  <button id="audio-focus-play-all" class="primary-btn" type="button">🔊 5フレーズを聞く</button>
+                  <button id="audio-focus-repeat" class="secondary-btn" type="button">🔁 3回リピート</button>
                 </div>
               </div>
               <div id="audio-focus-list" class="audio-focus-grid"></div>
@@ -3227,9 +3305,9 @@
             </section>
 
             <div class="lesson-step-actions">
-              <button id="lesson-step-prev" class="secondary-btn" type="button">前へ</button>
+              <button id="lesson-step-prev" class="secondary-btn" type="button">◀ 前へ</button>
               <span id="lesson-step-counter" class="lesson-step-counter">1 / 5</span>
-              <button id="lesson-step-next" class="primary-btn" type="button">次へ</button>
+              <button id="lesson-step-next" class="primary-btn" type="button">次へ ▶</button>
             </div>
           </div>
         </section>
@@ -4971,7 +5049,7 @@
       const renderChoiceMarkup = (text) => `
         <span class="quiz-option-body">
           <span class="quiz-option-text">${containsKorean(text) ? renderKoreanWithPronunciation(text, "ko") : `<span>${escapeHtml(text)}</span>`}</span>
-          ${containsKorean(text) ? `<button class="quiz-option-audio" type="button" data-option-audio="${escapeHtml(text)}">韓国語を聞く</button>` : ""}
+          ${containsKorean(text) ? `<button class="quiz-option-audio" type="button" data-option-audio="${escapeHtml(text)}" title="音声を聞く" aria-label="音声を聞く">🔊</button>` : ""}
         </span>
       `;
       const applyQuizResult = (resultEl, record, question) => {
@@ -5289,6 +5367,7 @@
         sessionStartTime = Date.now();
       };
       const setAppVisibility = (visible) => {
+        if (!visible) document.body.classList.remove("study-mode");
         appRoot.classList.toggle("app--locked", !visible);
         loginView.classList.toggle("active", !visible);
         appHeader.hidden = !visible;
@@ -5409,6 +5488,8 @@
         const wasStudyMode = isStudyViewMode(viewMode);
         viewMode = mode;
         updateNavState(mode);
+        // 学習中はヘッダー等を隠してスクロールを減らす（CSS側で参照）
+        document.body.classList.toggle("study-mode", mode === "main" || mode === "support");
         homeView.classList.toggle("active", mode === "home");
         vocabView.classList.toggle("active", mode === "vocab");
         outputView.classList.toggle("active", mode === "output");
@@ -6074,10 +6155,10 @@
             <p class="meaning-line">${escapeHtml(item.ja)}</p>
             <div class="ko-text">${renderKoreanWithPronunciation(item.ko, "ko")}</div>
             <div class="audio-focus-actions">
-              <button class="listen-btn" type="button" data-audio-focus-play>聞く</button>
-              <button class="secondary-btn" type="button" data-audio-focus-text>文字を見る</button>
-              <button class="record-btn" type="button" data-audio-focus-record>録音</button>
-              <button class="record-btn" type="button" data-audio-focus-playback disabled>再生</button>
+              <button class="listen-btn" type="button" data-audio-focus-play>🔊 聞く</button>
+              <button class="secondary-btn" type="button" data-audio-focus-text>👀 文字</button>
+              <button class="record-btn" type="button" data-audio-focus-record>🎙 録音</button>
+              <button class="record-btn" type="button" data-audio-focus-playback disabled>▶ 再生</button>
             </div>
           `;
           const playButton = card.querySelector("[data-audio-focus-play]");
@@ -6087,7 +6168,7 @@
           playButton.addEventListener("click", () => speakSlow(item.ko, card, "ko"));
           textButton.addEventListener("click", () => {
             card.classList.toggle("show-text");
-            textButton.textContent = card.classList.contains("show-text") ? "文字を隠す" : "文字を見る";
+            textButton.textContent = card.classList.contains("show-text") ? "👀 隠す" : "👀 文字";
             markStudyActivity();
           });
           if (recordingSupported) {
@@ -6133,7 +6214,7 @@
             const url = URL.createObjectURL(blob);
             playbackBtn.dataset.url = url;
             playbackBtn.hidden = false;
-            recordBtn.textContent = "録音";
+            recordBtn.textContent = "🎙 録音";
             row.classList.remove("recording");
             activeRecorder = null;
             activeRow = null;
@@ -6144,7 +6225,7 @@
           activeRecorder = recorder;
           activeRow = row;
           row.classList.add("recording");
-          recordBtn.textContent = "停止";
+          recordBtn.textContent = "⏹ 停止";
           setStatus("録音中...", "info");
         } catch (error) {
           setStatus("マイクの許可が必要です。", "warn");
@@ -6556,7 +6637,7 @@
                 <strong>${escapeHtml(mission.partner)}</strong>
                 ${renderKoreanWithPronunciation(turn.partnerKo, "ko")}
                 <p class="ja">${escapeHtml(turn.partnerJa)}</p>
-                <button class="listen-btn" type="button" data-output-listen>相手の音声</button>
+                <button class="listen-btn" type="button" data-output-listen>🔊 相手の音声</button>
               </div>
               <div class="output-turn user" data-output-record-row>
                 <strong>あなたの番</strong>
@@ -6567,21 +6648,21 @@
                   <div class="output-translation" data-output-translation hidden></div>
                   <span class="chip" data-output-score>${outputRecognizedScore} / 3点</span>
                 </div>
-                <div class="output-goal-box">
-                  <strong>満点（3点）のとり方</strong>
+                <details class="output-goal-box">
+                  <summary>💡 満点（3点）のとり方・キーワード</summary>
                   <p>下のキーワードを<strong>2つ以上</strong>入れて話すと3点満点です。1つなら2点、キーワードなしでも声が認識できれば1点です。</p>
                   <div class="output-keyword-row" data-output-keywords></div>
                   <p>🔊 キーワードをタップすると音声が聞けます。話して認識できたものは緑の ✓ に変わります。</p>
                   <p>※採点は「キーワードが入っているか」で判定します。発音の細かい正確さまでは判定しないので、まず伝わる声の大きさ・速さで話してみましょう。</p>
-                </div>
+                </details>
                 <div class="output-actions">
                   <button class="primary-btn" type="button" data-output-success>この結果で次へ</button>
                   <button class="secondary-btn" type="button" data-output-retry>もう一回言う</button>
                   <button class="secondary-btn" type="button" data-output-hint>言い方の例を見る</button>
                 </div>
                 <div class="output-recorder">
-                  <button class="record-btn" type="button" data-output-record>自分の声を録音して聞き比べ</button>
-                  <button class="playback-btn" type="button" data-output-playback hidden>録音を再生</button>
+                  <button class="record-btn" type="button" data-output-record>🎙 録音して聞き比べ</button>
+                  <button class="playback-btn" type="button" data-output-playback hidden>▶ 録音を聞く</button>
                 </div>
               </div>
             </div>
@@ -6594,7 +6675,7 @@
                     <span class="example-label">${escapeHtml(example.label)}</span>
                     ${renderKoreanWithPronunciation(example.ko, "ko")}
                     <p class="ja">${escapeHtml(example.ja)}</p>
-                    <button class="listen-btn" type="button" data-example-listen="${escapeHtml(example.ko)}">音声を聞く</button>
+                    <button class="listen-btn" type="button" data-example-listen="${escapeHtml(example.ko)}">🔊 聞く</button>
                   </div>
                 `).join("")}
               </div>
@@ -6678,9 +6759,9 @@
             <p class="ja">${item.ja}</p>
           </div>
           <div class="sentence-actions">
-            <button class="playback-btn" type="button" data-slow-listen>ゆっくり音声</button>
-            <button class="playback-btn" type="button" data-playback hidden>録音再生</button>
-            <button class="record-btn" type="button" data-record>録音</button>
+            <button class="playback-btn" type="button" data-slow-listen>🐢 ゆっくり</button>
+            <button class="playback-btn" type="button" data-playback hidden>▶ 録音</button>
+            <button class="record-btn" type="button" data-record>🎙 録音</button>
           </div>
         `;
 
@@ -6876,7 +6957,7 @@
           <p class="vocab-quiz-progress">1問答えると、自動で次の問題に進みます。</p>
           <div class="quiz-head">
             <p class="quiz-prompt">Q${currentIndex + 1}. ${escapeHtml(question.prompt)}</p>
-            <button class="listen-btn" type="button">再生</button>
+            <button class="listen-btn" type="button">🔊 再生</button>
           </div>
           <div class="quiz-options">${options}</div>
           <p class="quiz-result" aria-live="polite"></p>
@@ -7121,7 +7202,7 @@
                 ${tokens.map((token) => `<span class="${morphemes.some((morpheme) => token.includes(morpheme)) ? "hit" : ""}">${escapeHtml(token)}</span>`).join("")}
               </div>
             ` : ""}
-            ${example ? `<p class="grammar-note">${escapeHtml(example.ja)}（色つきの部分が今回の文法です）</p><button class="listen-btn" type="button" data-grammar-listen="${escapeHtml(example.ko)}">例文音声</button>` : ""}
+            ${example ? `<p class="grammar-note">${escapeHtml(example.ja)}（色つきの部分が今回の文法です）</p><button class="listen-btn" type="button" data-grammar-listen="${escapeHtml(example.ko)}">🔊 例文</button>` : ""}
           `;
           const button = card.querySelector("[data-grammar-listen]");
           if (button) {
@@ -8676,6 +8757,12 @@
         const columnOnly = isColumnChapter(chapter);
 
         chapterTitle.textContent = chapter.title;
+        const studyBarTitle = document.getElementById("study-bar-title");
+        if (studyBarTitle) studyBarTitle.textContent = chapter.title;
+        const studyBarPrev = document.getElementById("study-bar-prev");
+        if (studyBarPrev) studyBarPrev.disabled = currentChapterIndex === 0;
+        const studyBarNext = document.getElementById("study-bar-next");
+        if (studyBarNext) studyBarNext.disabled = currentChapterIndex >= chapters.length - 1;
         chapterSubtitle.textContent = chapter.subtitle;
         chapterProgress.textContent = `${currentChapterIndex + 1} / ${chapters.length}`;
         chapterLabel.textContent = introOnly ? "Quick Start" : isColumnChapter(chapter) ? `Vocabulary Column ${chapter.columnNumber}` : listeningOnly ? "Listening Chapter" : "Chapter";
@@ -8818,6 +8905,21 @@
       if (restartChapterButton) {
         restartChapterButton.addEventListener("click", () => restartChapterQuiz(chapters[currentChapterIndex]));
       }
+
+      const goToChapterByOffset = (offset) => {
+        const nextIndex = currentChapterIndex + offset;
+        if (nextIndex < 0 || nextIndex >= chapters.length) return;
+        currentChapterIndex = nextIndex;
+        if (activeRecorder) activeRecorder.stop();
+        if ("speechSynthesis" in window) window.speechSynthesis.cancel();
+        renderChapter("main");
+      };
+      const studyBarHomeButton = document.getElementById("study-bar-home");
+      if (studyBarHomeButton) studyBarHomeButton.addEventListener("click", () => showView("home"));
+      const studyBarPrevButton = document.getElementById("study-bar-prev");
+      if (studyBarPrevButton) studyBarPrevButton.addEventListener("click", () => goToChapterByOffset(-1));
+      const studyBarNextButton = document.getElementById("study-bar-next");
+      if (studyBarNextButton) studyBarNextButton.addEventListener("click", () => goToChapterByOffset(1));
 
       listeningCheckButton.addEventListener("click", () => {
         checkListening();
